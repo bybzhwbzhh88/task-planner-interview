@@ -1,0 +1,44 @@
+{
+  "executedAt": "2026-10-21T11:34:14.514Z",
+  "scope": "Delivery links, local document reader and static diagram assets; not the real application.",
+  "checks": [
+    {
+      "id": "D01",
+      "name": "Markdown 本地文件链接",
+      "status": "PASS",
+      "linksChecked": 43,
+      "broken": []
+    },
+    {
+      "id": "D02",
+      "name": "阅读版10个导航入口切换",
+      "status": "PASS",
+      "panels": 10
+    },
+    {
+      "id": "D03",
+      "name": "阅读版嵌入原型可操作",
+      "status": "PASS"
+    },
+    {
+      "id": "D04",
+      "name": "两张流程图加载及文字布局",
+      "status": "PASS",
+      "images": 2
+    },
+    {
+      "id": "D05",
+      "name": "移动端阅读版无整页横向溢出",
+      "status": "PASS",
+      "width": 390
+    },
+    {
+      "id": "D06",
+      "name": "阅读版无未捕获脚本错误",
+      "status": "PASS",
+      "errors": []
+    }
+  ],
+  "passed": 6,
+  "total": 6
+}

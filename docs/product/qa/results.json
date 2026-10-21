@@ -1,0 +1,108 @@
+{
+  "scope": "Local interactive prototype only. Not validation of the Wasp app, PostgreSQL, or real provider.",
+  "executedAt": "2026-10-21T11:09:37.417Z",
+  "timingFixture": "Browser Date.now held at run start; generation completes only when the demo completion control is used. Product default timing is unchanged.",
+  "browser": "Chromium 151.0.7922.34",
+  "viewport": {
+    "desktop": "1440×1100",
+    "mobile": [
+      "390×900",
+      "320×900"
+    ]
+  },
+  "checks": [
+    {
+      "id": "P01",
+      "name": "成功前占用，保存成功后消耗",
+      "status": "PASS"
+    },
+    {
+      "id": "P02",
+      "name": "零额度阻止生成，仍可编辑和查看",
+      "status": "PASS"
+    },
+    {
+      "id": "P03",
+      "name": "模型明确失败释放占用，不消耗",
+      "status": "PASS"
+    },
+    {
+      "id": "P04",
+      "name": "保存明确失败释放占用，无成功结果",
+      "status": "PASS"
+    },
+    {
+      "id": "P05",
+      "name": "两个页面争用最后一次，最多一次开始",
+      "status": "PASS"
+    },
+    {
+      "id": "P06",
+      "name": "有6次额度时仅接受3个并发，不排队",
+      "status": "PASS"
+    },
+    {
+      "id": "P07",
+      "name": "完成后释放名额，可手动新提交",
+      "status": "PASS"
+    },
+    {
+      "id": "P08",
+      "name": "本页连续触发不创建重复请求",
+      "status": "PASS"
+    },
+    {
+      "id": "P09",
+      "name": "响应丢失先查询原请求，不重复调用",
+      "status": "PASS"
+    },
+    {
+      "id": "P10",
+      "name": "查询失败仍待确认，不生成、不退款",
+      "status": "PASS"
+    },
+    {
+      "id": "P11",
+      "name": "刷新保留待确认记录，恢复同一结果",
+      "status": "PASS"
+    },
+    {
+      "id": "P12",
+      "name": "生成中编辑只影响后续输入",
+      "status": "PASS"
+    },
+    {
+      "id": "P13",
+      "name": "不同输入的混合请求各自结算，结果不串联",
+      "status": "PASS"
+    },
+    {
+      "id": "P14",
+      "name": "用户输入按文本展示，不执行HTML",
+      "status": "PASS"
+    },
+    {
+      "id": "P17",
+      "name": "另一页面重置后清除旧待确认引用，可再次生成",
+      "status": "PASS"
+    },
+    {
+      "id": "P18",
+      "name": "额度耗尽后仍可查询原请求，不再次消耗",
+      "status": "PASS"
+    },
+    {
+      "id": "P15",
+      "name": "桌面与移动端无横向溢出，标注可切换",
+      "status": "PASS"
+    },
+    {
+      "id": "P16",
+      "name": "浏览器执行无未捕获脚本错误",
+      "status": "PASS"
+    }
+  ],
+  "passed": 18,
+  "total": 18,
+  "consoleErrors": []
+}
