@@ -1,0 +1,8 @@
+{
+  "name": "product-prototype-review",
+  "private": true,
+  "type": "module",
+  "scripts": { "check": "node check.mjs", "build:reader": "node build-reader.mjs" },
+  "devDependencies": { "playwright-core": "1.58.2", "marked": "17.0.1" },
+  "engines": { "node": ">=22" }
+}
