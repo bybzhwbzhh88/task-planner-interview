@@ -1,0 +1,11 @@
+{
+  "name": "task-planner-product-prototype-checks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node check-prototype.mjs",
+    "build:review": "node build-review.mjs",
+    "check:delivery": "node check-delivery.mjs"
+  },
+  "devDependencies": { "playwright": "1.62.1", "marked": "17.0.5" }
+}

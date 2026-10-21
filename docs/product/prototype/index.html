@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI 任务规划 · 额度处理产品原型</title>
+<style>
+:root{color-scheme:light;--bg:#f6f7fb;--surface:#fff;--ink:#202337;--muted:#6b7285;--line:#e4e6ef;--purple:#6d4bd4;--soft:#f1edfc;--green:#20754e;--green-bg:#edf7f1;--amber:#8a5c12;--amber-bg:#fff6e6;--red:#a84242}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}button,input,select{font:inherit}button,a,input,select{touch-action:manipulation}button{cursor:pointer}button:disabled{cursor:not-allowed}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #b8a5ee;outline-offset:3px}a{color:var(--purple)}.demo{background:#eceaf3;border-bottom:1px solid #ddd9e8;padding:13px 24px}.demo-inner{max-width:1150px;margin:auto}.demo-heading{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.demo-heading strong{font-size:13px}.demo-heading span{font-size:12px;color:#615b72}.demo-heading button{margin-left:auto}.demo-controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:10px}.demo-controls label{font-size:12px;color:#514b60}.demo-controls select{max-width:190px}.demo button,.demo select{font-size:12px;border:1px solid #d3cedf;border-radius:7px;background:white;padding:7px 10px;min-height:34px;color:#454052}.demo .quiet{background:transparent}.debug{font-size:12px;color:#615b72;margin-top:7px;font-variant-numeric:tabular-nums}.shell{max-width:1150px;margin:0 auto;padding:24px 24px 60px}.brandbar{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}.brand{display:flex;align-items:center;gap:9px;color:var(--ink);font-weight:600}.brand-mark{display:grid;place-items:center;width:27px;height:27px;border-radius:8px;background:var(--purple);color:#fff;font-size:15px}.hero{text-align:center;padding:29px 0 24px}.eyebrow{font-size:12px;font-weight:600;color:var(--purple);letter-spacing:2px}.hero h1{font-size:34px;letter-spacing:-1px;margin:4px 0 8px;font-weight:650;line-height:1.35}.hero h1 span{color:var(--purple)}.hero p{margin:0;color:var(--muted)}.quota{background:var(--surface);border:1px solid var(--line);border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 26px;margin-bottom:22px}.quota-main{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.quota-label{font-size:14px;color:var(--muted)}.quota-num{font-size:31px;line-height:1.2;font-weight:650;font-variant-numeric:tabular-nums}.quota-num small{font-size:14px;font-weight:400;padding-left:4px}.occupied{color:var(--purple);font-size:13px;background:var(--soft);border-radius:7px;padding:5px 9px}.quota-policy{text-align:right;font-size:12px;color:var(--muted)}.quota-policy strong{display:block;color:#41475c;font-weight:500}.layout{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:22px;align-items:start}.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}.card-header{padding:21px 23px 16px;display:flex;justify-content:space-between;align-items:start;gap:12px}.card h2{font-size:17px;line-height:1.4;margin:0;font-weight:600}.subtle{font-size:12px;color:var(--muted);margin-top:4px}.body{padding:0 23px 23px}.section-label{font-size:13px;font-weight:500;display:block;margin-bottom:8px}.add-row{display:flex;gap:8px}.text-input{width:100%;min-width:0;background:#fff;border:1px solid #d9dce7;border-radius:8px;padding:10px 11px;color:var(--ink)}.btn{border:1px solid #d9dce7;border-radius:8px;background:#fff;color:var(--ink);padding:9px 14px;white-space:nowrap;min-height:40px;line-height:1.4}.btn.primary{background:var(--purple);color:white;border-color:var(--purple);font-weight:500}.btn:hover:not(:disabled){filter:brightness(.97)}.btn:disabled{background:#eeeaf6;border-color:#eeeaf6;color:#9a91b0}.btn.ghost{border-color:transparent;color:var(--purple);background:transparent;padding:6px 9px;min-height:34px;font-size:13px}.tasks{margin-top:17px}.task-row{display:flex;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #edf0f5}.task-check{accent-color:var(--purple);width:17px;height:17px;flex:0 0 auto}.task-name{flex:1;min-width:0;overflow-wrap:anywhere;font-size:14px}.task-name.done{text-decoration:line-through;color:#9b9fad}.task-hours{width:58px;border:1px solid var(--line);border-radius:6px;padding:5px;text-align:center;font-size:12px;min-height:32px}.unit{font-size:11px;color:var(--muted)}.delete{border:0;background:none;color:#9398a8;font-size:20px;padding:2px 6px;min-height:34px}.hours-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:21px}.hours-row label{font-size:13px}.hours-field{display:flex;align-items:center;gap:7px}.hours-field input{width:81px;text-align:center}.generate{width:100%;margin-top:22px;min-height:45px}.hint{font-size:12px;color:var(--muted);margin:10px 0 0;min-height:20px;overflow-wrap:anywhere}.hint.attention{color:var(--amber)}.notice{font-size:13px;border-radius:8px;padding:11px 13px;background:var(--soft);color:#51406f;margin-top:15px;overflow-wrap:anywhere}.notice.error{background:var(--amber-bg);color:var(--amber)}.records{padding:0 23px 10px}.empty{padding:30px 12px;text-align:center;color:var(--muted);font-size:13px}.record{padding:16px 0;border-bottom:1px solid #edf0f5}.record:last-child{border-bottom:0}.record-top{display:flex;justify-content:space-between;align-items:center;gap:10px}.record-title{font-size:14px;font-weight:500}.badge{font-size:11px;line-height:1.5;padding:3px 8px;border-radius:6px;white-space:nowrap;background:#eef0f5;color:#697183}.badge.running{background:var(--soft);color:var(--purple)}.badge.success{background:var(--green-bg);color:var(--green)}.badge.failed,.badge.unknown{background:var(--amber-bg);color:var(--amber)}.record-summary{color:var(--muted);font-size:12px;margin:6px 0 0;overflow-wrap:anywhere}.record-note{font-size:12px;margin:5px 0 4px;color:#6f7384;overflow-wrap:anywhere}.record-action{margin-top:7px}.record-action .btn{font-size:12px;min-height:34px;padding:6px 10px}.record-action .btn:disabled{background:#f4f3f7;color:#a29bae}.result-card{margin-top:22px}.result-meta{font-size:12px;color:var(--muted);padding-bottom:14px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}.schedule-item{margin-top:16px}.schedule-item h3{font-size:14px;margin:0 0 7px;font-weight:600;overflow-wrap:anywhere}.steps{list-style:none;margin:0;padding:0}.steps li{display:flex;align-items:baseline;justify-content:space-between;gap:15px;padding:7px 0;color:#5f667a;font-size:13px}.steps li span:first-child{overflow-wrap:anywhere}.steps li span:last-child{flex:0 0 auto;font-size:12px;color:var(--muted)}.result-placeholder{margin:0;color:var(--muted);font-size:13px}.annotation{display:none;font-size:10px;vertical-align:middle;margin-left:6px;border:1px solid #a391d3;color:var(--purple);background:var(--soft);border-radius:4px;padding:0 4px}.annotate .annotation{display:inline-block}.annotation-note{display:none;background:#f9f6ff;border:1px dashed #d3c6ef;border-radius:10px;padding:13px 16px;margin-top:20px;color:#625579;font-size:12px}.annotate .annotation-note{display:block}.footer{text-align:center;font-size:12px;color:#9196a7;margin-top:30px}.footer a{color:#767d91}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}[hidden]{display:none!important}@media(max-width:820px){.layout{grid-template-columns:1fr}.layout>div{display:contents}.layout>section{grid-row:2}.layout>div>.result-card{grid-row:3;margin-top:0}.hero{padding-top:24px}.quota{padding:18px 21px}}@media(max-width:480px){body{font-size:14px}.demo{padding:12px 15px}.demo-heading{gap:6px}.demo-heading span{width:100%}.demo-heading button{margin:0}.demo-controls{gap:7px}.demo-controls select{max-width:155px}.shell{padding:19px 15px 35px}.hero h1{font-size:29px}.hero p{font-size:13px}.quota{align-items:start;flex-direction:column;gap:12px;padding:18px}.quota-policy{text-align:left}.quota-policy strong{display:block;margin-right:0}.card-header{padding:19px 18px 15px}.body{padding:0 18px 20px}.records{padding:0 18px 9px}.task-row{gap:7px}.task-hours{width:48px}.btn{padding:9px 12px}.text-input{font-size:16px}.hours-row{gap:8px}.quota-main{gap:8px}.record-top{align-items:start}.record-title{font-size:13px}.btn,.delete,.task-check{min-height:40px}.task-check{min-height:18px;width:20px;height:20px}.demo button,.demo select{min-height:40px}.record-action .btn{min-height:40px}}
+</style>
+</head>
+<body>
+<aside class="demo" aria-label="原型演示控制，非产品功能">
+ <div class="demo-inner">
+  <div class="demo-heading"><strong>产品原型 / 演示控制</strong><span>仅使用本地演示数据，不连接真实模型或账号</span><button class="quiet" id="annotation-toggle" aria-pressed="false">显示页面标注</button></div>
+  <div class="demo-controls">
+   <label for="scenario">场景</label><select id="scenario"><option value="new">新账号 · 3 次额度</option><option value="last">最后 1 次</option><option value="zero">额度已用尽</option><option value="limit">并发上限 · 6 次额度</option><option value="modelFail">模型明确失败</option><option value="saveFail">保存明确失败</option><option value="lost">生成响应丢失</option></select>
+   <button id="load-scenario">载入场景</button><button id="remote-submit">模拟另一页面提交</button><button id="complete-all">推进至本批完成</button>
+   <label><input type="checkbox" id="query-offline"> 模拟查询仍失败</label>
+  </div>
+  <div class="debug" id="debug" aria-live="polite"></div>
+ </div>
+</aside>
+<main class="shell" id="product">
+ <div class="brandbar"><div class="brand"><span class="brand-mark" aria-hidden="true">计</span>任务规划实验室</div><span>我的工作台</span></div>
+ <header class="hero"><div class="eyebrow">PLAN YOUR DAY</div><h1><span>AI</span> 任务规划</h1><p>先安排待办，再生成适合今天的日程。</p></header>
+ <section class="quota" aria-label="账号额度" aria-live="polite"><div class="quota-main"><span class="quota-label">可用额度<span class="annotation">01</span></span><span class="quota-num"><span id="available">3</span><small>次</small></span><span class="occupied" id="occupied" hidden></span></div><div class="quota-policy"><strong>每次成功生成并保存，消耗 1 次</strong>同账号最多同时生成 3 份日程</div></section>
+ <div class="layout">
+  <div>
+   <section class="card" aria-labelledby="tasks-heading"><div class="card-header"><div><h2 id="tasks-heading">今天要做什么<span class="annotation">02</span></h2><div class="subtle">生成期间也可以编辑，修改将用于下一次生成。</div></div><span class="subtle" id="task-count"></span></div>
+    <div class="body"><form class="add-row" id="task-form"><label class="sr-only" for="description">待办事项</label><input class="text-input" id="description" placeholder="输入待办事项" autocomplete="off"><button class="btn" type="submit">添加</button></form><div class="tasks" id="tasks"></div>
+     <div class="hours-row"><label for="hours">今天可用的工作时长</label><div class="hours-field"><input class="text-input" id="hours" type="number" min="1" max="24" step="0.5" value="8"><span class="unit">小时</span></div></div>
+     <button class="btn primary generate" id="generate"><span id="generate-label">生成日程</span><span class="annotation">03</span></button><p class="hint" id="generate-hint">成功后消耗 1 次；明确失败不消耗。</p><div class="notice" id="notice" role="status" hidden></div>
+    </div>
+   </section>
+   <section class="card result-card" aria-labelledby="result-heading"><div class="card-header"><div><h2 id="result-heading">日程结果<span class="annotation">05</span></h2><div class="subtle" id="result-caption">从生成记录选择一份日程查看。</div></div></div><div class="body" id="result"><p class="result-placeholder">生成成功后，日程会保存在右侧记录中。</p></div></section>
+  </div>
+  <section class="card" aria-labelledby="records-heading"><div class="card-header"><div><h2 id="records-heading">生成记录<span class="annotation">04</span></h2><div class="subtle">每次生成独立保存，刷新后仍可找回。</div></div><button class="btn ghost" id="refresh-records">刷新记录</button></div><div class="records" id="records" aria-live="polite"></div></section>
+ </div>
+ <aside class="annotation-note">01 额度区分可用与占用。02 修改输入不改变已提交请求。03 本页防连续点击，服务端仍需确认资格。04 查询原请求不生成、不扣费。05 多次结果独立保存，失败不清空旧结果。</aside>
+ <footer class="footer">产品方案中的界面演示 · <a href="../PROTOTYPE.md" target="_blank" rel="noopener">查看页面说明</a></footer>
+</main>
+<script>
+(() => {
+ 'use strict';
+ const KEY='task-planner-product-demo-v1';
+ const SESSION='task-planner-view-v1';
+ const LIMIT=3;
+ const $=id=>document.getElementById(id);
+ const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ let view;
+ try{view=JSON.parse(sessionStorage.getItem(SESSION))||{};}catch{view={};}
+ view.hidden=view.hidden||[];
+ let current=null,submitting=false,notice='',noticeError=false,noticeKind='',lastTasks='',lastRecords='',lastResult='',nextOutcome='success',loseResponse=false;
+ const saveView=()=>sessionStorage.setItem(SESSION,JSON.stringify(view));
+ const occupied=s=>s.records.filter(r=>r.state==='running').length;
+ const available=s=>s.credits-occupied(s);
+ const calls=s=>s.events.filter(e=>e.event==='prototype.model.started').length;
+ const time=t=>new Date(t).toLocaleTimeString('zh-CN',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const defaultTasks=()=>[{id:crypto.randomUUID(),description:'完成项目需求方案',time:2,isDone:false},{id:crypto.randomUUID(),description:'准备产品评审材料',time:1.5,isDone:false}];
+ const makeResult=r=>({tasks:r.tasks.map(t=>({name:t.description,steps:['准备','执行','复盘'].map(label=>({label,hours:Number((r.hours/r.tasks.length/3).toFixed(2))}))}))});
+ function seed(which='new'){
+  const s={version:1,credits:which==='zero'?0:which==='last'?1:which==='limit'?6:3,tasks:defaultTasks(),hours:8,records:[],events:[],next:1};
+  if(which==='modelFail')s.tasks[0].description='完成项目需求方案 [fail]';
+  if(which==='zero'){
+   const r={id:crypto.randomUUID(),number:s.next++,submittedAt:Date.now()-600000,hours:8,tasks:structuredClone(s.tasks),state:'success',finishedAt:Date.now()-595000};r.result=makeResult(r);s.records.push(r);
+  }
+  return s;
+ }
+ function settle(s,force=false){
+  for(const r of s.records){
+   if(r.state!=='running'||(!force&&Date.now()<r.readyAt))continue;
+   r.finishedAt=Date.now();
+   if(r.outcome==='modelFail'){
+    r.state='failed';r.reason='生成失败';s.events.push({event:'prototype.model.failed',id:r.id});
+   }else{
+    s.events.push({event:'prototype.model.succeeded',id:r.id});
+    if(r.outcome==='saveFail'){r.state='failed';r.reason='日程未能保存';}
+    else{r.state='success';r.result=makeResult(r);s.credits-=1;}
+   }
+  }
+ }
+ async function mutate(fn){
+  const execute=()=>{
+   let s;
+   try{s=JSON.parse(localStorage.getItem(KEY));}catch{}
+   if(!s||s.version!==1)s=seed();
+   const before=JSON.stringify(s);settle(s);const result=fn?fn(s):undefined;
+   const after=JSON.stringify(s);if(before!==after||!localStorage.getItem(KEY))localStorage.setItem(KEY,after);
+   current=s;return {s,result};
+  };
+  return navigator.locks? navigator.locks.request(KEY,execute):execute();
+ }
+ function tell(message,isError=false,kind=''){notice=message;noticeError=isError;noticeKind=kind;render();}
+ function localRecord(){return current?.records.find(r=>r.id===view.localId);}
+ function reason(s){
+  const r=localRecord();
+  if(submitting)return '正在提交，请勿重复操作。';
+  if(r&&view.hidden.includes(r.id))return '上次生成结果待确认，请先在记录中查询状态。';
+  if(r?.state==='running')return '本次日程正在生成；成功生成并保存后消耗 1 次。';
+  if(!s.tasks.length)return '请先添加待办事项。';
+  if(!Number.isFinite(s.hours)||s.hours<1||s.hours>24||s.hours*2%1!==0)return '请填写 1—24 小时，间隔为 0.5 小时。';
+  if(occupied(s)>=LIMIT)return '已有 3 份日程正在生成，请完成后再试。';
+  if(available(s)<=0)return occupied(s)>0?'可用额度正在使用，请等待生成结果。':'额度已用尽，仍可编辑待办和查看已有日程。';
+  return '';
+ }
+ async function admit(snapshot){
+  return mutate(s=>{
+   if(!snapshot.tasks.length)return {error:'请先添加待办事项。'};
+   if(!Number.isFinite(snapshot.hours)||snapshot.hours<1||snapshot.hours>24||snapshot.hours*2%1!==0)return {error:'请填写 1—24 小时，间隔为 0.5 小时。'};
+   if(occupied(s)>=LIMIT)return {error:'已有 3 份日程正在生成，请完成后再试。',kind:'concurrency'};
+   if(available(s)<=0)return {error:occupied(s)>0?'可用额度正在使用，请等待生成结果。':'额度已用尽，仍可编辑待办和查看已有日程。',kind:occupied(s)>0?'occupied':'exhausted'};
+   const outcome=snapshot.tasks.some(t=>t.description.includes('[fail]'))?'modelFail':nextOutcome;
+   const r={id:crypto.randomUUID(),number:s.next++,submittedAt:Date.now(),tasks:structuredClone(snapshot.tasks),hours:snapshot.hours,state:'running',outcome,readyAt:Date.now()+4000};
+   s.records.unshift(r);s.events.push({event:'prototype.model.started',id:r.id});return {id:r.id};
+  });
+ }
+ async function generate(remote=false){
+  if(!current)return;
+  const pending=localRecord();
+  if(!remote&&(submitting||pending?.state==='running'||(pending&&view.hidden.includes(pending.id))))return;
+  const snapshot={tasks:structuredClone(current.tasks),hours:Number($('hours').value)};
+  if(!remote){submitting=true;render();}
+  try{
+   const {result}=await admit(snapshot);
+   if(result.error){tell(result.error,true,result.kind||'');return;}
+   if(!remote){view.localId=result.id;if(loseResponse)view.hidden.push(result.id);saveView();}
+   tell(remote?'另一页面已提交生成。':loseResponse?'暂未确认生成结果，请先查询本次状态。':'已提交生成，正在为你安排日程。');
+  }finally{submitting=false;render();}
+ }
+ async function query(id){
+  if($('query-offline').checked){tell('暂时无法查询，请检查网络后再试。',true);return;}
+  await mutate();
+  const r=current.records.find(r=>r.id===id);if(!r){tell('未找到该记录，请刷新记录后再试。',true);return;}
+  view.hidden=view.hidden.filter(x=>x!==id);
+  if(r.state!=='running'&&view.localId===id)delete view.localId;
+  if(r.state==='success'){view.selected=id;tell('已找回原日程；查询未消耗额度。');}
+  else if(r.state==='failed')tell('已确认生成失败，本次未消耗额度。',true);
+  else tell('本次仍在生成，请继续等待。');
+  saveView();render();
+ }
+ function render(){
+  if(!current)return;
+  const s=current;
+  const validIds=new Set(s.records.map(record=>record.id));
+  const previousHidden=view.hidden.length;
+  view.hidden=view.hidden.filter(id=>validIds.has(id));
+  let viewChanged=previousHidden!==view.hidden.length;
+  if(view.localId&&!validIds.has(view.localId)){delete view.localId;notice='';noticeError=false;viewChanged=true;}
+  if(view.selected&&!validIds.has(view.selected)){delete view.selected;viewChanged=true;}
+  if(viewChanged)saveView();
+  const r=localRecord();
+  if(r&&r.state!=='running'&&!view.hidden.includes(r.id)){
+   if(r.state==='success'){view.selected=r.id;notice='日程已生成，消耗 1 次额度。';noticeError=false;}
+   else{notice=r.reason+'，本次未消耗额度。';noticeError=true;}
+   noticeKind='';
+   delete view.localId;saveView();
+  }
+  $('available').textContent=available(s);$('occupied').hidden=occupied(s)===0;$('occupied').textContent='生成中占用 '+occupied(s)+' 次';
+  $('debug').textContent='本地模拟：已发起调用 '+calls(s)+' 次 · 进行中 '+occupied(s)+' / '+LIMIT+' · 下方为拟议产品界面';
+  $('task-count').textContent=s.tasks.length+' 项待办';
+  const tasksHTML=s.tasks.length?s.tasks.map(t=>`<div class="task-row"><input class="task-check" type="checkbox" data-task="${esc(t.id)}" data-action="done" ${t.isDone?'checked':''} aria-label="标记${esc(t.description)}完成"><span class="task-name ${t.isDone?'done':''}">${esc(t.description)}</span><input class="task-hours" type="number" min="0.5" step="0.5" value="${t.time}" ${t.isDone?'disabled':''} data-task="${esc(t.id)}" data-action="time" aria-label="${esc(t.description)}的预计时长"><span class="unit">小时</span><button class="delete" data-task="${esc(t.id)}" data-action="delete" aria-label="删除${esc(t.description)}">×</button></div>`).join(''):'<div class="empty">请先添加待办事项</div>';
+  if(tasksHTML!==lastTasks){$('tasks').innerHTML=tasksHTML;lastTasks=tasksHTML;}
+  if(document.activeElement!==$('hours'))$('hours').value=s.hours;
+  const why=reason(s);$('generate').disabled=!!why;
+  const lr=localRecord();$('generate-label').textContent=submitting?'正在提交…':lr&&view.hidden.includes(lr.id)?'请先确认生成结果':lr?.state==='running'?'生成中…':'生成日程';
+  $('generate-hint').textContent=why||'成功后消耗 1 次；明确失败不消耗。';$('generate-hint').classList.toggle('attention',!!why&&lr?.state!=='running');
+  if(['concurrency','occupied','exhausted'].includes(noticeKind)){
+   const latest=occupied(s)>=LIMIT?'concurrency':available(s)<=0?(occupied(s)>0?'occupied':'exhausted'):'';
+   if(!latest){notice='';noticeError=false;noticeKind='';}
+   else{noticeKind=latest;notice={concurrency:'已有 3 份日程正在生成，请完成后再试。',occupied:'可用额度正在使用，请等待生成结果。',exhausted:'额度已用尽，仍可编辑待办和查看已有日程。'}[latest];}
+  }
+  $('notice').hidden=!notice;$('notice').textContent=notice;$('notice').classList.toggle('error',noticeError);
+  const recordsHTML=s.records.length?s.records.map(rec=>{
+   const unknown=view.hidden.includes(rec.id);const status=unknown?'unknown':rec.state;
+   const label={unknown:'结果待确认',running:'生成中',success:'成功',failed:'生成失败'}[status];
+   const note=unknown?'页面未收到本次结果，账号额度可能已更新。请查询本次状态，查询不消耗额度。':rec.state==='running'?'占用 1 次额度；成功后才消耗。':rec.state==='success'?'已保存日程，消耗 1 次额度。':rec.reason+'，本次未消耗额度。';
+   const button=status==='unknown'?`<button class="btn" data-record="${rec.id}" data-action="query">查询状态</button>`:status==='success'?`<button class="btn" data-record="${rec.id}" data-action="view">查看日程</button>`:status==='failed'?`<button class="btn" data-record="${rec.id}" data-action="retry" ${why?'disabled':''}>按当前内容重新生成</button><div class="subtle">新请求，使用当前待办与时长。</div>`:'';
+   return `<article class="record" data-record-id="${rec.id}" data-visible-state="${status}"><div class="record-top"><span class="record-title">日程 ${String(rec.number).padStart(2,'0')}</span><span class="badge ${status}">${label}</span></div><p class="record-summary">${time(rec.submittedAt)} 提交 · ${rec.tasks.length} 项待办 · ${rec.hours} 小时</p><p class="record-note">${esc(note)}</p><div class="record-action">${button}</div></article>`;
+  }).join(''):'<div class="empty">还没有生成记录<br>第一份日程，从左侧待办开始。</div>';
+  if(recordsHTML!==lastRecords){$('records').innerHTML=recordsHTML;lastRecords=recordsHTML;}
+  const selected=s.records.find(x=>x.id===view.selected&&x.state==='success'&&!view.hidden.includes(x.id));
+  if(selected){
+   $('result-caption').textContent='日程 '+String(selected.number).padStart(2,'0')+' · '+time(selected.submittedAt)+' 提交';
+   const resultHTML=`<div class="result-meta">基于提交时的 ${selected.tasks.length} 项待办与 ${selected.hours} 小时生成。此后修改只影响下一次生成。</div>`+selected.result.tasks.map(t=>`<section class="schedule-item"><h3>${esc(t.name)}</h3><ul class="steps">${t.steps.map(step=>`<li><span>${esc(step.label)}：${esc(t.name)}</span><span>${Math.round(step.hours*60)} 分钟</span></li>`).join('')}</ul></section>`).join('');
+   if(resultHTML!==lastResult){$('result').innerHTML=resultHTML;lastResult=resultHTML;}
+  }else if(lastResult!=='empty'){$('result-caption').textContent='从生成记录选择一份日程查看。';$('result').innerHTML='<p class="result-placeholder">生成成功后，日程会保存在生成记录中。</p>';lastResult='empty';}
+ }
+ $('task-form').addEventListener('submit',async event=>{event.preventDefault();const text=$('description').value.trim();if(!text)return;await mutate(s=>s.tasks.push({id:crypto.randomUUID(),description:text,time:1,isDone:false}));$('description').value='';render();});
+ $('tasks').addEventListener('click',async event=>{const b=event.target.closest('[data-action="delete"]');if(!b)return;await mutate(s=>{s.tasks=s.tasks.filter(t=>t.id!==b.dataset.task);});render();});
+ $('tasks').addEventListener('change',async event=>{const target=event.target,id=target.dataset.task;if(!id)return;await mutate(s=>{const t=s.tasks.find(t=>t.id===id);if(!t)return;if(target.dataset.action==='done')t.isDone=target.checked;if(target.dataset.action==='time'){const n=Number(target.value);if(Number.isFinite(n)&&n>=.5&&n*2%1===0)t.time=n;}});lastTasks='';render();});
+ $('hours').addEventListener('change',async()=>{await mutate(s=>{s.hours=Number($('hours').value);});render();});
+ $('generate').addEventListener('click',()=>generate(false));
+ $('remote-submit').addEventListener('click',()=>generate(true));
+ $('complete-all').addEventListener('click',async()=>{await mutate(s=>settle(s,true));render();});
+ $('records').addEventListener('click',async event=>{const b=event.target.closest('button[data-action]');if(!b||b.disabled)return;const id=b.dataset.record;if(b.dataset.action==='query')await query(id);if(b.dataset.action==='view'){view.selected=id;saveView();render();$('result-heading').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'nearest'});}if(b.dataset.action==='retry')await generate(false);});
+ $('refresh-records').addEventListener('click',async()=>{if($('query-offline').checked){tell('暂时无法查询，请检查网络后再试。',true);return;}await mutate();view.hidden=[];saveView();render();});
+ $('annotation-toggle').addEventListener('click',()=>{const enabled=$('product').classList.toggle('annotate');$('annotation-toggle').textContent=enabled?'隐藏页面标注':'显示页面标注';$('annotation-toggle').setAttribute('aria-pressed',String(enabled));});
+ $('load-scenario').addEventListener('click',async()=>{
+  const which=$('scenario').value;nextOutcome=which==='saveFail'?'saveFail':'success';loseResponse=which==='lost';$('query-offline').checked=false;
+  await mutate(s=>{for(const k of Object.keys(s))delete s[k];Object.assign(s,seed(which));});
+  view={hidden:[]};saveView();notice='';noticeKind='';lastTasks='';render();
+ });
+ window.addEventListener('storage',async event=>{if(event.key===KEY){await mutate();render();}});
+ window.addEventListener('focus',async()=>{await mutate();render();});
+ setInterval(async()=>{await mutate();render();},300);
+ mutate().then(()=>render()).catch(()=>{$('debug').textContent='浏览器未允许本地存储，请使用说明中的本地预览地址打开。';});
+})();
+</script>
+</body>
+</html>
