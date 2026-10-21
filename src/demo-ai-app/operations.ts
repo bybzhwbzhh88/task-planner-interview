@@ -1,18 +1,19 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
-import { HttpError, prisma } from "wasp/server";
+import type { PlanResult, Task } from "wasp/entities";
+import { HttpError } from "wasp/server";
 import type {
   CreateTask,
   DeleteTask,
   GeneratePlan,
   GetAllTasksByUser,
   GetPlanResults,
+  GetUserCredits,
   UpdateTask,
 } from "wasp/server/operations";
 import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
 import type { GeneratedSchedule } from "./schedule";
 import { generateMockSchedule } from "./mockAi";
+import { getCredits, refundCredit, reserveCredit } from "./credits";
 
 
 //#region Actions
@@ -24,7 +25,7 @@ type GeneratePlanInput = z.infer<typeof generatePlanInputSchema>;
 
 export const generatePlan: GeneratePlan<
   GeneratePlanInput,
-  GeneratedSchedule
+  { schedule: GeneratedSchedule; creditsRemaining: number }
 > = async (rawArgs, context) => {
   if (!context.user) {
     throw new HttpError(
@@ -45,38 +46,52 @@ export const generatePlan: GeneratePlan<
     },
   });
 
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
+  // 预扣：一条带条件的原子 UPDATE（见 credits.ts），额度不足或被并发
+  // 请求扣走时 count 为 0 —— 此时绝不发起模型调用（402）。
+  const reserved = await reserveCredit(
+    { user: context.entities.User },
+    context.user.id,
+  );
+  if (!reserved) {
     throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
+      402,
+      "额度不足，本次未发起生成。成功生成一次日程消耗 1 个额度。",
     );
   }
 
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
-  });
+  try {
+    console.log("Calling mock AI provider");
+    const generatedSchedule = await generateMockSchedule(tasks, hours);
 
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
+    await context.entities.PlanResult.create({
+      data: {
+        user: { connect: { id: context.user.id } },
+        content: JSON.stringify(generatedSchedule),
+      },
+    });
 
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
+    const creditsRemaining = await getCredits(
+      { user: context.entities.User },
+      context.user.id,
+    );
+    console.log("Schedule saved, credits consumed:", creditsRemaining);
+    return { schedule: generatedSchedule, creditsRemaining };
+  } catch (err) {
+    // 模型明确失败：退回预扣的额度，再向客户端抛出可读的错误。
+    await refundCredit({ user: context.entities.User }, context.user.id);
+    console.log("Mock provider failed, credit refunded");
+    throw new HttpError(502, "生成失败，额度已退回，你可以重试。");
   }
+};
 
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
-
-  return generatedSchedule;
+export const getUserCredits: GetUserCredits<void, number> = async (
+  _args,
+  context,
+) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+  return getCredits({ user: context.entities.User }, context.user.id);
 };
 
 const createTaskInputSchema = z.object({

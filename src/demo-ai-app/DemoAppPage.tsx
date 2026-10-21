@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getUserCredits,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -67,6 +68,8 @@ function NewTaskForm({
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
 
+  const { data: credits, refetch: refetchCredits } = useQuery(getUserCredits);
+
   const handleSubmit = async () => {
     try {
       await handleCreateTask({ description });
@@ -81,12 +84,14 @@ function NewTaskForm({
   const handleGeneratePlan = async () => {
     try {
       setIsPlanGenerating(true);
-      const response = await generatePlan({
+      const result = await generatePlan({
         hours: todaysHours,
       });
-      if (response) {
-        setResponse(response);
-      }
+      setResponse(result.schedule);
+      toast({
+        title: "日程已生成",
+        description: `本次消耗 1 个额度，剩余 ${result.creditsRemaining} 个。`,
+      });
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
@@ -98,18 +103,23 @@ function NewTaskForm({
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description:
+            "额度不足，本次未发起生成。成功生成一次日程消耗 1 个额度。",
         });
       } else {
         toast({
-          title: "Error",
+          title: "生成失败",
           description:
-            err instanceof Error ? err.message : "Something went wrong",
+            err instanceof Error
+              ? err.message
+              : "Something went wrong",
           variant: "destructive",
         });
       }
     } finally {
       setIsPlanGenerating(false);
+      // 无论成功、不足还是失败退回，都刷新一次余额，保证页面与数据库一致。
+      refetchCredits();
     }
   };
 
@@ -184,6 +194,15 @@ function NewTaskForm({
           </div>
         )}
       </div>
+
+      {typeof credits === "number" && (
+        <div
+          className="text-muted-foreground text-center text-sm"
+          data-testid="credits-display"
+        >
+          剩余额度：{credits}（成功生成一次消耗 1 个）
+        </div>
+      )}
 
       <Button
         type="button"
