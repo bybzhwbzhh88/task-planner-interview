@@ -1,0 +1,221 @@
+{
+  "scope": "仅验证HTML原型的本地模拟交互，不是生产应用/数据库/并发验收",
+  "version": "v1.1",
+  "executedAt": "2026-10-21T17:17:49.698Z",
+  "browser": "155.0.4283.62",
+  "command": "cd product/qa && npm ci && npm run check",
+  "checks": [
+    {
+      "id": "P01",
+      "name": "初始额度3且费用说明可见",
+      "result": "PASS"
+    },
+    {
+      "id": "P02",
+      "name": "成功：余额2、调用1、结果1",
+      "result": "PASS"
+    },
+    {
+      "id": "P03",
+      "name": "成功后失败仍保留旧结果，标题明确非本次",
+      "result": "PASS"
+    },
+    {
+      "id": "P04",
+      "name": "零额度有禁用原因、无调用",
+      "result": "PASS"
+    },
+    {
+      "id": "P05",
+      "name": "明确模型失败不扣费不保存",
+      "result": "PASS"
+    },
+    {
+      "id": "P06",
+      "name": "添加其他任务不会掩盖仍存在的fail标记",
+      "result": "PASS"
+    },
+    {
+      "id": "P07",
+      "name": "删除fail任务后可重试成功",
+      "result": "PASS"
+    },
+    {
+      "id": "P08",
+      "name": "最后一次成功后额度耗尽仍有下一步提示",
+      "result": "PASS"
+    },
+    {
+      "id": "P09",
+      "name": "忙碌拒绝不新增调用或结果",
+      "result": "PASS"
+    },
+    {
+      "id": "P10",
+      "name": "刷新不会完成另一个请求",
+      "result": "PASS"
+    },
+    {
+      "id": "P11",
+      "name": "另一页完成不会提前更新当前页面余额快照",
+      "result": "PASS"
+    },
+    {
+      "id": "P12",
+      "name": "另一页保存使用其提交时任务快照",
+      "result": "PASS"
+    },
+    {
+      "id": "P13",
+      "name": "响应丢失保留旧快照，不能宣称未扣费",
+      "result": "PASS"
+    },
+    {
+      "id": "P14",
+      "name": "未知状态编辑不泄露未收到的余额历史或解除禁用",
+      "result": "PASS"
+    },
+    {
+      "id": "P15",
+      "name": "查询成功只读取现状，不能判定先前请求失败",
+      "result": "PASS"
+    },
+    {
+      "id": "P16",
+      "name": "确认核查不自动重新调用",
+      "result": "PASS"
+    },
+    {
+      "id": "P17",
+      "name": "核查后主动新生成独立计费",
+      "result": "PASS"
+    },
+    {
+      "id": "P18",
+      "name": "请求未送达也展示未知，模型调用0",
+      "result": "PASS"
+    },
+    {
+      "id": "P19",
+      "name": "无新增记录不能自动重试或直接宣称失败",
+      "result": "PASS"
+    },
+    {
+      "id": "P20",
+      "name": "未送达场景核查后可主动恢复",
+      "result": "PASS"
+    },
+    {
+      "id": "P21",
+      "name": "保存失败的演示无扣费、无结果",
+      "result": "PASS"
+    },
+    {
+      "id": "P22",
+      "name": "保存失败后可恢复",
+      "result": "PASS"
+    },
+    {
+      "id": "P23",
+      "name": "额度未知不显示假0并禁用生成",
+      "result": "PASS"
+    },
+    {
+      "id": "P24",
+      "name": "额度读取恢复后可继续",
+      "result": "PASS"
+    },
+    {
+      "id": "P25",
+      "name": "成功后刷新失败保留成功结论与结果",
+      "result": "PASS"
+    },
+    {
+      "id": "P26",
+      "name": "刷新恢复不重复调用、不改变扣费",
+      "result": "PASS"
+    },
+    {
+      "id": "P27",
+      "name": "旧余额1实际0，准入拒绝无新增调用",
+      "result": "PASS"
+    },
+    {
+      "id": "P28-0",
+      "name": "非法小时数0有原因且禁用",
+      "result": "PASS"
+    },
+    {
+      "id": "P28-25",
+      "name": "非法小时数25有原因且禁用",
+      "result": "PASS"
+    },
+    {
+      "id": "P28-1.25",
+      "name": "非法小时数1.25有原因且禁用",
+      "result": "PASS"
+    },
+    {
+      "id": "P28-empty",
+      "name": "非法小时数空值有原因且禁用",
+      "result": "PASS"
+    },
+    {
+      "id": "P29",
+      "name": "空任务给出可操作原因",
+      "result": "PASS"
+    },
+    {
+      "id": "P30",
+      "name": "纯空格不能成为任务",
+      "result": "PASS"
+    },
+    {
+      "id": "P31",
+      "name": "键盘Enter可添加任务",
+      "result": "PASS"
+    },
+    {
+      "id": "P32",
+      "name": "任务内容作为文本展示，不执行HTML",
+      "result": "PASS"
+    },
+    {
+      "id": "P33",
+      "name": "处理中禁用重复点击，双击仅一次调用",
+      "result": "PASS"
+    },
+    {
+      "id": "P34",
+      "name": "重复点击完成后只保存一份",
+      "result": "PASS"
+    },
+    {
+      "id": "P35",
+      "name": "切换演示场景不会被旧异步响应污染",
+      "result": "PASS"
+    },
+    {
+      "id": "P36-390",
+      "name": "390px布局无横向溢出",
+      "result": "PASS"
+    },
+    {
+      "id": "P36-320",
+      "name": "320px布局无横向溢出",
+      "result": "PASS"
+    },
+    {
+      "id": "P37",
+      "name": "原型无外部网络请求",
+      "result": "PASS"
+    },
+    {
+      "id": "P38",
+      "name": "浏览器脚本无未捕获异常",
+      "result": "PASS"
+    }
+  ],
+  "errors": [],
+  "externalRequests": []
+}

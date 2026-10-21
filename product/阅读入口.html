@@ -1,0 +1,683 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>李晗亮｜日程生成额度体验改进</title><style>
+*{box-sizing:border-box}body{margin:0;background:#f3f5f8;color:#1d3041;font:15px/1.85 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}a{color:#126c61;text-underline-offset:3px}a:focus-visible{outline:3px solid #bf8e21;outline-offset:4px}aside{position:fixed;inset:0 auto 0 0;width:230px;background:#163141;color:#e6f1f5;padding:38px 24px}aside b{font-size:19px}aside p{color:#b6cbd5;font-size:13px}nav{display:grid;gap:9px;margin:26px 0}nav a{color:#e4edf3;text-decoration:none;padding:8px 12px;border-radius:7px}nav a:hover{background:#284b59}.cta{display:block;background:#b4e4d6;color:#163c34;padding:12px;border-radius:8px;text-align:center;text-decoration:none;font-weight:700}main{margin-left:230px;padding:42px 44px;max-width:1430px}.banner{padding:30px 34px;background:#e4f1eb;border:1px solid #cbe1d5;border-radius:14px;margin-bottom:26px}.banner small{letter-spacing:2px;color:#286c5c}.banner h1{font-size:31px;line-height:1.45;margin:10px 0}.banner p{margin:5px 0}.badge{display:inline-block;padding:5px 11px;border-radius:5px;background:#fff;font-size:12px;margin:12px 7px 0 0}section{background:white;border:1px solid #dce4e9;padding:32px 36px;margin-bottom:25px;border-radius:14px;scroll-margin-top:20px}section h1{font-size:25px;margin:0 0 16px;line-height:1.5}h2{font-size:20px;margin:29px 0 13px;border-top:1px solid #e7edf1;padding-top:22px}h3{font-size:17px;margin-top:25px}p{margin:10px 0}li{margin:7px 0}code{font-family:ui-monospace,Consolas,monospace;background:#edf2f6;border-radius:4px;padding:2px 4px;font-size:13px;overflow-wrap:anywhere}pre{background:#eff3f6;padding:16px;overflow:auto}.table-wrap{overflow:auto;margin:15px 0}table{border-collapse:collapse;width:100%;font-size:13px;min-width:650px}th,td{border:1px solid #dce4e9;padding:11px 12px;text-align:left;vertical-align:top}th{background:#ecf3f1;color:#20574d}td p{margin:0}.flow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0}.flow>div{background:#edf5f1;border:1px solid #c9dfd4;padding:18px;border-radius:10px}.flow small{color:#5c7369}.foot{color:#667d8b;font-size:12px}section img{max-width:100%}@media(max-width:900px){aside{position:static;width:auto;padding:22px}nav{display:flex;flex-wrap:wrap;gap:3px;margin:12px 0}nav a{padding:7px 9px}.cta{max-width:240px}main{margin:0;padding:18px}section{padding:22px 18px}.banner{padding:22px}.banner h1{font-size:26px}.flow{grid-template-columns:1fr}}@media print{aside,.cta{display:none}main{margin:0;padding:0}section{border:0;break-before:page;padding:10px}.banner{background:none}.table-wrap{overflow:visible}table{min-width:0;font-size:10px}th,td{padding:5px}.flow>div{break-inside:avoid}}
+</style></head><body><aside><b>日程生成额度改进</b><p>产品方向 · AI 产品经理<br>李晗亮｜181****2618</p><nav><a href="#submission">交付概览</a><a href="#prd">需求与流程</a><a href="#delivery">开发拆解</a><a href="#acceptance">验收案例</a><a href="#review">审查与证据</a></nav><a class="cta" href="prototype.html">打开可点击原型 →</a><p>v1.1 · 二次审查修订<br>可离线阅读，无需安装依赖</p></aside><main><div class="banner"><small>PRODUCT CASE / 2026</small><h1>成功才扣费，失败有解释，<br>结果未知时先核查。</h1><p>生成前准入，同账号重叠请求立即拒绝，成功保存时扣除1额度。</p><span class="badge">10种原型场景</span><span class="badge">13组系统验收案例</span><span class="badge">42项原型检查通过</span><p class="foot">本次是产品方案交付。原型检查不等于真实服务端或数据库验收。</p></div><section id="submission" aria-label="交付概览"><h1>提交说明</h1>
+<p>当前额度流程的问题是模型调用早于额度检查，并发请求可能读取旧余额。本方案采用“生成前准入、同账号重叠请求立即拒绝、成功保存时扣 1 额度”，配合额度说明、失败恢复和已有日程核查，让用户知道本次是否成功以及下一步怎么做。产品需求、流程、可交互原型、开发拆解和验收案例已完成；真实应用开发与验收不在本次已完成声明内。</p>
+<ul>
+<li>姓名或称呼：李晗亮</li>
+<li>应聘方向：产品</li>
+<li>应聘岗位：AI 产品经理</li>
+<li>打码手机号：181****2618</li>
+</ul>
+<h2>交付入口</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>材料</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="%E9%98%85%E8%AF%BB%E5%85%A5%E5%8F%A3.html">浏览器阅读入口</a></td>
+<td>双击打开，集中阅读全部产品材料；无需Markdown工具</td>
+</tr>
+<tr>
+<td><a href="#prd">产品需求方案</a></td>
+<td>问题判断、范围、规则、用户流程、状态文案和关键取舍</td>
+</tr>
+<tr>
+<td><a href="prototype.html">可点击原型</a></td>
+<td>成功、额度耗尽、明确失败、并发忙碌、响应丢失、保存失败和读取失败；下载后用浏览器打开</td>
+</tr>
+<tr>
+<td><a href="prototype-preview.png">原型预览</a></td>
+<td>桌面页面快照；<a href="prototype-mobile.png">移动预览</a></td>
+</tr>
+<tr>
+<td><a href="#delivery">开发任务拆解</a></td>
+<td>优先级、依赖、角色、工程落点、接口契约与发布门槛</td>
+</tr>
+<tr>
+<td><a href="#acceptance">验收案例</a></td>
+<td>13组前置条件、操作、可观察结果，以及可重复并发验收方法</td>
+</tr>
+<tr>
+<td><a href="#review">交付检查记录</a></td>
+<td>产品交付实际检查、原型验证证据及验证边界</td>
+</tr>
+</tbody></table></div>
+<h2>方案的关键决定</h2>
+<p>额度不足在模型调用前拒绝；前端禁用按钮不作为安全边界。同一账号有生成在进行时，新请求不自动排队，避免误触造成多份结果和连续扣费。后续主动发起的新请求正常独立收费。模型明确失败不扣费；结果保存与扣费需同时成功，网络响应未知则引导核查，不能承诺未扣费。</p>
+<h2>验证与待办</h2>
+<p>已完成文档覆盖检查和42项 HTML 原型浏览器交互检查，详情见 <a href="#review">交付检查记录</a>。原型只模拟状态，不连接真实模型或数据库；真实系统 AC01–AC13 均需开发落地后执行。</p>
+<p>交接后先确认接口状态契约，再按任务拆解实现服务端准入和事务、前端反馈及核查。支付、跨请求结果复用、多进程并发控制和崩溃补偿不在本轮范围。本次按产品方向提交；截止时间以招聘渠道发出通知后48小时为准。</p>
+<p>本次使用 AI 辅助梳理需求、制作原型和检查交付；所有效果指标均为验收目标，不声称存在已验证的线上收益。</p>
+</section><section id="prd" aria-label="需求与流程"><h1>日程生成额度体验改进 · 产品需求方案</h1>
+<p>当前问题是额度检查发生在模型调用之后，且使用可能过期的账号额度：既浪费调用，也可能在并发时透支。方案是在生成前由服务端控制准入，同一账号只允许一个生成任务处理中，成功保存日程时才扣 1 额度，并用清晰状态告诉用户结果和下一步。产品文档与交互原型已交付；原型是本地演示，不代表真实应用已实现或验收。</p>
+<ul>
+<li>作者：李晗亮；应聘岗位：AI 产品经理；提交方向：产品。</li>
+<li>版本：v1.1（二次审查修订），2026-10-22。题目依据：<a href="../TASK.md">TASK.md</a>，运行背景：<a href="../README.md">README.md</a>。</li>
+<li>阅读顺序：本需求 → <a href="prototype.html">交互原型</a> → <a href="#delivery">开发拆解</a> → <a href="#acceptance">验收案例</a>。</li>
+</ul>
+<h2>1. 问题判断与目标</h2>
+<p>用户期待的是“生成成功才花一次额度，没成功能知道怎么办”。当前风险不只是余额显示不准确，而是调用、扣费、结果保存和用户感知之间不一致。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>观察依据</th>
+<th>问题</th>
+<th>用户/业务影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/bybzhwbzhh88/task-planner-interview/blob/114aeb28f6368e96c08a25627ac094b8d102fd1b/src/demo-ai-app/operations.ts#L49">原生成入口</a>在模型返回后检查 context.user.credits</td>
+<td>0 额度仍可能调用模型</td>
+<td>浪费接口调用，等待后才被拒绝</td>
+</tr>
+<tr>
+<td><a href="https://github.com/bybzhwbzhh88/task-planner-interview/blob/114aeb28f6368e96c08a25627ac094b8d102fd1b/src/demo-ai-app/operations.ts#L67">额度判断</a>使用认证上下文中的余额快照</td>
+<td>两个请求可能使用同一份旧余额</td>
+<td>额度透支，计费可信度下降</td>
+</tr>
+<tr>
+<td><a href="https://github.com/bybzhwbzhh88/task-planner-interview/blob/114aeb28f6368e96c08a25627ac094b8d102fd1b/src/client/App.tsx#L15">页头已有余额</a>，<a href="https://github.com/bybzhwbzhh88/task-planner-interview/blob/114aeb28f6368e96c08a25627ac094b8d102fd1b/src/demo-ai-app/DemoAppPage.tsx#L190">生成区</a>缺少本次扣费说明和明确的余额读取失败状态</td>
+<td>余额有展示，但费用规则、刷新反馈与结果核查不完整</td>
+<td>误解扣费、失败后盲目重试</td>
+</tr>
+<tr>
+<td><a href="https://github.com/bybzhwbzhh88/task-planner-interview/blob/114aeb28f6368e96c08a25627ac094b8d102fd1b/src/demo-ai-app/mockAi.ts#L13">模拟接口</a>用 [fail] 抛出明确错误</td>
+<td>错误需要转成用户可理解的反馈</td>
+<td>用户不知道是否扣费、如何恢复</td>
+</tr>
+</tbody></table></div>
+<p>原代码已经用数据库事务一起保存结果与扣减额度，本方案保留这一基础，重点把额度校验前移并增加条件扣减；不是从零引入事务。已有getPlanResults查询也可复用为历史入口，补充最近20份排序限制即可。页头余额的自动刷新时机需在实际Wasp环境复验，不仅凭静态源码断言它一定不刷新。</p>
+<p>以上为代码阅读结论，不是用户访谈或线上数据。目标是满足题目五条规则，并降低重复生成和错误重试，不以本地模拟延迟推导线上转化提升。</p>
+<h2>2. 范围与假设</h2>
+<p><strong>P0 本轮交付范围</strong>：额度展示、生成前校验、账号级并发准入、成功扣费与保存一致、明确失败不扣费、结果反馈、最近日程核查、对应日志与验收。</p>
+<p><strong>不做</strong>：支付/订阅、充值入口、Token 计价、跨账号防刷、多服务部署、崩溃自动补偿、跨请求结果复用。不同生成请求可以代表不同任务；本方案不会把两个独立请求合并成同一份结果。</p>
+<p>假设：单服务、单数据库，模型为仓库提供的本地 mock，通常约 500ms。新账号初始 3 额度。沿用现有任务选择规则，不顺带重做优先级和已完成任务筛选。无任务不生成；工作时长限制 1–24 小时，输入以 0.5 小时为步长，前后端都拒绝1.25等非半小时时长。</p>
+<p>“成功”定义为：模型返回有效日程，且结果与扣费一起成功持久化。仅出现 mock-ai.succeeded 不足以判定用户侧业务成功。网络响应丢失不意味着业务失败。</p>
+<h2>3. 用户场景与优先级</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>用户情境</th>
+<th>用户需要</th>
+<th>对应需求</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>第一次生成</td>
+<td>先知道费用，再得到可查看的日程</td>
+<td>R1、R2、R4</td>
+</tr>
+<tr>
+<td>剩余 0 额度</td>
+<td>不白等，知道还能做什么</td>
+<td>R2、R5</td>
+</tr>
+<tr>
+<td>模型明确失败</td>
+<td>确认未扣费，有具体恢复方式</td>
+<td>R4、R5</td>
+</tr>
+<tr>
+<td>连点、多标签页或直接并发请求</td>
+<td>不透支，不悄悄排队生成多份</td>
+<td>R3</td>
+</tr>
+<tr>
+<td>网络断开或响应超时</td>
+<td>不被误导，先核查再重试</td>
+<td>R6</td>
+</tr>
+</tbody></table></div>
+<h2>4. 业务规则与验收约束</h2>
+<h3>R1 额度透明（P0）</h3>
+<p>保留已有余额能力，布局上将余额与“每次成功生成消耗 1 额度”放在生成操作附近，原型采用该位置。页头若仍保留余额，必须与操作区使用同一个最新服务端查询快照，不能同时显示两个不同数值。余额以服务端数据库为准，不使用前端自减值作为事实。首次加载、生成结束、手动刷新及页面重新获得焦点时查询最新余额；加载失败显示“额度读取失败，请刷新重试”，不能把未知余额显示为 0。</p>
+<p>生成中显示“正在生成，成功后消耗 1 额度”。此方案不预扣，余额在成功提交后更新。按钮禁用只是体验措施，服务端仍必须独立校验。</p>
+<h3>R2 生成前准入（P0）</h3>
+<p>校验顺序固定为：认证 → 时长等请求参数校验 → 取得账号处理权 → 读取数据库任务与余额 → 调用模型。只有用户已登录、有任务、时长有效、账号无进行中的生成、数据库余额至少 1，才允许调用模型。未登录要求登录；无任务/时长错误定位到对应输入；额度不足返回明确业务原因且不产生 mock-ai.started。</p>
+<p>页面余额为 0 时禁用生成，展示“额度已用完，可查看已有日程或继续编辑任务”。不放没有实现的充值、申请额度或自动恢复倒计时。测试人员通过数据库 Studio 修改额度是测试手段，不进入普通用户流程。</p>
+<h3>R3 同账号并发准入（P0）</h3>
+<p>同一账号最多一个生成请求处于处理中。服务端在读取最新余额之前取得账号级处理权，持续到模型调用与保存/扣费结束；重叠请求立即返回“该账号正在生成，请稍后刷新查看”，不调用模型、不扣费、不自动排队。不同账号可以同时生成。</p>
+<p>选择“拒绝重叠请求”而非“后台排队”：用户点击生成通常期待一个结果，静默排队会把误触变成多次扣费。本轮宁可明确提示稍后再次发起，也不隐式创建待执行任务。当前任务完成后，用户可主动提交新请求；新请求成功仍独立扣费。这是产品取舍，不是题目强制要求的唯一技术方案。</p>
+<p>客户端同页面连点只发一个请求；多标签页和绕过按钮的请求靠服务端处理权拦截。处理权必须在成功、模型失败、保存失败后释放，不能因一次失败永久阻塞账号。单进程内账号互斥可作为开发实现参考；扩容多进程需重新设计，本轮不涉及。</p>
+<h3>R4 扣费与结果一致（P0）</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>结果</th>
+<th>模型调用</th>
+<th>额度</th>
+<th>保存结果</th>
+<th>用户结论</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>成功保存</td>
+<td>1 次</td>
+<td>-1</td>
+<td>新增 1 份</td>
+<td>生成成功</td>
+</tr>
+<tr>
+<td>生成前额度不足/重叠请求/参数错误</td>
+<td>0 次</td>
+<td>不变</td>
+<td>不新增</td>
+<td>本次未生成</td>
+</tr>
+<tr>
+<td>模型明确失败</td>
+<td>1 次</td>
+<td>不变</td>
+<td>不新增</td>
+<td>生成失败，未扣费</td>
+</tr>
+<tr>
+<td>模型成功、结果保存失败且确认回滚</td>
+<td>1 次</td>
+<td>不变</td>
+<td>不新增</td>
+<td>保存失败，未扣费</td>
+</tr>
+<tr>
+<td>响应丢失、提交状态未知</td>
+<td>不能仅凭客户端判断</td>
+<td>以数据库为准</td>
+<td>需核查</td>
+<td>暂时无法确认</td>
+</tr>
+</tbody></table></div>
+<p>开发约束：保留现有扣费与保存日程的同一数据库事务；条件扣减要求当时余额大于 0，未扣成功不能保存为成功。账号处理权覆盖“读余额 → 模型 → 提交”，事务仅覆盖数据库写入，不要求等待模型期间长期占用事务。</p>
+<p>管理员在请求处理中修改额度不是正常业务流程；测试设置额度必须在账号无进行中请求时执行。若发生外部改值，条件扣减仍必须避免负数，但不承诺撤销已经开始的模型调用。</p>
+<p>正常业务下应保持：最终余额 = 初始余额 − 成功保存份数 ≥ 0。模型失败次数不影响余额；成功响应只能在提交完成后发出。不要在未知结果时自动退款或自动再次调用模型。</p>
+<h3>R5 反馈与恢复（P0）</h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>状态</th>
+<th>页面文案</th>
+<th>下一步动作</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>成功</td>
+<td>生成成功，已消耗 1 额度，日程已保存</td>
+<td>查看日程；有额度时可再次生成</td>
+</tr>
+<tr>
+<td>额度不足</td>
+<td>额度已用完，可查看已有日程或继续编辑任务</td>
+<td>查看已有日程、编辑任务、刷新</td>
+</tr>
+<tr>
+<td>同账号处理中</td>
+<td>该账号正在生成日程，本次未发起新的生成</td>
+<td>等待完成后刷新查看</td>
+</tr>
+<tr>
+<td>模型明确失败</td>
+<td>生成失败，本次未扣费。请调整任务后重试</td>
+<td>保留任务和时长，可编辑后重试</td>
+</tr>
+<tr>
+<td>保存失败且已确认回滚</td>
+<td>日程保存失败，本次未扣费，请稍后重试</td>
+<td>稍后重试；不设置尚不存在的客服入口</td>
+</tr>
+<tr>
+<td>网络异常/未知</td>
+<td>暂时无法确认结果，请先刷新额度与已有日程；重新生成成功会再次扣费</td>
+<td>刷新核查后再决定是否重试</td>
+</tr>
+</tbody></table></div>
+<p>测试专用说明可在验收材料中告诉测试者删除含 [fail] 的任务；普通用户界面不展示错误堆栈、数据库或 HTTP 状态码。提示不能只靠颜色，使用可读文字与状态区域；生成中禁用按钮、保留任务输入，不清空之前的有效结果。</p>
+<h3>R6 结果核查（P0）</h3>
+<p>页面展示最近 20 份已保存日程，按生成时间倒序，可展开查看任务内容。列表包含时间与结果编号，严格按当前账号隔离。生成后刷新额度和历史；刷新失败时保留成功结论，同时提示“最新额度或历史暂未刷新，请重试”，不能把成功改写成未扣费。</p>
+<p>新生成一开始，原本次结果切换为“上次已保存日程 / 历史结果·非本次”；失败或未知时继续保留该标识，新请求确认为成功后才改回“本次日程”。用户通过时间和内容核查；本轮不保证自动定位每个断网请求，不自动重试、不承诺精确核对完成。若有多次相近生成难以辨别，继续提示等待并刷新；本轮不虚构客服渠道。请求编号精确恢复可列为后续增强。</p>
+<p>未知状态下先禁用生成，提供刷新。查询成功只表示读取到当前快照，不能判定之前请求已结束；无新增记录也不等于没有扣费或以后不会成功。核查后有额度时，用户可选择“我已核对，需要生成一份新日程”，再主动点击生成；这不是自动重试，也不将原请求标记失败，服务端仍做忙碌和余额校验。编辑任务或时长不得解除待核查状态或改变余额快照。</p>
+<h2>5. 用户流程与页面状态</h2>
+<div class="flow"><div><b>01 · 用户发起</b><p>读取额度 → 编辑任务 → 点击生成</p></div><div><b>02 · 服务端准入</b><p>认证 / 参数 → 账号处理权 → 最新任务与余额</p><small>无资格：明确拒绝，不调用模型</small></div><div><b>03 · 生成与提交</b><p>模型返回 → 条件扣1额度与保存结果的同一事务</p><small>明确失败或确认回滚：不扣费</small></div><div><b>04 · 告知与核查</b><p>成功：展示新日程；网络未知：先刷新核查，再主动决定新生成</p><small>重叠请求不排队；刷新不等于原请求已结束</small></div></div>
+<p>空任务、非法时长、额度未知及额度耗尽，都在按钮附近给出可见原因。最后1额度生成成功后也必须显示“额度已用完”，不能只禁用按钮。</p>
+<p>状态不等于余额：余额 0 是不可生成状态，网络错误是未知状态，不能互相替代。锁在服务端跟随实际请求完成释放；客户端断开不意味着可立即释放并允许重叠调用。</p>
+<h2>6. 衡量与日志</h2>
+<p>本地验收要求的正确性指标：0 额度准入后的 started 数为 0；透支账号数为 0；明确模型失败扣费数为 0；成功保存数与扣费数一致。阈值是验收条件，不是已测线上成绩。</p>
+<p>沿用 mock-ai.started/succeeded/failed 与 callId。建议增加请求级 requestId、拒绝原因、提交成功/失败日志，以区分“模型成功”与“业务成功”；不要记录密码、手机号或完整任务文本。只为可观测性增加日志，不引入复杂埋点平台。</p>
+<p>后续观察生成成功率、失败后重试率、并发拒绝比例、未知结果比例和 P95 等待时间。先测基线再定改善目标，不虚构提升百分比。高并发拒绝比例可能说明多页面误触，也可能是用户确有批量生成需求，需要结合使用行为判断是否新增显式任务队列。</p>
+<h2>7. 已确认决策与后续事项</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>事项</th>
+<th>本轮决定</th>
+<th>影响/后续</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>同账号并发</td>
+<td>拒绝重叠请求，不排队</td>
+<td>以并发测试验证“忙碌拒绝”和后续可恢复</td>
+</tr>
+<tr>
+<td>扣费时点</td>
+<td>模型成功且日程保存提交成功时</td>
+<td>保存失败必须一起回滚</td>
+</tr>
+<tr>
+<td>额度耗尽</td>
+<td>查看历史/编辑，不虚构补充渠道</td>
+<td>如后续有真实额度发放规则再增加入口</td>
+</tr>
+<tr>
+<td>网络未知</td>
+<td>不自动重试、不保证未扣费</td>
+<td>使用历史核查，精确请求恢复为后续增强</td>
+</tr>
+<tr>
+<td>历史范围</td>
+<td>最近 20 份</td>
+<td>不做检索、分页管理或删除能力</td>
+</tr>
+<tr>
+<td>服务崩溃补偿</td>
+<td>不做</td>
+<td>真实生产化前另行评估</td>
+</tr>
+</tbody></table></div>
+<p>以上取舍可直接交给开发实现。产品交付不要求先完成应用代码；真实应用验收应在开发落地后执行，记录要求见 <a href="#acceptance">验收文档</a>。</p>
+<h2>8. 题目覆盖索引</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>题目要求</th>
+<th>方案决策</th>
+<th>开发任务</th>
+<th>验收</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>每次成功扣1</td>
+<td>R4：提交结果与扣费同时成功</td>
+<td>D4</td>
+<td>AC03、AC09</td>
+</tr>
+<tr>
+<td>不足不调用</td>
+<td>R2：服务端准入；页面快照不是授权</td>
+<td>D3、D5</td>
+<td>AC02、AC07</td>
+</tr>
+<tr>
+<td>明确失败不扣费</td>
+<td>R4/R5：不写结果、不扣费，可恢复</td>
+<td>D4、D6</td>
+<td>AC04</td>
+</tr>
+<tr>
+<td>同账号并发不透支</td>
+<td>R3：忙碌拒绝；余额条件扣减</td>
+<td>D3、D4、D7</td>
+<td>AC05、AC06、AC08</td>
+</tr>
+<tr>
+<td>理解结果及下一步</td>
+<td>R1/R5/R6：费用说明、状态与核查</td>
+<td>D2、D5、D6</td>
+<td>AC01、AC10、AC12、AC13</td>
+</tr>
+</tbody></table></div>
+</section><section id="delivery" aria-label="开发拆解"><h1>开发任务拆解与交接</h1>
+<p>本轮以“生成前阻止无效调用、成功扣费与结果一致、失败可恢复”为一个完整版本交付。以下是开发计划，不表示代码已实现；需求唯一来源为 <a href="#prd">PRD</a>，验收编号见 <a href="#acceptance">ACCEPTANCE</a>。</p>
+<h2>任务与依赖</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>ID</th>
+<th>优先级/负责角色</th>
+<th>具体产出</th>
+<th>依赖</th>
+<th>完成定义 / 验收</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>D1</td>
+<td>P0 / 产品+前后端</td>
+<td>确认状态枚举、错误原因、接口字段；确认成功指事务提交成功</td>
+<td>无</td>
+<td>R1–R6 无歧义；错误能区分不足、忙碌、模型失败和未知</td>
+</tr>
+<tr>
+<td>D2</td>
+<td>P0 / 后端</td>
+<td>补充权威额度查询；复用现有getPlanResults，补排序/20份限制，保持账号隔离</td>
+<td>D1</td>
+<td>不信任前端 userId/credits；AC01、AC11</td>
+</tr>
+<tr>
+<td>D3</td>
+<td>P0 / 后端</td>
+<td>生成入口认证与输入校验；取得账号处理权，忙碌立即拒绝；锁内读数据库余额</td>
+<td>D1</td>
+<td>在模型前拒绝，任意退出释放处理权；AC02、AC05–08</td>
+</tr>
+<tr>
+<td>D4</td>
+<td>P0 / 后端</td>
+<td>保留mock及原事务；补充余额条件扣减和明确错误映射，保存失败回滚</td>
+<td>D3</td>
+<td>一份成功结果对应一次扣费；AC03、AC04、AC09</td>
+</tr>
+<tr>
+<td>D5</td>
+<td>P0 / 前端</td>
+<td>整合已有页头余额与操作区余额；补加载/失败/不足状态和费用说明；生成中防重复点击</td>
+<td>D1、D2</td>
+<td>未知余额不当作 0；状态可读，键盘可操作；AC01、AC02、AC12</td>
+</tr>
+<tr>
+<td>D6</td>
+<td>P0 / 前端</td>
+<td>显示结果与历史，错误原因对应文案；完成后刷新；网络未知先核查</td>
+<td>D2、D4、D5</td>
+<td>成功与刷新失败分开；旧结果标识清晰；AC03、AC04、AC10、AC12、AC13</td>
+</tr>
+<tr>
+<td>D7</td>
+<td>P0 / 后端+测试</td>
+<td>请求/模型/提交日志关联；可重复并发与回滚测试</td>
+<td>D3、D4</td>
+<td>记录调用数、余额、结果增量，不仅检查按钮；AC05–09</td>
+</tr>
+<tr>
+<td>D8</td>
+<td>P0 / 测试+产品</td>
+<td>真实应用逐案验收、缺陷修复回归、更新验证记录</td>
+<td>D2–D7</td>
+<td>P0 案例全部通过；未通过不得标记发布完成</td>
+</tr>
+</tbody></table></div>
+<p>建议执行顺序：D1 → D2/D3 与 D5 并行 → D4/D6 → D7/D8。保持原 React/TypeScript/Wasp/Prisma/PostgreSQL 技术栈，不因额度需求升级无关依赖。</p>
+<h2>接口契约建议（开发评审后确认）</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>操作</th>
+<th>请求/成功响应</th>
+<th>失败语义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>读取额度</td>
+<td>无用户 ID 入参；返回 credits</td>
+<td>未登录、读取失败</td>
+</tr>
+<tr>
+<td>读取日程</td>
+<td>当前认证账号；结果编号、生成时间、内容，最近 20 份</td>
+<td>未登录、读取失败</td>
+</tr>
+<tr>
+<td>生成</td>
+<td>hours；返回已保存结果，包含编号与生成时间</td>
+<td>AUTH_REQUIRED、INVALID_INPUT、OUT_OF_CREDITS、GENERATION_BUSY、MODEL_FAILED、SAVE_FAILED</td>
+</tr>
+</tbody></table></div>
+<p>推荐 HTTP 映射：401、400、402、409、502、500；具体以 Wasp 支持的错误机制为准。前端以稳定的业务错误原因处理，不靠匹配英文错误字符串。SAVE_FAILED 只有服务端确认回滚时才允许展示未扣费；网络异常和无法判定提交结果的异常统一归为结果未知。</p>
+<h2>优先级边界</h2>
+<p>D1–D8均为本题五条规则的闭环，不能只交付按钮提示而跳过服务端准入。范围内保留最小的最近日程核查；完整历史管理、搜索、分页、请求编号自动恢复、批量生成队列均延后。出现排期压力时先缩减这些后续增强，不削减扣费与保存一致性。</p>
+<h2>工程落点</h2>
+<ul>
+<li><code>src/demo-ai-app/operations.ts</code>：认证、准入、生成与查询入口。</li>
+<li><code>src/client/App.tsx</code>：已有页头余额入口，与操作区统一数据来源或收敛展示位置。</li>
+<li><code>src/demo-ai-app/DemoAppPage.tsx</code>：额度、按钮、结果、错误状态和历史展示。</li>
+<li><code>src/demo-ai-app/demo-ai-app.wasp.ts</code>：按最终接口声明查询/动作。</li>
+<li><code>src/demo-ai-app/mockAi.ts</code>：沿用模拟调用和 [fail] 行为，不替换成外部模型。</li>
+<li><code>schema.prisma</code>：现有 User.credits 和 PlanResult 可覆盖核心范围；非必要不新增支付、预占或队列表。</li>
+</ul>
+<h2>工作量与风险</h2>
+<p>粗估 3–4 个工作日、约 5–7 人日，假设已有可运行环境及熟悉 Wasp 的前后端开发；不是招聘 48 小时提交要求的工期承诺。产品材料可先在题目时限内交付。正式排期需由开发确认框架、测试环境和人力。</p>
+<p>上述估算拆分为：契约与评审0.5人日；服务端准入/事务/查询1.5–2人日；前端状态与历史1.5–2人日；集成测试/回归1.5–2.5人日。环境未就绪或错误契约调整会增加时间，不把区间当作承诺。</p>
+<p>主要风险：错误码在客户端丢失导致误判、页面旧余额、保存失败未回滚、处理中异常未释放、网络断开被当成明确失败。每项均有验收案例，不以“按钮禁用”替代服务端并发验收。</p>
+<h2>发布门槛</h2>
+<ol>
+<li>编译和类型检查通过；全部 P0 实际案例通过，附日志和数据库前后对比。</li>
+<li>无额度不调用、无透支、失败不扣费、保存与扣费一致，任一不满足均阻断发布。</li>
+<li>发布后关注拒绝、失败和提交日志；发现扣费错账优先暂停生成入口、保存证据并人工核查，不能通过批量猜测退款掩盖问题。</li>
+<li>不自动回退到原先不安全的额度逻辑。扩容多进程前重新评审并发控制。</li>
+</ol>
+</section><section id="acceptance" aria-label="验收案例"><h1>验收案例与记录规范</h1>
+<p>本文件提供可执行的产品验收，不把演示原型当作真实系统。下面 AC01–AC13 的真实应用执行状态均为<strong>待开发后执行</strong>。已做的产品交付检查另见 <a href="#review">REVIEW.md</a>。</p>
+<h2>准备与证据口径</h2>
+<p>按 <a href="../README.md">README</a> 启动应用，创建两个独立测试账号 A/B；用数据库 Studio 设置额度 0、1、3，确认没有生成进行中再设置，之后刷新页面。普通任务使用“整理面试资料”；明确模型失败使用含 [fail] 的任务。记录开始/结束时间、测试账号内部标识、前后余额、结果数量、接口结果与日志 callId；不记录真实个人联系方式。</p>
+<p>一次 mock-ai.started 算一次模型调用。每次验证应隔离时间窗口，按 callId 配对，不把其他账号/其他用例日志混入。检查结果条数增量，不要求数据库里原本没有历史记录。</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>ID / 需求</th>
+<th>前置条件</th>
+<th>操作</th>
+<th>可观察预期</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>AC01 / R1</td>
+<td>新账号或 A 额度设 3</td>
+<td>打开页面；模拟额度查询失败后恢复</td>
+<td>正常显示 3 与每次成功扣 1；读取失败显示刷新入口，不显示假 0；刷新恢复</td>
+</tr>
+<tr>
+<td>AC02 / R2</td>
+<td>A 额度 0，有普通任务</td>
+<td>页面点击检查；再绕过按钮直接发生成请求</td>
+<td>按钮不可用且有原因；服务端拒绝，started=0、余额0、结果增量0；可查看历史</td>
+</tr>
+<tr>
+<td>AC03 / R4</td>
+<td>A 额度3，有普通任务</td>
+<td>生成一次，刷新页面后查看历史</td>
+<td>started/succeeded 各1、余额2、结果增量1；成功提示，刷新后结果仍在</td>
+</tr>
+<tr>
+<td>AC04 / R4/R5</td>
+<td>A 额度1，任务含 [fail]</td>
+<td>生成失败；删除标记再生成</td>
+<td>首次 started/failed 各1、余额1、结果增量0；提示未扣费且输入保留；第二次成功，余额0、结果增量1</td>
+</tr>
+<tr>
+<td>AC05 / R3</td>
+<td>A 额度1；使首个 mock 请求保持处理中</td>
+<td>同时发送首个请求和9个重叠请求，全部落在处理中窗口</td>
+<td>仅首个进入模型；9个忙碌拒绝且不排队；释放首个后成功，started=1、余额0、结果增量1；随后新请求额度不足</td>
+</tr>
+<tr>
+<td>AC06 / R3</td>
+<td>A 额度3；首个请求处理中</td>
+<td>重叠提交第二个；首个完成后再主动生成</td>
+<td>重叠请求忙碌拒绝，不消耗额外额度；第一轮余额2、结果增量1；新的主动请求成功后余额1、总结果增量2</td>
+</tr>
+<tr>
+<td>AC07 / R2/R3</td>
+<td>A 两标签均显示旧余额1</td>
+<td>标签1生成完成；暂停标签2的焦点自动刷新，保留旧余额后直接请求</td>
+<td>标签2服务端额度不足；总 started=1、余额0、结果增量1；标签2更新余额；不能依赖旧余额放行</td>
+</tr>
+<tr>
+<td>AC08 / R3</td>
+<td>A/B 各1额度，普通任务</td>
+<td>第一轮在A处理中时发起B，确认两者均成功，各验证余额0、结果+1；将A重置额度1，添加[fail]后失败，再删标记重试</td>
+<td>B可进入模型，不被A全局阻塞；各自结果与余额隔离；A失败后可重新生成，不永久忙碌</td>
+</tr>
+<tr>
+<td>AC09 / R4</td>
+<td>A额度1，普通任务；测试环境注入保存失败</td>
+<td>模型成功后使结果写入失败；再恢复写入重试</td>
+<td>首次模型调用1次但结果增量0、余额1；确认事务回滚后提示未扣费；后续成功且处理权已释放</td>
+</tr>
+<tr>
+<td>AC10 / R6</td>
+<td>A有额度，普通任务</td>
+<td>代理丢弃已提交成功请求的响应，恢复网络再刷新；另测请求未送达，以及请求已送达仍在处理时断网</td>
+<td>三种情况下客户端均不宣称未扣费、不自动重试；已提交场景余额-1且历史+1；未送达场景调用0且余额不变；仍在处理时立即刷新不得宣称失败或完成，后续完成再核对；刷新本身不得新增模型调用</td>
+</tr>
+<tr>
+<td>AC11 / R2/R6</td>
+<td>未登录；或登录A并已创建B历史</td>
+<td>未登录请求；尝试在请求中伪造B用户ID查询/生成；提交无任务、越界小时数</td>
+<td>未登录返回401且无调用；伪造B身份字段应被拒绝或忽略，绝不能读写B数据（若忽略，只按A身份继续正常校验）；无任务及0/25/1.25等非法时长拒绝、无调用或扣费</td>
+</tr>
+<tr>
+<td>AC12 / R1/R5/R6</td>
+<td>A有历史且有额度</td>
+<td>快速连点；用键盘操作；模型成功后故意使余额/历史刷新失败</td>
+<td>同页只发1次生成；生成中可感知且按钮不可重复激活；成功仍提示已保存已扣费，同时提示刷新失败；旧结果明确为已有日程</td>
+</tr>
+<tr>
+<td>AC13 / R5/R6</td>
+<td>A已生成过日程且仍有额度；新请求失败或结果未知</td>
+<td>先成功生成，再添加[fail]生成失败；再删标记发请求并丢弃响应，期间编辑输入；最后刷新核查</td>
+<td>旧结果明确标为“上次已保存日程”，不能冒充本次；编辑不更新余额或历史、不解除未知状态；核查后须主动确认再点击生成，新请求仍独立计费</td>
+</tr>
+</tbody></table></div>
+<h2>并发验收的执行要求</h2>
+<p>“同时点击两个页面”只能做体验走查，不能单独证明无透支。开发需提供通过认证的并发脚本，或调用同一份真实服务逻辑的集成测试。推荐流程：</p>
+<ol>
+<li>初始化 A 额度1、普通任务，记录余额和结果数量；使用测试屏障让首个模型调用停留在处理中。</li>
+<li>发出首个请求，确认已进入模型；在释放屏障前，用 Promise.allSettled 等方式发出9个请求。</li>
+<li>确认9个请求均立即忙碌拒绝、started仍为1，再释放首个请求。</li>
+<li>验证最终余额0、结果新增1；继续主动请求应额度不足且不新增 started。</li>
+<li>重做额度3场景：忙碌拒绝不形成后台任务；首个完成后余额2，主动再次请求才生成下一份。</li>
+</ol>
+<p>屏障只用于可重复验证，不修改正式 mock 的业务失败规则。没有屏障时必须用日志证明请求确实重叠；否则第二个请求在前一个完成后成功是合法行为，不能误判并发缺陷。</p>
+<h2>故障注入边界</h2>
+<p>AC09仅在测试库通过测试开关或可控的存储适配器故障令插入失败，不破坏真实数据表。AC10需用代理区分三个时点：请求未送达、服务端仍在处理、服务端已提交但响应丢失；不能用浏览器随机断网代替这三种精确定义。AC12的刷新失败仅拦截额度/历史查询响应，不拦截已成功返回的生成响应。测试必须保留原始成功结论。</p>
+<h2>实际执行记录模板</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>日期 / 版本</th>
+<th>案例</th>
+<th>实际命令或操作</th>
+<th>预期</th>
+<th>实际余额/结果增量/调用数</th>
+<th>日志或截图</th>
+<th>结论/缺陷</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>待填写</td>
+<td>AC01–AC13逐项填写</td>
+<td>不写“按计划测试”</td>
+<td>引用上述案例</td>
+<td>未执行不可填通过</td>
+<td>可复核证据路径</td>
+<td>通过/失败/阻塞</td>
+</tr>
+</tbody></table></div>
+<p>缺陷需记录复现步骤、影响账号范围、是否发生错误扣费以及修复后的重测结果。不能用一次 UI 演示替代数据库和模型调用核对。</p>
+</section><section id="review" aria-label="审查与证据"><h1>产品交付二次审查记录</h1>
+<p>已按题目重新检查业务规则、文档与原型一致性、验收可执行性及提交材料。纠正了“原应用未展示余额”的事实错误，并修复旧结果误标、未知结果快照泄露、刷新触发另一请求完成等问题。当前v1.1产品材料完成，42项浏览器原型检查通过；真实应用未按本方案实现，生产验收仍未执行。</p>
+<h2>1. 本轮发现与修复</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>修订</th>
+<th>对应检查</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>对现有工程的描述不完整：忽略页头余额和已有事务</td>
+<td>全量核对App.tsx、operations.ts与查询入口；明确保留余额/事务、复用历史查询，只补准入与条件扣减等缺口</td>
+<td>PRD问题判断、DELIVERY D2/D4/D5</td>
+</tr>
+<tr>
+<td>已有成功结果在下一次失败后仍可能被标成“本次”</td>
+<td>新请求开始将旧结果明确标为“上次已保存日程”，只有新成功响应才能改回</td>
+<td>P03、AC13</td>
+</tr>
+<tr>
+<td>响应丢失后编辑输入会重新渲染尚未收到的余额/历史</td>
+<td>分离模拟服务端事实与页面快照，只有查询或成功响应能更新可见事实</td>
+<td>P13–P17、AC10/13</td>
+</tr>
+<tr>
+<td>刷新操作同时完成了另一页面的请求</td>
+<td>刷新只读；评审工具独立控制另一请求完成，保留其提交时任务快照</td>
+<td>P09–P12、AC05/08</td>
+</tr>
+<tr>
+<td>删除任意任务或新增任务会解除模拟失败</td>
+<td>与原mock一致，只要任一任务仍含[fail]就持续失败</td>
+<td>P05–P07、AC04</td>
+</tr>
+<tr>
+<td>最后一次额度用完、空任务时仅禁用按钮</td>
+<td>每种不可生成状态显示具体原因和下一步</td>
+<td>P08、P29、AC02/12</td>
+</tr>
+<tr>
+<td>未覆盖“生成成功但后续额度查询失败”</td>
+<td>独立保留成功结论，显示刷新失败；未知余额使用—而不是假0</td>
+<td>P25–P26、AC12</td>
+</tr>
+<tr>
+<td>旧余额、网络未送达等状态缺少原型演示</td>
+<td>增补至10种场景；未知结果核查后还需明确主动发起新生成</td>
+<td>P18–P20、P27、AC07/10</td>
+</tr>
+<tr>
+<td>测试步骤可能因自动刷新或身份参数被忽略而误判</td>
+<td>明确暂停焦点刷新、身份只能取认证用户、三种断网时点、管理员改值边界</td>
+<td>文档审查，见AC07/10/11与PRD</td>
+</tr>
+<tr>
+<td>验证结果缺少可交付复跑脚本</td>
+<td>提供固定版本依赖、检查脚本、逐项输出及执行说明</td>
+<td><a href="qa/README.md">qa/README.md</a></td>
+</tr>
+</tbody></table></div>
+<h2>2. 实际执行与证据</h2>
+<ul>
+<li>日期：2026-10-22（Asia/Shanghai）。环境：Windows、Microsoft Edge无头浏览器、Playwright 1.58.2；实际浏览器版本与执行时间见JSON。</li>
+<li>执行目录：<code>product/qa</code>；命令：首次<code>npm install --no-audit --no-fund</code>生成锁文件，随后<code>npm run check</code>；复跑使用<code>npm ci &amp;&amp; npm run check</code>。</li>
+<li>执行脚本：<a href="qa/check.mjs">check.mjs</a>，42项PASS、0项FAIL；浏览器未捕获异常0条、外部网络请求0条。结果：<a href="prototype-checks.json">prototype-checks.json</a>。</li>
+<li>逐项编号P01–P38，其中非法时长含4个独立输入、移动布局含2个宽度，所以实际断言总数为42。没有把场景数、验收组数与测试断言数混为一谈。</li>
+<li>截图：<a href="prototype-preview.png">桌面</a>、<a href="prototype-mobile.png">390px移动</a>；另验证320px页面无横向溢出。</li>
+<li>文档检查：题目5条规则均有需求/开发/验收映射；本地相对链接可解析；提交信息只含称呼与打码手机号；应用源码未修改。</li>
+</ul>
+<h2>3. 验证范围</h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>已做</th>
+<th>能证明</th>
+<th>不能证明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>浏览器点击、编辑、刷新、状态恢复</td>
+<td>原型的可见行为与状态转移符合本方案</td>
+<td>真实数据库事务、实际接口调用及并发互斥</td>
+</tr>
+<tr>
+<td>[fail]与保存失败演示</td>
+<td>文案、模拟额度和恢复路径</td>
+<td>模型服务故障或真实数据库回滚</td>
+</tr>
+<tr>
+<td>三类页面状态：旧额度、响应未知、查询失败</td>
+<td>用户不被误导为未扣费或本次成功</td>
+<td>实际网络代理丢包、Wasp鉴权及跨账号隔离</td>
+</tr>
+<tr>
+<td>320/390px布局、键盘添加、HTML转义</td>
+<td>已列场景可操作且无横向溢出</td>
+<td>完整无障碍审计和所有设备兼容</td>
+</tr>
+</tbody></table></div>
+<p>真实应用AC01–AC13均待开发后执行，不能用42项原型检查替代。原型不实现登录、真实跨标签通信、持久化、页面焦点自动刷新；也不自动模拟真实“请求仍在处理时断网”，该案例已在验收中明确要求。浏览器整页刷新会重置演示。</p>
+<h2>4. 交接状态</h2>
+<p>产品方向要求的需求、流程/原型、开发拆解、验收及SUBMISSION均已交付。阅读入口是从Markdown生成的便于评审的副本，更新正文后用<code>npm run build:reader</code>再生成；需求源文档仍是PRD。</p>
+<p>真实工程编译、接口鉴权、数据库集成、并发压力、代理断网及用户访谈未执行。这些属于开发落地后的验证，不伪装成产品交付已实测成绩。本次产品交付的完成状态不包含这些开发后的系统验收。</p>
+</section><p class="foot">本页由交付中的Markdown生成；修改正文后请运行product/qa中的build:reader重新生成。正文与实际验证边界以源文档为准。</p></main></body></html>
