@@ -1,6 +1,10 @@
 # SPEC：改进日程生成的额度处理
 
-> 状态：**初稿（实现前）**。实现过程中的调整会修订本文档并保留 Git 历史。
+> 状态：**已实现并验证**（v2）。初稿见 Git 历史（`docs: add SPEC.md draft`）。v2 相对初稿的调整：
+>
+> 1. 任务列表查询移到预留额度**之前**——空任务列表直接 400，完全不触碰余额，省去一条退还路径；
+> 2. 模型失败返回码定为 502；并发脚本定名 `scripts/verify-credits.mjs`，覆盖 AC1–AC4；
+> 3. 前端用 `useQuery(getMe)` 读取并在每次生成后刷新剩余额度。
 
 ## 0. 问题判断与方案结论
 
@@ -38,16 +42,16 @@
 | 步骤 | 行为 | 说明 |
 | --- | --- | --- |
 | 1 | 校验登录（401）与入参 `hours`（422） | 沿用现状 |
-| 2 | **原子预留额度**：`UPDATE "User" SET credits = credits - 1 WHERE id = ? AND credits > 0`，影响行数为 0 → 抛 402 | 此时不查任务、不调模型，无 `mock-ai.started` |
-| 3 | 查询当前用户任务；任务列表为空 → 退还额度并抛 400 | 避免为空调用浪费额度 |
+| 2 | 查询当前用户任务；任务列表为空 → 抛 400 | 不触碰余额，避免为空调用浪费额度 |
+| 3 | **原子预留额度**：`UPDATE "User" SET credits = credits - 1 WHERE id = ? AND credits > 0`，影响行数为 0 → 抛 402 | 此时不发起模型调用，无 `mock-ai.started` |
 | 4 | 调用 `generateMockSchedule(tasks, hours)` | 产生 `mock-ai.started` / `succeeded` |
-| 5 | 保存 `PlanResult`，返回日程 | 额度已在第 2 步扣除 |
+| 5 | 保存 `PlanResult`，返回日程 | 额度已在第 3 步扣除 |
 
 ### 2.2 异常流程
 
 | 场景 | 行为 | 可观察结果 |
 | --- | --- | --- |
-| 额度不足 | 第 2 步抛 402，**不发起模型调用** | 无 `mock-ai.started` 日志；`credits` 不变；前端提示额度不足 |
+| 额度不足 | 第 3 步抛 402，**不发起模型调用** | 无 `mock-ai.started` 日志；`credits` 不变；前端提示额度不足 |
 | 模型明确失败 | **退还额度**（`credits + 1`），抛 502 | `started` + `failed` 各一次（同 `callId`）；`credits` 不变；无新增 `PlanResult`；前端提示可删除 `[fail]` 任务后重试 |
 | 存档等其它内部错误 | 抛 500，不退还（额度为已发生的成功调用付费），打错误日志 | `succeeded` 已记录 |
 
@@ -78,13 +82,13 @@ UPDATE "User" SET credits = credits - 1 WHERE id = ? AND credits > 0
 
 ## 4. 实现步骤
 
-1. **`src/demo-ai-app/operations.ts`**：重写 `generatePlan` 为“预留 → 调用 → 成功存档 / 失败退还”。预留用 Prisma `updateMany`（带 `credits: { gt: 0 }` 条件），按 `count` 判断；退还用 `update` + `increment`。
+1. **`src/demo-ai-app/operations.ts`**：重写 `generatePlan` 为“查任务 → 预留 → 调用 → 成功存档 / 失败退还”。预留用 Prisma `updateMany`（带 `credits: { gt: 0 }` 条件），按 `count` 判断；退还用 `update` + `increment`。
 2. **`src/demo-ai-app/DemoAppPage.tsx`**：
-   - 显示当前剩余额度（新增 `getCredits` query 或在页面查询用户实体），生成后自动刷新；
+   - 用 `useQuery(getMe)` 显示剩余额度，每次生成尝试后 `refetch` 刷新；
    - 额度为 0 时禁用“生成日程”按钮；
    - 生成失败时清除上一次成功展示的旧日程，避免误导；
-   - 402 提示“额度不足”；模型失败提示“本次未消耗额度，删除 [fail] 任务后可重试”。
-3. **`scripts/verify-concurrency.mjs`**：可重复执行的并发验证脚本（见 AC4）。
+   - 402 提示“额度不足”；502（模型失败）提示“本次未消耗额度，删除 [fail] 任务后可重试”。
+3. **`scripts/verify-credits.mjs`**：可重复执行的验证脚本，覆盖 AC1–AC4（见脚本头部注释的运行方式）。
 4. **验证记录**：按第 5 节验收案例逐项执行，结果记入 `SUBMISSION.md`。
 
 ## 5. 验收案例
@@ -94,7 +98,7 @@ UPDATE "User" SET credits = credits - 1 WHERE id = ? AND credits > 0
 | AC1 成功消耗 | 新账号 `credits = 3`；至少 1 条任务，不含 `[fail]` | 点击“生成日程” | 返回并展示日程；`credits` 变为 2，页面同步显示；服务端日志出现同一 `callId` 的 `mock-ai.started`、`mock-ai.succeeded` 各 1 次；新增 1 条 `PlanResult` |
 | AC2 额度不足 | 账号 `credits = 0`（可用 SQL 设置） | 点击“生成日程” | 接口返回 402；页面提示额度不足；服务端**无** `mock-ai.started` 日志；`credits` 仍为 0；无新增 `PlanResult` |
 | AC3 模型失败 | 账号 `credits = 1`；任务中含 `[fail]` | 点击“生成日程” | 接口返回错误，页面提示“未消耗额度、可删除 [fail] 后重试”；`credits` 仍为 1；日志出现同一 `callId` 的 `mock-ai.started`、`mock-ai.failed` 各 1 次；无新增 `PlanResult` |
-| AC4 并发不透支 | 账号 `credits = 1`；至少 1 条正常任务 | 同一会话并发发起 10 个 `generatePlan` 请求（`node scripts/verify-concurrency.mjs`） | 恰好 1 个成功、9 个 402；`credits` 最终为 0（不为负）；服务端 `mock-ai.started` 恰好 1 次；新增恰好 1 条 `PlanResult` |
+| AC4 并发不透支 | 账号有剩余额度；至少 1 条正常任务 | 同一会话并发发起 10 个 `generatePlan` 请求（`node scripts/verify-credits.mjs`） | 恰好“初始额度数”个成功、其余 402；`credits` 最终为 0（不为负）；服务端 `mock-ai.started` 次数等于成功数 |
 | AC5 基础检查 | 依赖已安装 | `wasp compile`；`npx tsc --project tsconfig.src.json --noEmit`；`npx tsc --project tsconfig.wasp.json --noEmit` | 三条命令均通过 |
 
 ## 6. 待办与已知限制
