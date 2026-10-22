@@ -5,6 +5,8 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCredits,
+  getPlanResults,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -62,10 +64,22 @@ function NewTaskForm({
   const [description, setDescription] = useState<string>("");
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
+  const [responseIsHistorical, setResponseIsHistorical] = useState(false);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+  const {
+    data: credits,
+    isLoading: isCreditsLoading,
+    error: creditsError,
+    refetch: refetchCredits,
+  } = useQuery(getCredits);
+  const { data: planResults, refetch: refetchPlanResults } =
+    useQuery(getPlanResults);
+  const latestResult = planResults?.[0];
+  const hoursAreValid =
+    Number.isFinite(todaysHours) && todaysHours >= 1 && todaysHours <= 24;
 
   const handleSubmit = async () => {
     try {
@@ -79,14 +93,18 @@ function NewTaskForm({
   };
 
   const handleGeneratePlan = async () => {
+    setIsPlanGenerating(true);
+    setResponse(null);
+    setResponseIsHistorical(false);
     try {
-      setIsPlanGenerating(true);
-      const response = await generatePlan({
+      const generatedSchedule = await generatePlan({
         hours: todaysHours,
       });
-      if (response) {
-        setResponse(response);
-      }
+      setResponse(generatedSchedule);
+      toast({
+        title: "日程已生成",
+        description: "已消耗 1 个额度，余额将在下方更新。",
+      });
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
@@ -94,22 +112,43 @@ function NewTaskForm({
           : undefined;
       if (statusCode === 402) {
         toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          title: "当前没有可用额度",
+          description: "本次未调用模型。若其他页面正在生成，请等待后刷新再试。",
+        });
+      } else if (statusCode === 503) {
+        toast({
+          title: "生成失败，本次未扣额度",
+          description: "请修改任务或稍后重试。",
+          variant: "destructive",
         });
       } else {
         toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
+          title: "本次结果尚未确认",
+          description: "请刷新查看额度和最近日程，确认前不要连续重试。",
           variant: "destructive",
         });
       }
     } finally {
+      void Promise.allSettled([refetchCredits(), refetchPlanResults()]);
       setIsPlanGenerating(false);
+    }
+  };
+
+  const handleShowLatestResult = () => {
+    if (!latestResult) return;
+    try {
+      const parsed = JSON.parse(latestResult.content) as GeneratedSchedule;
+      if (!Array.isArray(parsed.tasks) || !Array.isArray(parsed.taskItems)) {
+        throw new Error("Invalid saved schedule");
+      }
+      setResponse(parsed);
+      setResponseIsHistorical(true);
+    } catch {
+      toast({
+        title: "无法显示最近日程",
+        description: "保存的日程内容无法读取，请检查账号状态。",
+        variant: "destructive",
+      });
     }
   };
 
@@ -185,29 +224,64 @@ function NewTaskForm({
         )}
       </div>
 
-      <Button
-        type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
-        onClick={() => handleGeneratePlan()}
-        variant="default"
-        size="default"
-        className="w-full"
-        data-testid="generate-schedule-button"
-      >
-        {isPlanGenerating ? (
-          <>
-            <Loader2 className="mr-2 inline-block animate-spin" />
-            生成中…
-          </>
-        ) : (
-          "生成日程"
+      <div className="space-y-3">
+        <p className="text-muted-foreground text-sm" data-testid="credit-status">
+          {creditsError
+            ? "额度暂不可查，请刷新页面。"
+            : isCreditsLoading || credits === undefined
+              ? "正在获取可用额度…"
+              : `可用额度：${credits}。每成功生成一次消耗 1 个。`}
+        </p>
+        {credits === 0 && !creditsError && (
+          <p className="text-muted-foreground text-sm">
+            额度不足，暂不能生成。请检查账号状态。
+          </p>
         )}
-      </Button>
+        <Button
+          type="button"
+          disabled={
+            isPlanGenerating ||
+            isTasksLoading ||
+            !tasks?.length ||
+            isCreditsLoading ||
+            creditsError != null ||
+            credits === undefined ||
+            credits <= 0 ||
+            !hoursAreValid
+          }
+          onClick={() => handleGeneratePlan()}
+          variant="default"
+          size="default"
+          className="w-full"
+          data-testid="generate-schedule-button"
+        >
+          {isPlanGenerating ? (
+            <>
+              <Loader2 className="mr-2 inline-block animate-spin" />
+              生成中…
+            </>
+          ) : (
+            "生成日程"
+          )}
+        </Button>
+      </div>
+
+      {!response && latestResult && (
+        <div className="text-muted-foreground flex items-center justify-between gap-3 text-sm">
+          <span>
+            最近一次成功日程：
+            {new Date(latestResult.createdAt).toLocaleString("zh-CN")}
+          </span>
+          <Button type="button" variant="ghost" size="sm" onClick={handleShowLatestResult}>
+            查看
+          </Button>
+        </div>
+      )}
 
       {!!response && (
         <div className="flex flex-col">
           <h3 className="text-foreground mb-4 text-lg font-semibold">
-            本次日程
+            {responseIsHistorical ? "最近一次成功日程" : "本次日程"}
           </h3>
           <Schedule schedule={response} />
         </div>
