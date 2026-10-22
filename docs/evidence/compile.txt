@@ -1,0 +1,67 @@
+v24.14.1
+
+If you wish to install/switch to the latest version of Wasp, do:
+  npm i -g @wasp.sh/wasp-cli@latest
+
+If you want a specific x.y.z version of Wasp, do:
+  npm i -g @wasp.sh/wasp-cli@x.y.z
+
+Check https://github.com/wasp-lang/wasp/releases for the list of valid versions, including the latest one.
+
+0.25.0
+
+[   Db  !] prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+[   Db  !] Please manually install OpenSSL and try installing Prisma again.
+[   Db  !] prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+[   Db  !] Please manually install OpenSSL and try installing Prisma again.
+[   Db  !] [schema-engine] error: Error: spawn /mnt/host/d/A/work/codex/verification-tools/schema-engine-debian-openssl-1.1.x ENOENT
+[   Db  !]     at ChildProcess._handle.onexit (node:internal/child_process:286:19)
+[   Db  !]     at onErrorNT (node:internal/child_process:484:16)
+[   Db  !]     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+[   Db  !]   errno: -2,
+[   Db  !]   code: 'ENOENT',
+[   Db  !]   syscall: 'spawn /mnt/host/d/A/work/codex/verification-tools/schema-engine-debian-openssl-1.1.x',
+[   Db  !]   path: '/mnt/host/d/A/work/codex/verification-tools/schema-engine-debian-openssl-1.1.x',
+[   Db  !]   spawnargs: []
+[   Db  !] }
+[   Db  !] Error: spawn /mnt/host/d/A/work/codex/verification-tools/schema-engine-debian-openssl-1.1.x ENOENT
+[   Db  !] prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+
+🐝 --- Compiling wasp project... --------------------------------------------------
+
+
+✅ --- Successfully completed npm install. ----------------------------------------
+
+
+🐝 --- Setting up database... -----------------------------------------------------
+
+
+[   Db   ] Environment variables loaded from .env
+[   Db  !] Please manually install OpenSSL and try installing Prisma again.
+[   Db  !] prisma:warn Prisma failed to detect the libssl/openssl version to use, and may not work as expected. Defaulting to "openssl-1.1.x".
+[   Db   ] Prisma schema loaded from ../db/schema.prisma
+[   Db   ] 
+[   Db   ] ✔ Generated Prisma Client (v5.19.1) to ./../../../node_modules/@prisma/client in 263ms
+[   Db   ] 
+✅ --- Database successfully set up. ----------------------------------------------
+
+
+🐝 --- Building SDK... ------------------------------------------------------------
+
+
+[  Wasp  ] > wasp@1.0.0 build
+[  Wasp  ] > tsc && node ./scripts/copy-assets.js
+[  Wasp  ] 
+[  Wasp  ] [copy-assets] 9 copied, 0 skipped
+✅ --- SDK built successfully. ----------------------------------------------------
+
+
+✅ --- Your wasp project has successfully compiled. -------------------------------
+
+
+
+👀 --- [Warning] Your wasp project reported following warnings during compilation: ---
+
+- Wasp was unable to verify your database is up to date. Running `wasp db migrate-dev` may fix this and will provide more info.
+LINUX_COMPILE_AND_TYPES_PASSED
+[   Db  !] Please manually install OpenSSL and try installing Prisma again.

@@ -1,0 +1,42 @@
+
+> test
+> vitest run --reporter=verbose
+
+
+ RUN  v4.1.11 D:/A/work/codex/task-planner-interview-main
+
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > rejects unauthenticated generation before any work 3ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > rejects invalid hours 0 2ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > rejects invalid hours -1 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > rejects invalid hours 25 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > rejects invalid hours NaN 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > rejects invalid hours Infinity 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > rejects invalid hours -Infinity 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > rejects invalid hours 8 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > rejects invalid hours null 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > rejects invalid hours undefined 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > passes the authenticated id and valid hours 1, ignoring cached credits 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > passes the authenticated id and valid hours 1.5, ignoring cached credits 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > passes the authenticated id and valid hours 24, ignoring cached credits 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > maps no-credits to 402 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > maps no-tasks to 400 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > maps provider-failed to 502 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > does not label an unknown database error as a confirmed free failure 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > requires login for the balance query 0ms
+ ✓ tests/unit/operations.test.ts > authenticated operation boundary (A8) > queries only the authenticated user's current balance 1ms
+ ✓ tests/ui/quota-feedback.test.tsx > A10: quota feedback and recovery in the real page > disables zero-credit generation and shows the persisted schedule 43ms
+ ✓ tests/ui/quota-feedback.test.tsx > A10: quota feedback and recovery in the real page > disables generation while balance is loading 7ms
+ ✓ tests/ui/quota-feedback.test.tsx > A10: quota feedback and recovery in the real page > disables generation while balance is error 7ms
+ ✓ tests/ui/quota-feedback.test.tsx > A10: quota feedback and recovery in the real page > shows pending state, sends once, reports success and refreshes both authoritative views 106ms
+ ✓ tests/ui/quota-feedback.test.tsx > A10: quota feedback and recovery in the real page > explains a confirmed provider failure and preserves the previous schedule for retry 47ms
+ ✓ tests/ui/quota-feedback.test.tsx > A10: quota feedback and recovery in the real page > handles a stale one-credit page receiving 402 and refreshes the exhausted balance 47ms
+ ✓ tests/ui/quota-feedback.test.tsx > A10: quota feedback and recovery in the real page > does not promise a refund when the response is lost 32ms
+ ✓ tests/ui/quota-feedback.test.tsx > A10: quota feedback and recovery in the real page > rejects invalid hours in the page before submitting 17ms
+ ✓ tests/ui/quota-feedback.test.tsx > A10: quota feedback and recovery in the real page > disables generation when task loading failed 11ms
+ ✓ tests/ui/quota-feedback.test.tsx > A10: quota feedback and recovery in the real page > ignores invalid saved JSON without breaking generation 5ms
+
+ Test Files  2 passed (2)
+      Tests  29 passed (29)
+   Start at  19:26:05
+   Duration  2.01s (transform 139ms, setup 0ms, import 898ms, tests 334ms, environment 826ms)
+

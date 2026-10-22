@@ -5,12 +5,13 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getPlanResults,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
 
 import { Loader2, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "../client/components/ui/button";
 import {
   Card,
@@ -21,7 +22,7 @@ import {
 import { Checkbox } from "../client/components/ui/checkbox";
 import { Input } from "../client/components/ui/input";
 import { Label } from "../client/components/ui/label";
-import { toast } from "../client/hooks/use-toast";
+import { useCredits } from "../client/hooks/useCredits";
 import { cn } from "../client/utils";
 import type {
   GeneratedSchedule,
@@ -29,6 +30,7 @@ import type {
   TaskItem,
   TaskPriority,
 } from "./schedule";
+import { generatedScheduleSchema } from "./schedule";
 
 export function DemoAppPage() {
   return (
@@ -63,9 +65,24 @@ function NewTaskForm({
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
+  const generating = useRef(false);
+  const [feedback, setFeedback] = useState<string>("");
+  const { data: credits, error: creditsError, refetch: refetchCredits } = useCredits();
+  const { data: plans, error: plansError, refetch: refetchPlans } = useQuery(getPlanResults);
 
-  const { data: tasks, isLoading: isTasksLoading } =
+  const { data: tasks, isLoading: isTasksLoading, error: tasksError } =
     useQuery(getAllTasksByUser);
+  const validHours = Number.isFinite(todaysHours) && todaysHours >= 1 && todaysHours <= 24;
+  const latestSchedule = useMemo(() => {
+    if (!plans?.[0]) return null;
+    try {
+      const result = generatedScheduleSchema.safeParse(JSON.parse(plans[0].content));
+      return result.success ? result.data : null;
+    } catch {
+      return null;
+    }
+  }, [plans]);
+  const visibleSchedule = response ?? latestSchedule;
 
   const handleSubmit = async () => {
     try {
@@ -79,6 +96,9 @@ function NewTaskForm({
   };
 
   const handleGeneratePlan = async () => {
+    if (generating.current) return;
+    generating.current = true;
+    setFeedback("");
     try {
       setIsPlanGenerating(true);
       const response = await generatePlan({
@@ -86,6 +106,7 @@ function NewTaskForm({
       });
       if (response) {
         setResponse(response);
+        setFeedback("日程已生成并保存，已消耗 1 次额度。");
       }
     } catch (err) {
       const statusCode =
@@ -93,28 +114,41 @@ function NewTaskForm({
           ? err.statusCode
           : undefined;
       if (statusCode === 402) {
-        toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
-        });
+        setFeedback("额度不足，本次未调用模型。请刷新余额并查看下方最近一次成功日程。");
+      } else if (statusCode === 502) {
+        setFeedback("模拟生成失败，本次未扣费。请删除包含 [fail] 的任务后重试。");
+      } else if (statusCode === 400) {
+        setFeedback("请添加待办事项，并将可用时长设为 1–24 小时。本次未扣费。");
+      } else if (statusCode === 401) {
+        setFeedback("登录已失效，请重新登录后继续。");
       } else {
-        toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
-          variant: "destructive",
-        });
+        setFeedback("暂时无法确认生成结果。请先刷新余额与最近日程，确认是否已成功，再决定是否重试。");
       }
     } finally {
+      // A failed HTTP response can still follow a committed transaction.
+      // Refresh both authoritative views, without masking the original outcome.
+      await Promise.allSettled([refetchCredits(), refetchPlans()]);
+      generating.current = false;
       setIsPlanGenerating(false);
     }
   };
 
   return (
     <div className="flex flex-col justify-center gap-10">
+      <div className="space-y-2 text-sm" aria-live="polite">
+        <p>剩余额度：{creditsError ? "读取失败" : credits ?? "加载中…"}</p>
+        <p className="text-muted-foreground">每次成功生成消耗 1 次额度，生成失败不扣费。</p>
+        {credits === 0 && <p>额度已用完，可查看下方最近一次成功日程。本演示暂未提供充值入口。</p>}
+        {creditsError && <p>暂时无法读取余额，请刷新后继续。</p>}
+        {plansError && <p>最近日程读取失败，请刷新后确认生成记录。</p>}
+        <Button type="button" variant="outline" disabled={isPlanGenerating}
+          onClick={async () => {
+            const [, result] = await Promise.allSettled([refetchCredits(), refetchPlans()]);
+            if (result.status === "fulfilled" && !result.value.error) setResponse(null);
+          }}>
+          刷新余额与最近日程
+        </Button>
+      </div>
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <Input
@@ -143,10 +177,11 @@ function NewTaskForm({
       </div>
 
       <div className="col-span-full space-y-10">
+        {tasksError && <p role="alert">任务读取失败，请刷新页面后重试。</p>}
         {isTasksLoading && (
           <div className="text-muted-foreground">Loading...</div>
         )}
-        {tasks! && tasks.length > 0 ? (
+        {tasks && tasks.length > 0 ? (
           <div className="space-y-4">
             {tasks.map((task: Task) => (
               <Todo
@@ -160,14 +195,14 @@ function NewTaskForm({
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-3">
                 <Label
-                  htmlFor="time"
+                  htmlFor="available-hours"
                   className="text-muted-foreground text-nowrap text-sm font-semibold"
                 >
                   今天可用的工作时长
                 </Label>
                 <Input
                   type="number"
-                  id="time"
+                  id="available-hours"
                   step={0.5}
                   min={1}
                   max={24}
@@ -185,9 +220,13 @@ function NewTaskForm({
         )}
       </div>
 
+      {!validHours && <p role="alert">可用时长应为 1–24 小时。</p>}
+      {feedback && <p role="status" aria-live="polite">{feedback}</p>}
+
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || !tasks?.length || !!tasksError ||
+          credits === undefined || !!creditsError || credits <= 0 || !validHours}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -200,16 +239,16 @@ function NewTaskForm({
             生成中…
           </>
         ) : (
-          "生成日程"
+          credits === 0 ? "额度已用完" : "生成日程（消耗 1 次）"
         )}
       </Button>
 
-      {!!response && (
+      {!!visibleSchedule && (
         <div className="flex flex-col">
           <h3 className="text-foreground mb-4 text-lg font-semibold">
-            本次日程
+            最近一次成功日程
           </h3>
-          <Schedule schedule={response} />
+          <Schedule schedule={visibleSchedule} />
         </div>
       )}
     </div>
@@ -257,7 +296,8 @@ function Todo({ id, isDone, description, time }: TodoProps) {
           </div>
           <div className="flex items-center gap-2">
             <Input
-              id="time"
+              id={`task-time-${id}`}
+              aria-label={`${description}所需时长`}
               type="number"
               min={0.5}
               step={0.5}

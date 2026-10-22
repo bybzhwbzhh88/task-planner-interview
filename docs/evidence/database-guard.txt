@@ -1,0 +1,11 @@
+file:///D:/A/work/codex/task-planner-interview-main/scripts/test-integration.mjs:7
+  throw new Error("Refusing to run: the PostgreSQL database name must end in _test.");
+        ^
+
+Error: Refusing to run: the PostgreSQL database name must end in _test.
+    at file:///D:/A/work/codex/task-planner-interview-main/scripts/test-integration.mjs:7:9
+    at ModuleJob.run (node:internal/modules/esm/module_job:430:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:661:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.14.1

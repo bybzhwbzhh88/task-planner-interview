@@ -6,6 +6,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCredits,
   getPlanResults,
   updateTask,
 } from "./operations" with { type: "ref" };
@@ -14,6 +15,7 @@ export const demoAiAppSpec: Spec = [
   route("DemoAppRoute", "/demo-app", page(DemoAppPage, { authRequired: true })),
 
   query(getPlanResults, { entities: ["User", "PlanResult"] }),
+  query(getCredits, { entities: ["User"] }),
   action(generatePlan, { entities: ["User", "Task", "PlanResult"] }),
 
   query(getAllTasksByUser, { entities: ["Task"] }),
