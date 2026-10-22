@@ -1,6 +1,6 @@
 # 日程生成额度处理 SPEC
 
-> 状态：实现前基线。环境已按 README 配好，`SPEC.md` 已重写；业务代码尚未修改，额度验收尚未执行。
+> 状态：已实现并验证。环境、代码、自动化测试和界面反馈已对齐；实际结果见 [VERIFICATION.md](VERIFICATION.md)。
 
 ## 结论
 
@@ -186,13 +186,13 @@ PostgreSQL 在并发更新同一行时串行获取行锁，并在等待后重新
 
 | 顺序 | 文件 | 改动 |
 | --- | --- | --- |
-| 1 | `SPEC.md` | 提交本版实现前说明 |
-| 2 | `src/demo-ai-app/operations.ts` | 增加输入边界、额度预占、失败归还和结果返回类型 |
-| 3 | `src/demo-ai-app/demo-ai-app.wasp.ts` | 保持 `generatePlan` 的 `User` 实体声明，必要时补充查询依赖 |
-| 4 | `src/demo-ai-app/DemoAppPage.tsx` | 适配新返回结构、余额状态和差异化错误提示 |
-| 5 | `src/client/App.tsx` | 保持 `useAuth` 页头余额展示；如样式需要，仅增加生成状态说明 |
-| 6 | `tests/`、`scripts/` 和 `package.json` | 增加额度逻辑测试与可重复并发验证入口 |
-| 7 | `VERIFICATION.md` | 按 Q1-Q7 记录命令、预期结果和实际结果 |
+| 1 | `src/demo-ai-app/quotaGeneration.ts` | 编排预占、模型调用、结果保存和单次归还 |
+| 2 | `src/demo-ai-app/operations.ts` | 执行原子条件更新、事务保存和 HTTP 错误映射 |
+| 3 | `src/demo-ai-app/demo-ai-app.wasp.ts` | 保留 `generatePlan` 的 `User` 实体声明，使 `useAuth` 自动刷新 |
+| 4 | `src/demo-ai-app/DemoAppPage.tsx` | 适配新返回结构、额度状态和差异化错误提示 |
+| 5 | `src/client/App.tsx` | 继续保持页头 `useAuth` 余额展示 |
+| 6 | `tests/`、`scripts/` 和 `package.json` | 已增加单元测试和可重复接口并发验证入口 |
+| 7 | `VERIFICATION.md` | 已按 Q1-Q7 记录命令、预期结果和实际结果 |
 
 前端不依赖旧响应猜测余额；服务端返回的 `creditsRemaining` 用于即时提示，`useAuth` 刷新后的数据库值用于最终展示。
 
@@ -216,7 +216,7 @@ PostgreSQL 在并发更新同一行时串行获取行锁，并在等待后重新
 - PostgreSQL 集成测试覆盖：并发条件更新、`credits >= 0`、成功预占数等于初始额度。
 - 接口验证覆盖：认证、创建任务、并发生成、查询额度和 `PlanResult`。
 
-计划提供的命令：
+验证命令：
 
 ```sh
 npm run test:quota
@@ -235,8 +235,11 @@ npx tsc --project tsconfig.wasp.json --noEmit
 
 实际验证结果统一写入 `VERIFICATION.md`。未运行的检查必须明确标注，不以“环境已启动”代替额度验收。
 
-## 尚未完成
+## 完成状态与边界
 
-- 额度处理代码、测试脚本和 `VERIFICATION.md` 尚未实现。
-- 当前只验证了环境、编译、数据库迁移和页面可访问性，没有执行任何额度业务验收。
-- 生成接口的返回类型将从 `GeneratedSchedule` 调整为包含 `creditsRemaining` 的对象，前端和相关测试需同步更新。
+- 已实现原子预占、模型失败归还、保存失败归还、并发防透支和前端反馈。
+- `npm run test:quota` 覆盖成功、余额不足、模型失败、保存失败和归还失败。
+- `npm run verify:quota` 使用独立数据库完成 Q1-Q5 的真实接口验证。
+- Q6 已在 Chrome 中手动检查零额度和成功生成后的即时余额刷新。
+- 支付、订阅、跨账号防刷和进程崩溃后的自动补偿仍按任务范围排除。
+- 尚未填写 `SUBMISSION.md` 中的个人身份字段，也尚未创建远端 Fork 或 Pull Request。

@@ -72,6 +72,24 @@ npx tsc --project tsconfig.wasp.json --noEmit
 
 运行检查前需要完成依赖安装。首次启动前需要执行数据库迁移。
 
+## 额度处理验证
+
+额度编排单元测试不依赖数据库：
+
+```sh
+npm run test:quota
+```
+
+接口级并发验证会编译当前源码，在独立数据库 `taskplanner_verify` 中应用迁移，并启动临时 API 服务 `http://127.0.0.1:3101`：
+
+```sh
+npm run verify:quota
+```
+
+运行前需保持 Docker 守护进程和 `task-planner-postgres` 容器运行；建议先停止 `wasp start`，避免两个进程同时编译 `.wasp/`。测试数据会在每次运行开始时清理。可通过 `TEST_DATABASE_URL` 和 `QUOTA_TEST_PORT` 覆盖默认值。
+
+实际验证结果见 [VERIFICATION.md](VERIFICATION.md)。
+
 ## 开源许可
 
 第三方代码的版权声明与使用条件见 [LICENSE](LICENSE) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

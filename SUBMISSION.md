@@ -1,23 +1,29 @@
 # 提交说明
 
-- 姓名或称呼：
-- 应聘方向：产品 / 技术
-- 打码手机号：前三位 + `****` + 后四位
+- 姓名或称呼：待填写
+- 应聘方向：技术
+- 打码手机号：待填写
 
 ## 结果概览
 
-用几句话说明问题判断、主要方案和当前完成状态。
+额度处理已从“先调用模型、后检查旧余额”改为“模型调用前原子预占、失败归还”。同一账号并发请求不会透支；模型失败不扣额度；额度不足不会触发 `mock-ai.started`；前端会展示扣费结果、失败原因和可用额度。
 
 ## 交付入口
 
-产品方向：链接到方案、流程或原型、任务拆解及验收案例。
-
-技术方向：链接到 `SPEC.md`、主要改动和验证脚本，补充必要的运行命令。拆解和设计写在 spec 中，此处引用即可。
+- 方案与验收：[SPEC.md](SPEC.md)
+- 额度编排：[quotaGeneration.ts](src/demo-ai-app/quotaGeneration.ts)
+- 服务端操作：[operations.ts](src/demo-ai-app/operations.ts)
+- 前端反馈：[DemoAppPage.tsx](src/demo-ai-app/DemoAppPage.tsx)
+- 单元测试：[quotaGeneration.test.ts](tests/quotaGeneration.test.ts)
+- 并发验证脚本：[verify-quota.mjs](scripts/verify-quota.mjs)
+- 运行说明：[README.md](README.md#额度处理验证)
 
 ## 验证记录
 
-逐项对应验收案例，写明操作或命令、预期结果、实际结果及必要证据。未验证的部分请明确标注；已有独立记录可直接链接。
+Q1-Q7 的操作、预期结果和实际结果见 [VERIFICATION.md](VERIFICATION.md)。`npm run test:quota` 和 `npm run verify:quota` 均已通过。
 
 ## 待办与交接
 
-说明尚未完成的事项、已知问题，以及接手者需要知道的信息。
+- 填写姓名或称呼及打码手机号。
+- 创建 Fork、推送分支并按指定格式提交 PR。
+- 服务崩溃后的额度自动恢复不在本次范围；预占后进程异常退出需要人工核查。
