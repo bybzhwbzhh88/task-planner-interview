@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCreditBalance,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -66,6 +67,7 @@ function NewTaskForm({
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+  const { data: creditBalance } = useQuery(getCreditBalance);
 
   const handleSubmit = async () => {
     try {
@@ -85,7 +87,11 @@ function NewTaskForm({
         hours: todaysHours,
       });
       if (response) {
-        setResponse(response);
+        setResponse(response.schedule);
+        toast({
+          title: "日程已生成",
+          description: `本次消耗 1 次额度，当前剩余 ${response.remainingCredits} 次。`,
+        });
       }
     } catch (err) {
       const statusCode =
@@ -98,13 +104,18 @@ function NewTaskForm({
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description:
+            "本次未调用模型，也没有扣除额度。当前额度已用完，请联系管理员补充额度后再试。",
+        });
+      } else if (statusCode === 502) {
+        toast({
+          title: "生成失败，未扣额度",
+          description: "模拟模型未能完成本次生成，请修改任务后重试。",
         });
       } else {
         toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
+          title: "生成失败",
+          description: "本次未生成日程，请稍后重试。",
           variant: "destructive",
         });
       }
@@ -185,6 +196,19 @@ function NewTaskForm({
         )}
       </div>
 
+      <div className="flex items-center justify-between rounded-md border px-4 py-3 text-sm">
+        <span className="text-muted-foreground">可用额度</span>
+        <span className="font-semibold">
+          {creditBalance === undefined ? "读取中…" : `${creditBalance} 次`}
+        </span>
+      </div>
+
+      {creditBalance === 0 && (
+        <p className="text-muted-foreground text-sm">
+          额度已用完。现在生成不会调用模型，也不会扣除额度；请联系管理员补充额度。
+        </p>
+      )}
+
       <Button
         type="button"
         disabled={isPlanGenerating || tasks?.length === 0}
@@ -200,7 +224,7 @@ function NewTaskForm({
             生成中…
           </>
         ) : (
-          "生成日程"
+          "生成日程（消耗 1 次额度）"
         )}
       </Button>
 

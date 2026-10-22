@@ -1,6 +1,9 @@
 {
   "name": "task-planner-interview",
   "type": "module",
+  "scripts": {
+    "test:credit": "sh scripts/test-credit.sh"
+  },
   "workspaces": [
     ".wasp/out/*",
     ".wasp/out/sdk/wasp"

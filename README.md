@@ -72,6 +72,18 @@ npx tsc --project tsconfig.wasp.json --noEmit
 
 运行检查前需要完成依赖安装。首次启动前需要执行数据库迁移。
 
+## 额度验证
+
+额度计费核心在 `src/demo-ai-app/creditBilling.ts`，设计、异常流程和验收案例见 [SPEC.md](SPEC.md)。
+
+测试必须使用独立的 PostgreSQL 数据库，脚本会自动应用迁移，再运行真实数据库并发测试：
+
+```sh
+TEST_DATABASE_URL="postgresql://<user>:<password>@localhost:5432/<test_database>" npm run test:credit
+```
+
+如果 `wasp db migrate-dev` 提示无法创建 shadow database，请给本地数据库用户 `CREATEDB` 权限，或配置独立的 shadow database。不要把测试数据库指向已有开发数据。
+
 ## 开源许可
 
 第三方代码的版权声明与使用条件见 [LICENSE](LICENSE) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
