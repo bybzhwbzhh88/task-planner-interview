@@ -1,0 +1,416 @@
+{
+  "recordedAt": "2026-10-22T08:10:16.744Z",
+  "roundsPerBalance": 10,
+  "results": [
+    {
+      "name": "AC01-success",
+      "statuses": [
+        200
+      ],
+      "modelStarted": 1,
+      "credits": 2,
+      "results": 1
+    },
+    {
+      "name": "AC02-no-credit",
+      "statuses": [
+        402
+      ],
+      "modelStarted": 0,
+      "credits": 0,
+      "results": 0
+    },
+    {
+      "name": "AC03-model-failure",
+      "statuses": [
+        502
+      ],
+      "modelStarted": 1,
+      "credits": 1,
+      "results": 0
+    },
+    {
+      "name": "AC06-recovery",
+      "statuses": [
+        200
+      ],
+      "modelStarted": 1,
+      "credits": 0,
+      "results": 1
+    },
+    {
+      "name": "AC07-input-and-auth",
+      "statuses": [
+        400,
+        400,
+        400,
+        400,
+        400,
+        401
+      ],
+      "modelStarted": 0,
+      "credits": 1,
+      "results": 0
+    },
+    {
+      "name": "AC04-round-1",
+      "statuses": [
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 1,
+      "credits": 0,
+      "results": 1
+    },
+    {
+      "name": "AC04-round-2",
+      "statuses": [
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 1,
+      "credits": 0,
+      "results": 1
+    },
+    {
+      "name": "AC04-round-3",
+      "statuses": [
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 1,
+      "credits": 0,
+      "results": 1
+    },
+    {
+      "name": "AC04-round-4",
+      "statuses": [
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 1,
+      "credits": 0,
+      "results": 1
+    },
+    {
+      "name": "AC04-round-5",
+      "statuses": [
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 1,
+      "credits": 0,
+      "results": 1
+    },
+    {
+      "name": "AC04-round-6",
+      "statuses": [
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 1,
+      "credits": 0,
+      "results": 1
+    },
+    {
+      "name": "AC04-round-7",
+      "statuses": [
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 1,
+      "credits": 0,
+      "results": 1
+    },
+    {
+      "name": "AC04-round-8",
+      "statuses": [
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 1,
+      "credits": 0,
+      "results": 1
+    },
+    {
+      "name": "AC04-round-9",
+      "statuses": [
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 1,
+      "credits": 0,
+      "results": 1
+    },
+    {
+      "name": "AC04-round-10",
+      "statuses": [
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 1,
+      "credits": 0,
+      "results": 1
+    },
+    {
+      "name": "AC05-round-1",
+      "statuses": [
+        200,
+        200,
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 3,
+      "credits": 0,
+      "results": 3
+    },
+    {
+      "name": "AC05-round-2",
+      "statuses": [
+        200,
+        200,
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 3,
+      "credits": 0,
+      "results": 3
+    },
+    {
+      "name": "AC05-round-3",
+      "statuses": [
+        200,
+        200,
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 3,
+      "credits": 0,
+      "results": 3
+    },
+    {
+      "name": "AC05-round-4",
+      "statuses": [
+        200,
+        200,
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 3,
+      "credits": 0,
+      "results": 3
+    },
+    {
+      "name": "AC05-round-5",
+      "statuses": [
+        200,
+        200,
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 3,
+      "credits": 0,
+      "results": 3
+    },
+    {
+      "name": "AC05-round-6",
+      "statuses": [
+        200,
+        200,
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 3,
+      "credits": 0,
+      "results": 3
+    },
+    {
+      "name": "AC05-round-7",
+      "statuses": [
+        200,
+        200,
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 3,
+      "credits": 0,
+      "results": 3
+    },
+    {
+      "name": "AC05-round-8",
+      "statuses": [
+        200,
+        200,
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 3,
+      "credits": 0,
+      "results": 3
+    },
+    {
+      "name": "AC05-round-9",
+      "statuses": [
+        200,
+        200,
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 3,
+      "credits": 0,
+      "results": 3
+    },
+    {
+      "name": "AC05-round-10",
+      "statuses": [
+        200,
+        200,
+        200,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402,
+        402
+      ],
+      "modelStarted": 3,
+      "credits": 0,
+      "results": 3
+    }
+  ]
+}
