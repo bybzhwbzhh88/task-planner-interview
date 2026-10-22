@@ -1,5 +1,6 @@
 import { type Task } from "wasp/entities";
 import { useAuth } from "wasp/client/auth";
+import { PlannerAuthBoundary } from "../auth/PlannerAuthBoundary";
 
 import {
   createTask,
@@ -33,6 +34,10 @@ import type {
 import { generatedScheduleSchema } from "./schedule";
 
 export function DemoAppPage() {
+  return <PlannerAuthBoundary><PlannerContent /></PlannerAuthBoundary>;
+}
+
+function PlannerContent() {
   return (
     <div className="py-10 lg:mt-10">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
