@@ -1,0 +1,14 @@
+
+> test:http
+> node --test tests/quota.http.test.mjs
+
+✔ A8 HTTP: unauthenticated generate-plan returns 401 (74.229321ms)
+✔ A8 HTTP: unauthenticated get-credits returns 401 (8.409765ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 234.339251

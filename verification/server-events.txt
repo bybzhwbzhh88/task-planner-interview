@@ -1,0 +1,40 @@
+POST /operations/get-credits 200 64.201 ms - 10
+POST /operations/get-all-tasks-by-user 200 74.621 ms - 11
+POST /operations/create-task 200 12.620 ms - 243
+POST /operations/get-all-tasks-by-user 200 6.462 ms - 247
+{"event":"mock-ai.started","callId":"73888d90-4d52-4c8d-9d84-b6caf4f06dd8"}
+{"event":"mock-ai.succeeded","callId":"73888d90-4d52-4c8d-9d84-b6caf4f06dd8"}
+POST /operations/generate-plan 200 557.243 ms - 309
+POST /operations/get-credits 200 47.643 ms - 10
+POST /operations/get-all-tasks-by-user 200 62.864 ms - 247
+POST /operations/get-credits 200 10.426 ms - 10
+POST /operations/create-task 200 37.084 ms - 250
+POST /operations/get-all-tasks-by-user 200 6.717 ms - 465
+{"event":"mock-ai.started","callId":"8308e984-33f3-4500-bc13-8a1eb653e458"}
+{"event":"mock-ai.failed","callId":"8308e984-33f3-4500-bc13-8a1eb653e458"}
+POST /operations/generate-plan 502 514.841 ms - 102
+POST /operations/get-credits 200 8.646 ms - 10
+POST /operations/get-all-tasks-by-user 200 12.240 ms - 465
+POST /operations/get-credits 200 10.518 ms - 10
+POST /operations/generate-plan 401 0.622 ms - 76
+POST /operations/get-credits 401 0.496 ms - 14
+POST /operations/get-credits 200 6.259 ms - 10
+POST /operations/get-credits 200 79.502 ms - 10
+POST /operations/delete-task 200 14.421 ms - 250
+POST /operations/get-all-tasks-by-user 200 8.083 ms - 247
+POST /operations/get-all-tasks-by-user 200 7.720 ms - 247
+POST /operations/get-credits 200 75.299 ms - 10
+{"event":"mock-ai.started","callId":"b8911b86-78c2-4af9-ad6e-e9251376a830"}
+{"event":"mock-ai.succeeded","callId":"b8911b86-78c2-4af9-ad6e-e9251376a830"}
+POST /operations/generate-plan 200 556.022 ms - 309
+POST /operations/get-all-tasks-by-user 200 6.578 ms - 247
+POST /operations/get-credits 200 54.865 ms - 10
+POST /operations/get-credits 200 7.574 ms - 10
+POST /operations/generate-plan 401 1.669 ms - 76
+POST /operations/get-credits 401 0.709 ms - 14
+POST /operations/get-credits 200 16.835 ms - 10
+POST /operations/get-all-tasks-by-user 200 16.948 ms - 247
+POST /operations/get-credits 200 12.818 ms - 10
+POST /operations/get-all-tasks-by-user 200 15.000 ms - 247
+POST /operations/get-credits 200 11.237 ms - 10
+POST /operations/get-credits 200 9.988 ms - 10
