@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getMyCredits,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -66,6 +67,9 @@ function NewTaskForm({
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+  const { data: credits, refetch: refetchCredits } = useQuery(getMyCredits);
+  // 余额还没拉到时不要禁用；<= 0 覆盖历史数据里可能出现的负数
+  const isOutOfCredits = credits !== undefined && credits <= 0;
 
   const handleSubmit = async () => {
     try {
@@ -81,13 +85,15 @@ function NewTaskForm({
   const handleGeneratePlan = async () => {
     try {
       setIsPlanGenerating(true);
-      const response = await generatePlan({
+      const result = await generatePlan({
         hours: todaysHours,
       });
-      if (response) {
-        setResponse(response);
+      if (result) {
+        setResponse(result.schedule);
       }
     } catch (err) {
+      // 失败后清掉上一次的日程，避免旧结果被当成"本次"生成的。
+      setResponse(null);
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
@@ -98,17 +104,22 @@ function NewTaskForm({
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description:
+            "本次未调用模型，也未扣除额度。可联系管理员补充额度后重试。",
         });
       } else {
         toast({
-          title: "Error",
+          title: "生成失败",
+          style: {
+            minWidth: "400px",
+          },
           description:
             err instanceof Error ? err.message : "Something went wrong",
           variant: "destructive",
         });
       }
     } finally {
+      await refetchCredits();
       setIsPlanGenerating(false);
     }
   };
@@ -185,24 +196,39 @@ function NewTaskForm({
         )}
       </div>
 
-      <Button
-        type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
-        onClick={() => handleGeneratePlan()}
-        variant="default"
-        size="default"
-        className="w-full"
-        data-testid="generate-schedule-button"
-      >
-        {isPlanGenerating ? (
-          <>
-            <Loader2 className="mr-2 inline-block animate-spin" />
-            生成中…
-          </>
-        ) : (
-          "生成日程"
-        )}
-      </Button>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between gap-3 text-sm">
+          <span
+            className="text-muted-foreground"
+            data-testid="credits-remaining"
+          >
+            剩余额度：{credits ?? "-"} 次
+          </span>
+          {isOutOfCredits && (
+            <span className="text-destructive" data-testid="credits-empty">
+              额度已用完，本次不会调用模型；请联系管理员补充额度。
+            </span>
+          )}
+        </div>
+        <Button
+          type="button"
+          disabled={isPlanGenerating || tasks?.length === 0 || isOutOfCredits}
+          onClick={() => handleGeneratePlan()}
+          variant="default"
+          size="default"
+          className="w-full"
+          data-testid="generate-schedule-button"
+        >
+          {isPlanGenerating ? (
+            <>
+              <Loader2 className="mr-2 inline-block animate-spin" />
+              生成中…
+            </>
+          ) : (
+            "生成日程"
+          )}
+        </Button>
+      </div>
 
       {!!response && (
         <div className="flex flex-col">

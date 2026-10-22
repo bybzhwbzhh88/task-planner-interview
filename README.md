@@ -72,6 +72,17 @@ npx tsc --project tsconfig.wasp.json --noEmit
 
 运行检查前需要完成依赖安装。首次启动前需要执行数据库迁移。
 
+## 额度行为验证
+
+应用启动后，在另一个终端执行：
+
+```sh
+node scripts/quota-check.mjs --log <wasp start 的日志文件>
+```
+
+脚本通过公开 HTTP 接口走完 AC1–AC6，每个场景使用新注册的账号（默认额度 3），可重复执行；
+`--log` 用于比对 `mock-ai.started` 条数，验证"额度不足时不调用模型"。逐条结果见 `docs/VERIFICATION.md`。
+
 ## 开源许可
 
 第三方代码的版权声明与使用条件见 [LICENSE](LICENSE) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

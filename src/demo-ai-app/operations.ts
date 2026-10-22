@@ -1,11 +1,11 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
+import type { PlanResult, Task } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateTask,
   DeleteTask,
   GeneratePlan,
   GetAllTasksByUser,
+  GetMyCredits,
   GetPlanResults,
   UpdateTask,
 } from "wasp/server/operations";
@@ -22,9 +22,32 @@ const generatePlanInputSchema = z.object({
 
 type GeneratePlanInput = z.infer<typeof generatePlanInputSchema>;
 
+export type GeneratePlanResult = {
+  schedule: GeneratedSchedule;
+  creditsRemaining: number;
+};
+
+/**
+ * 退回一次预留。退补失败不重试，避免把已失败的请求变成无限重试。
+ * 返回是否真的退成功：调用方据此决定能不能对用户说"未扣除额度"。
+ */
+async function refundCredit(userId: string): Promise<boolean> {
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { credits: { increment: 1 } },
+    });
+    console.log(JSON.stringify({ event: "quota.refunded", userId }));
+    return true;
+  } catch (err) {
+    console.error(JSON.stringify({ event: "quota.refund_failed", userId }), err);
+    return false;
+  }
+}
+
 export const generatePlan: GeneratePlan<
   GeneratePlanInput,
-  GeneratedSchedule
+  GeneratePlanResult
 > = async (rawArgs, context) => {
   if (!context.user) {
     throw new HttpError(
@@ -37,46 +60,68 @@ export const generatePlan: GeneratePlan<
     generatePlanInputSchema,
     rawArgs,
   );
+  const userId = context.user.id;
   const tasks = await context.entities.Task.findMany({
     where: {
       user: {
-        id: context.user.id,
+        id: userId,
       },
     },
   });
 
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
-    );
+  // 预留：条件判断与扣减写在同一条 UPDATE 里，并发请求由数据库在该行上串行化。
+  // 只有预留成功的请求才允许调用模型，额度不足的请求在这里直接失败。
+  const reserved = await context.entities.User.updateMany({
+    where: { id: userId, credits: { gt: 0 } },
+    data: { credits: { decrement: 1 } },
+  });
+  if (reserved.count === 0) {
+    console.log(JSON.stringify({ event: "quota.rejected", userId }));
+    throw new HttpError(402, "额度不足：本次未调用模型，也未扣除额度");
   }
 
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
+  let generatedSchedule: GeneratedSchedule;
+  try {
+    console.log("Calling mock AI provider");
+    generatedSchedule = await generateMockSchedule(tasks, hours);
+  } catch (err) {
+    console.error(JSON.stringify({ event: "generate_plan.provider_failed" }), err);
+    const refunded = await refundCredit(userId);
+    if (!refunded) {
+      // 退补本身失败：额度可能已被扣且没退回来，此时不能说"未扣除额度"。
+      throw new HttpError(
+        500,
+        "生成失败，且额度状态待确认：请刷新页面查看剩余额度后再决定是否重试",
+      );
+    }
+    throw new HttpError(502, "生成失败：本次未扣除额度，可直接重试");
+  }
+
+  try {
+    await context.entities.PlanResult.create({
+      data: {
+        user: { connect: { id: userId } },
+        content: JSON.stringify(generatedSchedule),
+      },
+    });
+  } catch (err) {
+    console.error(JSON.stringify({ event: "generate_plan.save_failed" }), err);
+    const refunded = await refundCredit(userId);
+    if (!refunded) {
+      throw new HttpError(
+        500,
+        "保存日程失败，且额度状态待确认：请刷新页面查看剩余额度后再决定是否重试",
+      );
+    }
+    throw new HttpError(500, "保存日程失败：本次未扣除额度，可直接重试");
+  }
+
+  const user = await context.entities.User.findUniqueOrThrow({
+    where: { id: userId },
+    select: { credits: true },
   });
 
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
-  }
-
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
-
-  return generatedSchedule;
+  return { schedule: generatedSchedule, creditsRemaining: user.credits };
 };
 
 const createTaskInputSchema = z.object({
@@ -192,6 +237,24 @@ export const getPlanResults: GetPlanResults<void, PlanResult[]> = async (
       },
     },
   });
+};
+
+export const getMyCredits: GetMyCredits<void, number> = async (
+  _args,
+  context,
+) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+  const user = await context.entities.User.findUnique({
+    where: {
+      id: context.user.id,
+    },
+    select: {
+      credits: true,
+    },
+  });
+  return user?.credits ?? 0;
 };
 
 export const getAllTasksByUser: GetAllTasksByUser<void, Task[]> = async (
