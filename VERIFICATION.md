@@ -28,6 +28,7 @@ npm test                      # = vitest run tests/quota.test.ts
 # 2) 真实 PostgreSQL 并发测试
 wasp start db                 # 或自备 PostgreSQL
 wasp db migrate-dev           # 建表（含 CreditLedgerEntry）
+# TEST_DATABASE_URL 直接用 .env.server 里的 DATABASE_URL（同一个库即可，测试只读写自己建的数据）
 TEST_DATABASE_URL='postgresql://postgres:postgres@localhost:5432/planner_test' npm run test:pg
 
 # 3) 全量
@@ -111,3 +112,4 @@ await prisma.$transaction(tx);
 3. 浏览器端 AC-6 / AC-7：没有可运行的页面。
 4. 迁移在「Wasp 注入 Auth 模型后的完整 schema」下由 `wasp db migrate-dev` 实际执行：本机用 `prisma migrate reset` 验证了迁移 SQL 本身可干净重放，但没跑过 Wasp 那条路径。迁移已手工去掉 Prisma 误生成的 `DROP TABLE "Auth"/"AuthIdentity"/"Session"`（原因写在迁移文件头）。
 5. `mock-ai.started` 日志条数没有在真实服务端日志里数过；用 provider 调用次数（测试内计数）等价断言。
+6. `tests/planFlow.pg.test.ts` 里 `import("@prisma/client")` 的解析路径：本机是 `npx prisma generate` 直接写进根 `node_modules`，能跑；在 Wasp 环境下 Prisma Client 由 `wasp install` / `wasp compile` 生成在 `.wasp/out`，靠 `package.json` 的 workspaces 提升到根 `node_modules`。**这条路径没有实测**——若报 `Cannot find module '@prisma/client'`，把该 import 换成 `.wasp/out/db` 下的客户端路径即可，测试逻辑不受影响。

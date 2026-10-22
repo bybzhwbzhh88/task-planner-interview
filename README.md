@@ -4,7 +4,7 @@
 
 ## 任务
 
-请阅读 [TASK.md](TASK.md)。项目中的额度处理是待改进的初始版本。
+请阅读 [TASK.md](TASK.md)。额度处理的规则与设计见 [SPEC.md](SPEC.md)，验证记录见 [VERIFICATION.md](VERIFICATION.md)。
 
 ## 环境
 
