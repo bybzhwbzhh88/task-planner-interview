@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="额度有据：任务规划实验室的额度事务交互原型与验收台。模拟数据，不连接真实后端。"
+    />
+    <meta name="color-scheme" content="light" />
+    <title>额度有据 · 任务规划实验室原型</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#product-view">跳到产品视图</a>
+
+    <div class="page-shell">
+      <header class="case-header">
+        <div class="case-kicker-row">
+          <p class="case-kicker">任务规划实验室 · 额度方案原型</p>
+          <span class="sim-pill"><span class="sim-dot" aria-hidden="true"></span>模拟环境</span>
+        </div>
+        <div class="case-heading-row">
+          <div class="case-heading-copy">
+            <h1>生成有据，额度可查</h1>
+            <p class="case-subtitle">
+              把一次 AI 生成做成可对账的额度事务：先预检，再预占；成功核销，失败返还。
+            </p>
+          </div>
+          <div class="case-tags" aria-label="原型说明">
+            <span class="tag">交互原型</span>
+            <span class="tag tag-warm">模拟服务端</span>
+            <span class="tag tag-quiet">不连接真实数据</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="workbench">
+        <section class="product-column" aria-labelledby="product-view">
+          <div class="browser-frame">
+            <div class="browser-bar" aria-hidden="true">
+              <div class="browser-dots"><span></span><span></span><span></span></div>
+              <div class="browser-url">task-planner.local/demo-app</div>
+              <span class="browser-label">PROTOTYPE</span>
+            </div>
+
+            <div class="product-app" id="product-view">
+              <header class="app-header">
+                <div class="app-brand">
+                  <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M12 3.5 13.9 9l5.6 1.9-5.6 1.9L12 18.5l-1.9-5.7-5.6-1.9L10.1 9 12 3.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+                      <circle cx="18.4" cy="18.2" r="1.9" stroke="currentColor" stroke-width="1.4" />
+                    </svg>
+                  </span>
+                  <span>任务规划实验室</span>
+                </div>
+                <div class="app-header-side">
+                  <div id="balanceChip" class="balance-chip">
+                    <span class="balance-label">剩余额度</span>
+                    <strong id="balanceValue">3</strong>
+                  </div>
+                  <span class="app-logout" aria-hidden="true">退出登录</span>
+                </div>
+              </header>
+
+              <div class="app-body">
+                <header class="app-intro">
+                  <p class="app-eyebrow">AI 任务规划</p>
+                  <h2>把今天安排明白</h2>
+                  <p class="app-lead">输入待办与可用时长，生成一份可执行日程。</p>
+                </header>
+
+                <section class="planner-card" aria-label="生成日程">
+                  <div class="task-list" aria-label="待办事项">
+                    <label class="task-row" id="task1Row">
+                      <input type="checkbox" class="task-check" />
+                      <span class="task-copy">
+                        <span class="task-name" id="task1Name">整理项目周报素材</span>
+                        <span class="task-meta">预计 1.5 小时</span>
+                      </span>
+                      <span class="task-duration">1.5h</span>
+                    </label>
+
+                    <label class="task-row" id="task2Row">
+                      <input type="checkbox" class="task-check" />
+                      <span class="task-copy">
+                        <span class="task-name" id="task2Name">准备周五方案评审</span>
+                        <span class="task-meta" id="task2Meta">预计 2 小时</span>
+                      </span>
+                      <span class="task-duration">2h</span>
+                      <span id="failChip" class="fail-chip" hidden>触发模拟失败</span>
+                    </label>
+                  </div>
+
+                  <div class="planner-controls">
+                    <div class="field">
+                      <label for="hours">今天可用的工作时长</label>
+                      <div class="hours-control">
+                        <input id="hours" type="number" min="1" max="24" step="0.5" value="8" inputmode="decimal" />
+                        <span>小时</span>
+                      </div>
+                    </div>
+                    <p class="soft-note">任务只存在当前页面，不会上传。</p>
+                  </div>
+
+                  <div class="generate-area">
+                    <div class="cost-block">
+                      <p id="costHint" class="cost-hint">
+                        每次成功生成消耗 1 个额度，当前剩余
+                        <strong id="hintCredits">3</strong> 个。
+                      </p>
+                      <p id="lastCreditHint" class="last-credit" hidden>
+                        这是最后 1 个额度；本次成功后额度将用完。
+                      </p>
+                      <div id="zeroNotice" class="notice notice-warning" role="alert" hidden>
+                        额度已用完。生成按钮已停用；继续生成不会发起请求，也不会扣除额度。请联系管理员补充额度后刷新页面。
+                      </div>
+                    </div>
+
+                    <button id="generateBtn" class="primary-button" type="button">
+                      <span class="button-spinner" aria-hidden="true" hidden></span>
+                      <span id="generateLabel">生成日程</span>
+                    </button>
+                  </div>
+
+                  <div
+                    id="statusRegion"
+                    class="status-region"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                  ></div>
+
+                  <section id="resultSection" class="result-section" aria-labelledby="resultTitle" hidden>
+                    <div class="result-heading">
+                      <h3 id="resultTitle">本次日程</h3>
+                      <span class="result-badge">AI 生成</span>
+                    </div>
+                    <div id="schedule" class="schedule"></div>
+                  </section>
+                </section>
+
+                <p class="product-disclaimer">交互原型 · 模拟数据 · 刷新页面恢复初始状态</p>
+              </div>
+            </div>
+          </div>
+
+          <p class="under-stage-note">
+            左侧是用户视角；右侧验收台模拟服务端额度事务。规则、接口与取舍见
+            <a href="../SPEC.md">SPEC.md</a>。
+          </p>
+        </section>
+
+        <aside class="lab" aria-labelledby="lab-title">
+          <header class="lab-header">
+            <div>
+              <p class="lab-kicker">验收台</p>
+              <h2 id="lab-title">跑一遍额度规则</h2>
+            </div>
+            <button id="resetDemo" class="lab-reset" type="button">重置演示</button>
+          </header>
+
+          <p class="lab-disclaimer">
+            以下结果由页面模拟器产生，用于演示交互与验收口径，<strong>不代表真实后端或真实并发安全</strong>。
+          </p>
+
+          <section class="lab-section" aria-labelledby="scenarios-title">
+            <div class="lab-section-head">
+              <h3 id="scenarios-title">场景</h3>
+              <span>AC-01 – AC-04</span>
+            </div>
+            <div class="scenario-grid">
+              <button class="scenario-card" type="button" data-scenario="P1">
+                <span class="scenario-top"><span class="scenario-id">P1</span><span class="scenario-arrow">→</span></span>
+                <strong>成功扣 1</strong>
+                <span>余额 3 → 2，出现回执与日程</span>
+              </button>
+              <button class="scenario-card" type="button" data-scenario="P2">
+                <span class="scenario-top"><span class="scenario-id">P2</span><span class="scenario-arrow">→</span></span>
+                <strong>零额度拦截</strong>
+                <span>按钮禁用；直连请求也不调用模型</span>
+              </button>
+              <button class="scenario-card" type="button" data-scenario="P3">
+                <span class="scenario-top"><span class="scenario-id">P3</span><span class="scenario-arrow">→</span></span>
+                <strong>失败自动返还</strong>
+                <span>模型失败，净扣 0，可重试</span>
+              </button>
+              <button class="scenario-card" type="button" data-scenario="P4">
+                <span class="scenario-top"><span class="scenario-id">P4</span><span class="scenario-arrow">→</span></span>
+                <strong>并发只放行 1 个</strong>
+                <span>余额 1，两个请求，一次模型调用</span>
+              </button>
+            </div>
+            <div class="lab-controls">
+              <button id="runAll" class="run-all" type="button">
+                <span>运行全部场景</span>
+                <span aria-hidden="true">→</span>
+              </button>
+              <label class="toggle-row">
+                <input id="failToggle" type="checkbox" />
+                <span>向第二个任务注入 <code>[fail]</code></span>
+              </label>
+            </div>
+            <p id="labRunStatus" class="lab-run-status" role="status" aria-live="polite"></p>
+          </section>
+
+          <section class="lab-section" aria-labelledby="invariants-title">
+            <div class="lab-section-head">
+              <h3 id="invariants-title">不变量</h3>
+              <span>每次结算后检查</span>
+            </div>
+            <div id="invariants" class="invariants" aria-live="polite">
+              <div class="invariant" data-invariant="balance" data-status="idle">
+                <span class="invariant-mark" aria-hidden="true">·</span>
+                <span class="invariant-name">余额不为负</span>
+                <span class="invariant-value">等待运行</span>
+              </div>
+              <div class="invariant" data-invariant="reservation" data-status="idle">
+                <span class="invariant-mark" aria-hidden="true">·</span>
+                <span class="invariant-name">未预占不调用</span>
+                <span class="invariant-value">等待运行</span>
+              </div>
+              <div class="invariant" data-invariant="reconcile" data-status="idle">
+                <span class="invariant-mark" aria-hidden="true">·</span>
+                <span class="invariant-name">对账平衡</span>
+                <span class="invariant-value">等待运行</span>
+              </div>
+            </div>
+            <p id="reconciliation" class="reconciliation">初始额度 − 预占次数 + 返还次数 = 当前余额</p>
+          </section>
+
+          <section class="lab-section" aria-labelledby="timeline-title">
+            <div class="lab-section-head">
+              <h3 id="timeline-title">请求轨道</h3>
+              <span>attempt 视角</span>
+            </div>
+            <div id="timeline" class="timeline">
+              <p class="empty-state">运行场景后，在这里看到预占、调用与结算路径。</p>
+            </div>
+          </section>
+
+          <section class="lab-section" aria-labelledby="log-title">
+            <div class="lab-section-head">
+              <h3 id="log-title">事件日志</h3>
+              <span id="logCount">0 条</span>
+            </div>
+            <div id="eventLog" class="event-log" role="log" aria-label="模拟事件日志">
+              <p class="empty-state">请求事件会出现在这里。</p>
+            </div>
+          </section>
+
+          <section class="lab-section" aria-labelledby="results-title">
+            <div class="lab-section-head">
+              <h3 id="results-title">验收结果</h3>
+              <span>期望 vs 实际</span>
+            </div>
+            <div id="scenarioResults" class="scenario-results">
+              <p class="empty-state">尚未运行场景。</p>
+            </div>
+          </section>
+
+          <footer class="lab-footer">
+            <a href="../ACCEPTANCE.md">验收案例与证据 <span aria-hidden="true">↗</span></a>
+            <a href="../TASKS.md">开发任务拆解 <span aria-hidden="true">↗</span></a>
+          </footer>
+        </aside>
+      </main>
+
+      <footer class="page-footer">
+        <p>额度有据 · 产品方向方案原型 · 模拟环境</p>
+        <nav aria-label="文档">
+          <a href="../SPEC.md">需求方案</a>
+          <a href="../TASKS.md">任务拆解</a>
+          <a href="../ACCEPTANCE.md">验收案例</a>
+          <a href="../SUBMISSION.md">提交说明</a>
+        </nav>
+      </footer>
+    </div>
+
+    <script defer src="./app.js"></script>
+  </body>
+</html>
