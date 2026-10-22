@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCreditBalance,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -63,9 +64,13 @@ function NewTaskForm({
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
+  // null 表示还没拿到过准确值。生成返回后直接用返回值覆盖，避免刷新前显示旧余额。
+  const [creditsOverride, setCreditsOverride] = useState<number | null>(null);
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+  const { data: balance, refetch: refetchBalance } = useQuery(getCreditBalance);
+  const creditsLeft = creditsOverride ?? balance?.credits ?? null;
 
   const handleSubmit = async () => {
     try {
@@ -81,28 +86,51 @@ function NewTaskForm({
   const handleGeneratePlan = async () => {
     try {
       setIsPlanGenerating(true);
-      const response = await generatePlan({
+      const result = await generatePlan({
         hours: todaysHours,
       });
-      if (response) {
-        setResponse(response);
-      }
+      setResponse(result.schedule);
+      setCreditsOverride(result.creditsRemaining);
+      // 页头余额与本组件共用同一个 query 缓存，refetch 后两处同时更新。
+      void refetchBalance();
+      toast({
+        title: "已生成",
+        description: `本次已生成日程，剩余 ${result.creditsRemaining} 次额度。`,
+      });
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
           : undefined;
       if (statusCode === 402) {
+        // 402：服务端在预扣阶段就拒绝了，没有发起模型调用，也没有扣额度。
+        setCreditsOverride(0);
+        void refetchBalance();
         toast({
           title: "额度不足",
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description: "额度已用完，本次未发起生成。",
+        });
+      } else if (statusCode === 502) {
+        // 502：模型明确失败，额度已退还，可以直接重试。
+        void refetchBalance();
+        toast({
+          title: "生成失败",
+          description: "模型返回失败，本次未扣额度，可以直接重试。",
+          variant: "destructive",
+        });
+      } else if (statusCode === 500) {
+        void refetchBalance();
+        toast({
+          title: "保存失败",
+          description: "生成结果未能保存，本次额度已退还，请重试。",
+          variant: "destructive",
         });
       } else {
         toast({
-          title: "Error",
+          title: "生成失败",
           description:
             err instanceof Error ? err.message : "Something went wrong",
           variant: "destructive",
@@ -187,7 +215,9 @@ function NewTaskForm({
 
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={
+          isPlanGenerating || tasks?.length === 0 || creditsLeft === 0
+        }
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -203,6 +233,15 @@ function NewTaskForm({
           "生成日程"
         )}
       </Button>
+
+      {creditsLeft === 0 && (
+        <p
+          className="text-muted-foreground text-center text-sm"
+          data-testid="credit-exhausted-hint"
+        >
+          额度已用完，暂时无法生成新的日程。
+        </p>
+      )}
 
       {!!response && (
         <div className="flex flex-col">

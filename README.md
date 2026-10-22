@@ -72,6 +72,21 @@ npx tsc --project tsconfig.wasp.json --noEmit
 
 运行检查前需要完成依赖安装。首次启动前需要执行数据库迁移。
 
+## 验证
+
+额度处理的验收用例见 [SPEC.md](SPEC.md) §7，实测结果见 [VERIFICATION.md](VERIFICATION.md)。
+
+```sh
+npm run verify:unit     # 逻辑层：假存储单测，不需要数据库
+npm run verify:quota    # 接口层：打真实接口，需要 dev server 与日志文件
+```
+
+`verify:quota` 默认请求 `http://127.0.0.1:3001`（Wasp 的 API 端口，`3000` 是 Vite 客户端），并从 `/tmp/wasp-dev.log` 统计 `mock-ai.started` 条数；可用 `--base-url`、`--log` 覆盖。启动时若要把日志留档：
+
+```sh
+wasp start > /tmp/wasp-dev.log 2>&1
+```
+
 ## 开源许可
 
 第三方代码的版权声明与使用条件见 [LICENSE](LICENSE) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
