@@ -13,6 +13,22 @@ model User {
   credits      Int           @default(3)
   planResults PlanResult[]
   tasks        Task[]
+  creditLedger CreditLedgerEntry[]
+}
+
+/// 额度账本：每笔余额变动一条，用于对账与验证「扣了几次、退了几次」。
+model CreditLedgerEntry {
+  id           String   @id @default(uuid())
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  /// -1 = 预占（plan_reserved），+1 = 退回（plan_refunded）
+  delta        Int
+  reason       String
+  /// 该笔变动后的余额快照
+  balanceAfter Int
+
+  @@index([userId, createdAt])
 }
 
 model PlanResult {
