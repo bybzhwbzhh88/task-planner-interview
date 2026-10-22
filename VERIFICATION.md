@@ -1,7 +1,7 @@
 # 额度处理验证记录
 
 > 日期：2026-10-22  
-> 状态：核心规则与界面反馈均已验证通过。
+> 状态：核心规则与界面反馈均已验证通过；PR [#10](https://github.com/bybzhwbzhh88/task-planner-interview/pull/10) 已创建。
 
 ## 结论
 
@@ -54,6 +54,6 @@
 
 ## 未验证与范围外
 
-- 未创建远端 Fork 或 Pull Request；仓库当前为本地 Git 仓库。
+- Pull Request [#10](https://github.com/bybzhwbzhh88/task-planner-interview/pull/10) 已创建，当前等待维护者评审。
 - 未实现支付、订阅、跨账号防刷、幂等键或服务崩溃后的自动额度恢复。
 - 本次没有浏览器级并发压测；并发行为通过真实 HTTP 接口和独立 PostgreSQL 数据库验证。

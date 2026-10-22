@@ -242,4 +242,4 @@ npx tsc --project tsconfig.wasp.json --noEmit
 - `npm run verify:quota` 使用独立数据库完成 Q1-Q5 的真实接口验证。
 - Q6 已在 Chrome 中手动检查零额度和成功生成后的即时余额刷新。
 - 支付、订阅、跨账号防刷和进程崩溃后的自动补偿仍按任务范围排除。
-- 尚未填写 `SUBMISSION.md` 中的个人身份字段，也尚未创建远端 Fork 或 Pull Request。
+- 已于 2026-10-22 创建 [Pull Request #10](https://github.com/bybzhwbzhh88/task-planner-interview/pull/10)。

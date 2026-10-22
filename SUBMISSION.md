@@ -10,6 +10,7 @@
 
 ## 交付入口
 
+- Pull Request：[#10](https://github.com/bybzhwbzhh88/task-planner-interview/pull/10)
 - 方案与验收：[SPEC.md](SPEC.md)
 - 额度编排：[quotaGeneration.ts](src/demo-ai-app/quotaGeneration.ts)
 - 服务端操作：[operations.ts](src/demo-ai-app/operations.ts)
@@ -24,5 +25,4 @@ Q1-Q7 的操作、预期结果和实际结果见 [VERIFICATION.md](VERIFICATION.
 
 ## 待办与交接
 
-- 创建 Fork、推送分支并按指定格式提交 PR。
 - 服务崩溃后的额度自动恢复不在本次范围；预占后进程异常退出需要人工核查。
