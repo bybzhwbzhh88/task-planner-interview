@@ -1,5 +1,4 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
+import type { PlanResult, Task } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateTask,
@@ -37,6 +36,9 @@ export const generatePlan: GeneratePlan<
     generatePlanInputSchema,
     rawArgs,
   );
+
+  // Tasks are fetched before reserving a credit so that an empty task list
+  // never touches the balance at all.
   const tasks = await context.entities.Task.findMany({
     where: {
       user: {
@@ -44,40 +46,73 @@ export const generatePlan: GeneratePlan<
       },
     },
   });
-
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
-    );
+  if (tasks.length === 0) {
+    throw new HttpError(400, "Add at least one task before generating a plan");
   }
 
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
+  // Reserve one credit BEFORE calling the provider. The conditional
+  // single-statement update (UPDATE ... SET credits = credits - 1 WHERE
+  // credits > 0) is what prevents overdraft under concurrency: PostgreSQL
+  // holds a row lock for the update, so only one request can claim the last
+  // credit and every other request observes count === 0 here.
+  const reservation = await context.entities.User.updateMany({
+    where: { id: context.user.id, credits: { gt: 0 } },
+    data: { credits: { decrement: 1 } },
   });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
+  if (reservation.count === 0) {
+    // No model call is made when the user is out of credits.
     throw new HttpError(402, "User is out of credits");
   }
 
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
+  console.log("Calling mock AI provider");
+  let generatedSchedule: GeneratedSchedule;
+  try {
+    generatedSchedule = await generateMockSchedule(tasks, hours);
+  } catch (err) {
+    // The provider explicitly rejected the call: refund the reserved credit
+    // so a failed generation never consumes quota.
+    await refundCredit(context.user.id);
+    throw new HttpError(
+      502,
+      "The mock provider rejected the request. No credits were consumed; remove any task containing [fail] and try again.",
+    );
+  }
 
+  try {
+    await context.entities.PlanResult.create({
+      data: {
+        user: { connect: { id: context.user.id } },
+        content: JSON.stringify(generatedSchedule),
+      },
+    });
+  } catch (err) {
+    // The provider call succeeded, so the credit stays consumed (this is a
+    // platform-side failure; automatic compensation is out of scope).
+    console.error(
+      "Failed to persist PlanResult after a successful generation",
+      err,
+    );
+    throw new HttpError(500, "Failed to save the generated plan");
+  }
+
+  console.log("Saved generated schedule, credit consumed");
   return generatedSchedule;
 };
+
+/** Atomically returns one credit to the user. Atomic increment keeps the
+ * final balance equal to (initial - successful calls), never negative. */
+async function refundCredit(userId: string): Promise<void> {
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { credits: { increment: 1 } },
+    });
+  } catch (err) {
+    // If the refund itself fails the database is unhealthy; log loudly so
+    // the loss is visible instead of silently dropping the credit.
+    console.error(`Failed to refund credit for user ${userId}`, err);
+  }
+}
 
 const createTaskInputSchema = z.object({
   description: z.string().nonempty(),
