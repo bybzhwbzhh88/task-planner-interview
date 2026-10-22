@@ -8,6 +8,7 @@ import {
   updateTask,
   useQuery,
 } from "wasp/client/operations";
+import { getMe } from "wasp/client/auth";
 
 import { Loader2, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -66,6 +67,8 @@ function NewTaskForm({
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+  const { data: currentUser, refetch: refetchUser } = useQuery(getMe);
+  const credits = currentUser?.credits;
 
   const handleSubmit = async () => {
     try {
@@ -88,6 +91,8 @@ function NewTaskForm({
         setResponse(response);
       }
     } catch (err) {
+      // A failed generation must not leave a stale schedule on screen.
+      setResponse(null);
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
@@ -98,7 +103,16 @@ function NewTaskForm({
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description: "当前账号没有剩余额度，本次未发起生成。请联系管理员充值后再试。",
+        });
+      } else if (statusCode === 502) {
+        toast({
+          title: "生成失败",
+          style: {
+            minWidth: "400px",
+          },
+          description: "模拟接口拒绝了本次请求，未消耗额度。请删除包含 [fail] 的任务后重试。",
+          variant: "destructive",
         });
       } else {
         toast({
@@ -110,6 +124,8 @@ function NewTaskForm({
       }
     } finally {
       setIsPlanGenerating(false);
+      // Refresh the displayed balance after every attempt.
+      refetchUser();
     }
   };
 
@@ -185,24 +201,33 @@ function NewTaskForm({
         )}
       </div>
 
-      <Button
-        type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
-        onClick={() => handleGeneratePlan()}
-        variant="default"
-        size="default"
-        className="w-full"
-        data-testid="generate-schedule-button"
-      >
-        {isPlanGenerating ? (
-          <>
-            <Loader2 className="mr-2 inline-block animate-spin" />
-            生成中…
-          </>
-        ) : (
-          "生成日程"
-        )}
-      </Button>
+      <div className="flex flex-col gap-2">
+        <Button
+          type="button"
+          disabled={isPlanGenerating || tasks?.length === 0 || credits === 0}
+          onClick={() => handleGeneratePlan()}
+          variant="default"
+          size="default"
+          className="w-full"
+          data-testid="generate-schedule-button"
+        >
+          {isPlanGenerating ? (
+            <>
+              <Loader2 className="mr-2 inline-block animate-spin" />
+              生成中…
+            </>
+          ) : (
+            "生成日程"
+          )}
+        </Button>
+        <p className="text-muted-foreground text-center text-sm">
+          {credits === undefined
+            ? "正在读取剩余额度…"
+            : credits > 0
+              ? `剩余额度：${credits}（每次成功生成消耗 1 点）`
+              : "剩余额度：0，已无法生成日程"}
+        </p>
+      </div>
 
       {!!response && (
         <div className="flex flex-col">
