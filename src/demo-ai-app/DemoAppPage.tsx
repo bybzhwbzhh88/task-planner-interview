@@ -5,12 +5,13 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCredits,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
 
-import { Loader2, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "../client/components/ui/button";
 import {
   Card,
@@ -64,8 +65,46 @@ function NewTaskForm({
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
 
-  const { data: tasks, isLoading: isTasksLoading } =
-    useQuery(getAllTasksByUser);
+  const {
+    data: tasks,
+    isLoading: isTasksLoading,
+    error: tasksError,
+    refetch: refetchTasks,
+  } = useQuery(getAllTasksByUser);
+  const isTasksError = Boolean(tasksError);
+
+  const {
+    data: credits,
+    isLoading: isCreditsLoading,
+    error: creditsError,
+    refetch: refetchCredits,
+  } = useQuery(getCredits);
+  const isCreditsError = Boolean(creditsError);
+
+  useEffect(() => {
+    const handleFocus = () => {
+      refetchCredits().catch(() => undefined);
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [refetchCredits]);
+
+  const isHoursValid =
+    Number.isFinite(todaysHours) && todaysHours >= 1 && todaysHours <= 24;
+
+  const disabledReason = (() => {
+    if (isPlanGenerating) return "正在生成，请稍候…";
+    if (isTasksLoading) return "任务加载中…";
+    if (isTasksError) return "任务加载失败，请刷新重试。";
+    if (!tasks || tasks.length === 0) return "请先添加待办事项。";
+    if (isCreditsLoading) return "额度加载中…";
+    if (isCreditsError) return "额度读取失败，请刷新重试。";
+    if (credits === undefined) return "额度加载中…";
+    if (credits <= 0) return "额度不足，本练习暂不提供充值。";
+    if (!isHoursValid) return "工作时长需在 1–24 小时之间。";
+    return null;
+  })();
 
   const handleSubmit = async () => {
     try {
@@ -81,37 +120,54 @@ function NewTaskForm({
   const handleGeneratePlan = async () => {
     try {
       setIsPlanGenerating(true);
-      const response = await generatePlan({
+      const generatedSchedule = await generatePlan({
         hours: todaysHours,
       });
-      if (response) {
-        setResponse(response);
-      }
+      setResponse(generatedSchedule);
+      toast({
+        title: "生成成功",
+        description: "已消耗 1 个额度。",
+      });
     } catch (err) {
-      const statusCode =
-        err && typeof err === "object" && "statusCode" in err
-          ? err.statusCode
-          : undefined;
+      const statusCode = getStatusCode(err);
       if (statusCode === 402) {
         toast({
           title: "额度不足",
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description: "无法生成。可继续编辑任务；本练习暂不提供充值。",
+        });
+      } else if (statusCode === 502) {
+        toast({
+          title: "生成失败",
+          description:
+            "模拟生成失败，本次未扣费。请删除含 [fail] 的任务后重试。",
+          variant: "destructive",
+        });
+      } else if (statusCode === 400) {
+        toast({
+          title: "输入不合法",
+          description: "请检查工作时长（1–24 小时）或先添加任务。",
+          variant: "destructive",
         });
       } else {
         toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
+          title: "暂时无法确认结果",
+          description: "请先刷新额度并核对后再操作。",
           variant: "destructive",
         });
       }
     } finally {
       setIsPlanGenerating(false);
+      refetchCredits().catch(() => undefined);
     }
   };
+
+  const creditsLabel =
+    isCreditsLoading || isCreditsError || credits === undefined
+      ? "—"
+      : credits;
 
   return (
     <div className="flex flex-col justify-center gap-10">
@@ -146,7 +202,22 @@ function NewTaskForm({
         {isTasksLoading && (
           <div className="text-muted-foreground">Loading...</div>
         )}
-        {tasks! && tasks.length > 0 ? (
+        {isTasksError && (
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-muted-foreground">
+              任务加载失败，请刷新重试。
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => refetchTasks().catch(() => undefined)}
+            >
+              重新加载
+            </Button>
+          </div>
+        )}
+        {tasks && tasks.length > 0 ? (
           <div className="space-y-4">
             {tasks.map((task: Task) => (
               <Todo
@@ -179,15 +250,41 @@ function NewTaskForm({
             </div>
           </div>
         ) : (
-          <div className="text-muted-foreground text-center">
-            请先添加待办事项
-          </div>
+          !isTasksLoading &&
+          !isTasksError && (
+            <div className="text-muted-foreground text-center">
+              请先添加待办事项
+            </div>
+          )
         )}
       </div>
 
+      <div className="flex items-center justify-between gap-3">
+        <span
+          className="text-muted-foreground text-sm"
+          data-testid="credits-balance"
+        >
+          剩余额度：{creditsLabel}
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => refetchCredits().catch(() => undefined)}
+          disabled={isCreditsLoading}
+        >
+          <RefreshCw className="mr-2 h-4 w-4" />
+          刷新额度
+        </Button>
+      </div>
+
+      {isCreditsError && (
+        <p className="text-destructive text-sm">额度读取失败，请刷新重试。</p>
+      )}
+
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={disabledReason !== null}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -204,6 +301,15 @@ function NewTaskForm({
         )}
       </Button>
 
+      {disabledReason && (
+        <p
+          className="text-muted-foreground text-center text-sm"
+          data-testid="generate-disabled-reason"
+        >
+          {disabledReason}
+        </p>
+      )}
+
       {!!response && (
         <div className="flex flex-col">
           <h3 className="text-foreground mb-4 text-lg font-semibold">
@@ -214,6 +320,15 @@ function NewTaskForm({
       )}
     </div>
   );
+}
+
+function getStatusCode(error: unknown): number | undefined {
+  if (error && typeof error === "object" && "statusCode" in error) {
+    const statusCode = (error as { statusCode?: unknown }).statusCode;
+    return typeof statusCode === "number" ? statusCode : undefined;
+  }
+
+  return undefined;
 }
 
 type TodoProps = Pick<Task, "id" | "isDone" | "description" | "time">;

@@ -1,18 +1,19 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
+import type { PlanResult, Task } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateTask,
   DeleteTask,
   GeneratePlan,
   GetAllTasksByUser,
+  GetCredits,
   GetPlanResults,
   UpdateTask,
 } from "wasp/server/operations";
 import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
-import type { GeneratedSchedule } from "./schedule";
 import { generateMockSchedule } from "./mockAi";
+import { generatePlanWithQuota, QuotaError, readCredits } from "./quota";
+import type { GeneratedSchedule } from "./schedule";
 
 
 //#region Actions
@@ -37,46 +38,18 @@ export const generatePlan: GeneratePlan<
     generatePlanInputSchema,
     rawArgs,
   );
-  const tasks = await context.entities.Task.findMany({
-    where: {
-      user: {
-        id: context.user.id,
-      },
-    },
-  });
 
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
+  try {
+    return await generatePlanWithQuota(
+      { userId: context.user.id, hours },
+      { db: prisma, generate: generateMockSchedule },
     );
+  } catch (error) {
+    if (error instanceof QuotaError) {
+      throw new HttpError(error.status, error.message, { cause: error });
+    }
+    throw error;
   }
-
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
-  });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
-  }
-
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
-
-  return generatedSchedule;
 };
 
 const createTaskInputSchema = z.object({
@@ -178,6 +151,22 @@ export const deleteTask: DeleteTask<DeleteTaskInput, Task> = async (
 //#endregion
 
 //#region Queries
+export const getCredits: GetCredits<void, number> = async (
+  _args,
+  context,
+) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+
+  const credits = await readCredits(prisma, context.user.id);
+  if (credits === null) {
+    throw new HttpError(401);
+  }
+
+  return credits;
+};
+
 export const getPlanResults: GetPlanResults<void, PlanResult[]> = async (
   _args,
   context,

@@ -1,6 +1,10 @@
 {
   "name": "task-planner-interview",
   "type": "module",
+  "scripts": {
+    "test:quota": "vitest run tests/quota.integration.test.ts",
+    "test:http": "node --test tests/quota.http.test.mjs"
+  },
   "workspaces": [
     ".wasp/out/*",
     ".wasp/out/sdk/wasp"
