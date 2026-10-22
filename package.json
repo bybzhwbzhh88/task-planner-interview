@@ -35,6 +35,11 @@
     "vitest": "^4.1.9"
   },
   "private": true,
+  "scripts": {
+    "test": "vitest run tests/quota.test.ts",
+    "test:pg": "vitest run tests/planFlow.pg.test.ts",
+    "test:all": "vitest run"
+  },
   "engines": {
     "node": ">=24.14.1"
   }
