@@ -1,5 +1,4 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
+import type { PlanResult, Task } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateTask,
@@ -13,18 +12,27 @@ import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
 import type { GeneratedSchedule } from "./schedule";
 import { generateMockSchedule } from "./mockAi";
+import {
+  generateScheduleWithQuota,
+  QuotaGenerationError,
+} from "./quotaGeneration";
 
 
 //#region Actions
 const generatePlanInputSchema = z.object({
-  hours: z.number(),
+  hours: z.number().min(1).max(24),
 });
 
 type GeneratePlanInput = z.infer<typeof generatePlanInputSchema>;
 
+export type GeneratePlanOutput = {
+  schedule: GeneratedSchedule;
+  creditsRemaining: number;
+};
+
 export const generatePlan: GeneratePlan<
   GeneratePlanInput,
-  GeneratedSchedule
+  GeneratePlanOutput
 > = async (rawArgs, context) => {
   if (!context.user) {
     throw new HttpError(
@@ -37,47 +45,104 @@ export const generatePlan: GeneratePlan<
     generatePlanInputSchema,
     rawArgs,
   );
+  const userId = context.user.id;
   const tasks = await context.entities.Task.findMany({
     where: {
       user: {
-        id: context.user.id,
+        id: userId,
       },
     },
   });
 
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
-    );
+  if (tasks.length === 0) {
+    throw new HttpError(400, "请先添加至少一条待办任务");
   }
 
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
-  });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
+  try {
+    return await generateScheduleWithQuota({
+      userId,
+      tasks,
+      hours,
+      generateSchedule: generateMockSchedule,
+      store: {
+        reserveCredit: async (id) => {
+          const reservation = await context.entities.User.updateMany({
+            where: {
+              id,
+              credits: { gt: 0 },
+            },
+            data: {
+              credits: { decrement: 1 },
+            },
+          });
+          return reservation.count === 1;
+        },
+        refundCredit: async (id) => {
+          const user = await context.entities.User.update({
+            where: { id },
+            data: { credits: { increment: 1 } },
+            select: { credits: true },
+          });
+          return user.credits;
+        },
+        saveResultAndGetBalance: async (id, schedule) => {
+          return prisma.$transaction(async (tx) => {
+            await tx.planResult.create({
+              data: {
+                userId: id,
+                content: JSON.stringify(schedule),
+              },
+            });
+            const user = await tx.user.findUniqueOrThrow({
+              where: { id },
+              select: { credits: true },
+            });
+            return user.credits;
+          });
+        },
+      },
+    });
+  } catch (error) {
+    if (error instanceof QuotaGenerationError) {
+      throw quotaErrorToHttpError(error);
+    }
+    throw error;
   }
-
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
-
-  return generatedSchedule;
 };
+
+function quotaErrorToHttpError(error: QuotaGenerationError): HttpError {
+  const data = { code: error.kind };
+  switch (error.kind) {
+    case "insufficient-credits":
+      return new HttpError(
+        402,
+        "额度不足：本次未调用模型，也未扣除额度。",
+        data,
+        { cause: error },
+      );
+    case "provider-failed":
+      return new HttpError(
+        502,
+        "模拟模型生成失败，本次额度已退回。",
+        data,
+        { cause: error },
+      );
+    case "persistence-failed":
+      return new HttpError(
+        500,
+        "保存日程失败，本次额度已退回。",
+        data,
+        { cause: error },
+      );
+    case "refund-failed":
+      return new HttpError(
+        500,
+        "额度归还失败，请刷新后确认余额并联系维护者。",
+        data,
+        { cause: error },
+      );
+  }
+}
 
 const createTaskInputSchema = z.object({
   description: z.string().nonempty(),

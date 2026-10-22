@@ -8,6 +8,7 @@ import {
   updateTask,
   useQuery,
 } from "wasp/client/operations";
+import { useAuth } from "wasp/client/auth";
 
 import { Loader2, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -64,8 +65,11 @@ function NewTaskForm({
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
 
+  const { data: user } = useAuth();
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+  const credits = user?.credits;
+  const isOutOfCredits = credits === 0;
 
   const handleSubmit = async () => {
     try {
@@ -84,9 +88,11 @@ function NewTaskForm({
       const response = await generatePlan({
         hours: todaysHours,
       });
-      if (response) {
-        setResponse(response);
-      }
+      setResponse(response.schedule);
+      toast({
+        title: "日程生成成功",
+        description: `已扣除 1 个额度，当前剩余 ${response.creditsRemaining} 个。`,
+      });
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
@@ -95,14 +101,28 @@ function NewTaskForm({
       if (statusCode === 402) {
         toast({
           title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description:
+            "本次未调用模型，也未扣除额度。演示版本不提供充值或购买，请保留待办，待额度补充后再试。",
+        });
+      } else if (statusCode === 502) {
+        toast({
+          title: "日程生成失败",
+          description:
+            "模拟模型拒绝了本次请求，额度未扣除。请检查待办中是否包含 [fail] 后重试。",
+          variant: "destructive",
+        });
+      } else if (statusCode === 500) {
+        toast({
+          title: "生成未完成",
+          description:
+            err instanceof Error
+              ? err.message
+              : "处理失败，请刷新页面确认余额后重试。",
+          variant: "destructive",
         });
       } else {
         toast({
-          title: "Error",
+          title: "请求失败",
           description:
             err instanceof Error ? err.message : "Something went wrong",
           variant: "destructive",
@@ -187,7 +207,14 @@ function NewTaskForm({
 
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={
+          isPlanGenerating ||
+          !tasks?.length ||
+          credits === undefined ||
+          isOutOfCredits ||
+          todaysHours < 1 ||
+          todaysHours > 24
+        }
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -200,9 +227,27 @@ function NewTaskForm({
             生成中…
           </>
         ) : (
-          "生成日程"
+          "生成日程（消耗 1 个额度）"
         )}
       </Button>
+
+      <div className="bg-muted/40 flex flex-wrap items-center justify-between gap-3 rounded-md border px-4 py-3 text-sm">
+        <span className="text-muted-foreground">每次生成消耗 1 个额度</span>
+        <span
+          className="font-medium"
+          data-testid="quota-balance"
+        >
+          当前剩余 {credits ?? "-"} 个
+        </span>
+      </div>
+      {isOutOfCredits && (
+        <div
+          className="border-destructive/30 bg-destructive/5 text-destructive rounded-md border px-4 py-3 text-sm leading-6"
+          role="status"
+        >
+          额度已用完。本次不会调用模型或扣除额度；演示版本不提供充值或购买，请保留待办，待额度补充后再生成。
+        </div>
+      )}
 
       {!!response && (
         <div className="flex flex-col">
