@@ -4,7 +4,7 @@
 
 ## 任务
 
-请阅读 [TASK.md](TASK.md)。项目中的额度处理是待改进的初始版本。
+题目要求见 [TASK.md](TASK.md)。本分支已完成额度处理改进，方案与验证结果见 [SPEC.md](SPEC.md) 和 [SUBMISSION.md](SUBMISSION.md)。
 
 ## 环境
 
@@ -71,6 +71,35 @@ npx tsc --project tsconfig.wasp.json --noEmit
 ```
 
 运行检查前需要完成依赖安装。首次启动前需要执行数据库迁移。
+
+## 额度验收
+
+先执行 `wasp compile` 生成 SDK，再使用独立 PostgreSQL 测试库。测试入口只接受名称以 `_test` 结尾的数据库，不会读取 `.env.server` 中的开发库地址。
+
+首次使用时，在 PostgreSQL 管理员的 psql 会话中创建本地测试账号与数据库，并通过 `\password` 交互设置密码：
+
+```text
+CREATE ROLE quota_test_user LOGIN;
+\password quota_test_user
+CREATE DATABASE task_planner_quota_test OWNER quota_test_user;
+```
+
+在项目根目录设置测试连接串，将 `<password>` 替换为刚设置的密码；密码中的特殊字符需进行 URL 编码：
+
+```sh
+export TEST_DATABASE_URL='postgresql://quota_test_user:<password>@127.0.0.1:5432/task_planner_quota_test'
+npm run test:quota
+```
+
+脚本先应用现有迁移，再运行真实数据库集成测试。测试只清理自己创建的用户及关联数据，可以重复执行，无需启动网页服务。每个案例打印模拟接口的 started/succeeded/failed 数量，以及用户最终余额、保存结果数。
+
+仅运行并发案例：
+
+```sh
+npm run test:quota -- --testNamePattern='AC04|AC05'
+```
+
+测试覆盖成功、零额度、明确失败、同账号并发、失败后重试、存储失败回滚、账号隔离和未登录请求。前置条件与预期见 [SPEC.md](SPEC.md)，实际结果及页面截图见 [SUBMISSION.md](SUBMISSION.md)。
 
 ## 开源许可
 

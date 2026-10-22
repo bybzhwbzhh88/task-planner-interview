@@ -1,4 +1,5 @@
 import { type Task } from "wasp/entities";
+import { useAuth } from "wasp/client/auth";
 
 import {
   createTask,
@@ -63,6 +64,13 @@ function NewTaskForm({
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
+  const {
+    data: user,
+    isLoading: isAuthLoading,
+    isError: isAuthError,
+    refetch: refreshAuth,
+  } = useAuth();
+  const hasNoCredits = !!user && user.credits <= 0;
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
@@ -86,29 +94,36 @@ function NewTaskForm({
       });
       if (response) {
         setResponse(response);
+        toast({
+          title: "生成成功",
+          description: "日程已生成，已消耗 1 个额度。",
+        });
       }
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
           : undefined;
+      const body = err && typeof err === "object" && "data" in err ? err.data : undefined;
+      const detail = body && typeof body === "object" && "data" in body ? body.data : undefined;
+      const isMockFailure = statusCode === 502 && detail && typeof detail === "object" &&
+        "code" in detail && detail.code === "MOCK_PROVIDER_FAILED";
       if (statusCode === 402) {
         toast({
           title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description: "本次未发起生成，请联系管理员确认测试额度。",
         });
       } else {
         toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
+          title: "生成失败",
+          description: isMockFailure
+            ? "生成失败，本次未扣除额度。请重试。"
+            : "生成未完成，请刷新页面确认额度后再决定是否重试。",
           variant: "destructive",
         });
       }
     } finally {
+      await refreshAuth({ throwOnError: false });
       setIsPlanGenerating(false);
     }
   };
@@ -185,9 +200,20 @@ function NewTaskForm({
         )}
       </div>
 
+      <p role="status" className="text-muted-foreground text-sm">
+        {isAuthError
+          ? "额度暂时无法读取，请刷新页面后重试。"
+          : isAuthLoading
+            ? "正在读取额度…"
+            : hasNoCredits
+              ? "额度已用完，无法继续生成。请联系管理员确认测试额度。"
+              : "每成功生成一次日程消耗 1 个额度。"}
+      </p>
+
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || isTasksLoading || !tasks?.length ||
+          isAuthLoading || isAuthError || !user || hasNoCredits}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -200,7 +226,7 @@ function NewTaskForm({
             生成中…
           </>
         ) : (
-          "生成日程"
+          hasNoCredits ? "额度不足" : "生成日程"
         )}
       </Button>
 

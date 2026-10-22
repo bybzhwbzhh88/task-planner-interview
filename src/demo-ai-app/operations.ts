@@ -1,5 +1,4 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
+import type { PlanResult, Task } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateTask,
@@ -12,7 +11,7 @@ import type {
 import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
 import type { GeneratedSchedule } from "./schedule";
-import { generateMockSchedule } from "./mockAi";
+import { generateMockSchedule, MockProviderError } from "./mockAi";
 
 
 //#region Actions
@@ -37,46 +36,47 @@ export const generatePlan: GeneratePlan<
     generatePlanInputSchema,
     rawArgs,
   );
-  const tasks = await context.entities.Task.findMany({
-    where: {
-      user: {
-        id: context.user.id,
-      },
-    },
-  });
+  const userId = context.user.id;
+  return prisma.$transaction(async (tx) => {
+    // Serialize this account's requests before reading its current balance.
+    // The lock remains held until both the result and debit commit or roll back.
+    const lockedUsers = await tx.$queryRaw<{ id: string }[]>`
+      SELECT id FROM "User" WHERE id = ${userId} FOR UPDATE
+    `;
+    if (lockedUsers.length === 0) {
+      throw new HttpError(401, "账号不存在，请重新登录。");
+    }
+    const user = await tx.user.findUniqueOrThrow({ where: { id: userId } });
+    if (user.credits <= 0) {
+      throw new HttpError(402, "额度不足，本次未发起生成。");
+    }
 
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
-    );
-  }
+    const tasks = await tx.task.findMany({ where: { userId } });
+    let schedule: GeneratedSchedule;
+    try {
+      schedule = await generateMockSchedule(tasks, hours);
+    } catch (error) {
+      if (error instanceof MockProviderError) {
+        throw new HttpError(502, "生成失败，本次未扣除额度。", {
+          code: "MOCK_PROVIDER_FAILED",
+        });
+      }
+      throw error;
+    }
 
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
-  });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
+    await tx.planResult.create({
+      data: { userId, content: JSON.stringify(schedule) },
+    });
+    await tx.user.update({
+      where: { id: userId },
       data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
-  }
-
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
-
-  return generatedSchedule;
+    });
+    return schedule;
+  }, {
+    isolationLevel: "ReadCommitted",
+    maxWait: 5_000,
+    timeout: 10_000,
+  });
 };
 
 const createTaskInputSchema = z.object({
