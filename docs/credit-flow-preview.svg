@@ -10,6 +10,7 @@
       .small { font-size: 16px; }
       .body { font-size: 18px; }
       .heading { font-size: 24px; font-weight: 700; }
+      .onblue { fill: #ffffff; }
     </style>
   </defs>
   <rect width="1200" height="790" fill="#f3f6fb"/>
@@ -51,7 +52,7 @@
   <text x="187" y="600" font-size="15" font-weight="700" fill="#176843">可用额度：2</text>
   <text x="348" y="600" font-size="14" class="muted">每成功生成一次消耗 1 个</text>
   <rect x="152" y="627" width="474" height="46" rx="9" fill="#315fe8"/>
-  <text x="323" y="658" font-size="18" font-weight="700" fill="#ffffff">生成日程</text>
+  <text x="323" y="658" font-size="18" font-weight="700" class="onblue">生成日程</text>
 
   <rect x="676" y="235" width="398" height="456" rx="16" fill="#ffffff" stroke="#dce4ef" stroke-width="2"/>
   <rect x="700" y="259" width="350" height="80" rx="12" fill="#e8f7ee"/>
