@@ -1,0 +1,19 @@
+{
+  "recordedAt": "2026-10-22T09:20:55.192Z",
+  "passed": false,
+  "failedScenario": "/: cached identity + persistent 503 retains result",
+  "failureEvidence": {
+    "credits": 2,
+    "saved": 1,
+    "generated": 1,
+    "modelStarted": 1,
+    "injected": 12,
+    "scheduleVisible": false,
+    "successVisible": false
+  },
+  "results": [
+    {
+      "name": "/: success"
+    }
+  ]
+}

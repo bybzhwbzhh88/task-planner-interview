@@ -11,7 +11,7 @@ import {
 } from "./operations" with { type: "ref" };
 
 export const demoAiAppSpec: Spec = [
-  route("DemoAppRoute", "/demo-app", page(DemoAppPage, { authRequired: true })),
+  route("DemoAppRoute", "/demo-app", page(DemoAppPage)),
 
   query(getPlanResults, { entities: ["User", "PlanResult"] }),
   action(generatePlan, { entities: ["User", "Task", "PlanResult"] }),

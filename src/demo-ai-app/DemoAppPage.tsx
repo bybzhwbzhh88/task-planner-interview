@@ -1,16 +1,19 @@
 import { type Task } from "wasp/entities";
+import { useAuth } from "wasp/client/auth";
+import { PlannerAuthBoundary } from "../auth/PlannerAuthBoundary";
 
 import {
   createTask,
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getPlanResults,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
 
 import { Loader2, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../client/components/ui/button";
 import {
   Card,
@@ -21,7 +24,6 @@ import {
 import { Checkbox } from "../client/components/ui/checkbox";
 import { Input } from "../client/components/ui/input";
 import { Label } from "../client/components/ui/label";
-import { toast } from "../client/hooks/use-toast";
 import { cn } from "../client/utils";
 import type {
   GeneratedSchedule,
@@ -29,8 +31,13 @@ import type {
   TaskItem,
   TaskPriority,
 } from "./schedule";
+import { generatedScheduleSchema } from "./schedule";
 
 export function DemoAppPage() {
+  return <PlannerAuthBoundary><PlannerContent /></PlannerAuthBoundary>;
+}
+
+function PlannerContent() {
   return (
     <div className="py-10 lg:mt-10">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -63,6 +70,19 @@ function NewTaskForm({
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
+  const [isCurrentResult, setIsCurrentResult] = useState(false);
+  const [generationMessage, setGenerationMessage] = useState<string | null>(null);
+  const [isReadingSaved, setIsReadingSaved] = useState(false);
+  const generating = useRef(false);
+  const { data: user, isError: isQuotaError, isFetching: isQuotaFetching, refetch: refreshQuota } = useAuth();
+  const hasNoCredits = !isQuotaError && user?.credits === 0;
+  const validHours = Number.isFinite(todaysHours) && todaysHours >= 1 && todaysHours <= 24;
+
+  useEffect(() => {
+    const onFocus = () => { void refreshQuota(); };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, [refreshQuota]);
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
@@ -79,37 +99,67 @@ function NewTaskForm({
   };
 
   const handleGeneratePlan = async () => {
+    // Cover two clicks before React has rendered the disabled button.
+    if (generating.current) return;
+    generating.current = true;
+    setIsCurrentResult(false);
+    setGenerationMessage(null);
+    setIsPlanGenerating(true);
     try {
-      setIsPlanGenerating(true);
       const response = await generatePlan({
         hours: todaysHours,
       });
-      if (response) {
-        setResponse(response);
-      }
+      setResponse(response);
+      setIsCurrentResult(true);
+      setGenerationMessage("日程已生成并保存，本次消耗 1 个额度。");
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
           : undefined;
+      // Wasp wraps the server payload in error.data; only explicit codes
+      // justify telling the user that the reserved credit was restored.
+      const code = (err as { data?: { data?: { code?: string } } } | null)?.data?.data?.code;
       if (statusCode === 402) {
-        toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
-        });
+        setGenerationMessage("当前没有可用额度。若有其他生成进行中，请稍后刷新额度。");
+      } else if (statusCode === 400) {
+        setGenerationMessage("请添加任务，并将可用时长设为 1～24 小时。本次未消耗额度。");
+      } else if (statusCode === 401) {
+        setGenerationMessage("登录已失效，请重新登录后再操作。");
+      } else if (code === "MODEL_FAILED") {
+        setGenerationMessage("本次生成失败，未消耗额度。请检查任务后重试。");
+      } else if (code === "SAVE_FAILED") {
+        setGenerationMessage("结果保存失败，未消耗额度。请稍后重试。");
       } else {
-        toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
-          variant: "destructive",
-        });
+        setGenerationMessage("暂时无法确认本次结果，请刷新查看，避免重复提交。");
       }
     } finally {
-      setIsPlanGenerating(false);
+      // A failed request can also have released a reserved credit.
+      try {
+        await refreshQuota();
+      } finally {
+        generating.current = false;
+        setIsPlanGenerating(false);
+      }
+    }
+  };
+
+  const handleReadSaved = async () => {
+    setIsReadingSaved(true);
+    try {
+      const plans = await getPlanResults();
+      const latest = plans.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+      if (!latest) {
+        setGenerationMessage("当前没有已保存的日程。");
+        return;
+      }
+      setResponse(generatedScheduleSchema.parse(JSON.parse(latest.content)));
+      setIsCurrentResult(false);
+      setGenerationMessage("已读取最近保存的日程，此操作不消耗额度。");
+    } catch {
+      setGenerationMessage("暂时无法读取已保存的日程，请稍后再查，避免重复生成。");
+    } finally {
+      setIsReadingSaved(false);
     }
   };
 
@@ -185,9 +235,20 @@ function NewTaskForm({
         )}
       </div>
 
+      <div className="space-y-2 text-sm">
+        <p>每成功生成并保存一次日程，消耗 1 个额度。</p>
+        {isQuotaError && <p role="alert">暂时无法读取额度，请刷新后再操作。</p>}
+        {hasNoCredits && <p>当前没有可用额度。如有生成正在进行，请等待完成后刷新查看。</p>}
+        {!validHours && <p role="alert">可用时长须在 1～24 小时之间。</p>}
+        <Button type="button" variant="outline" disabled={isQuotaFetching}
+          onClick={() => { void refreshQuota(); }}>刷新额度</Button>
+        <Button type="button" variant="outline" disabled={isReadingSaved || isPlanGenerating}
+          onClick={() => { void handleReadSaved(); }}>查看最近保存的日程</Button>
+      </div>
+
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || isReadingSaved || !tasks?.length || !user || isQuotaError || hasNoCredits || !validHours}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -204,10 +265,12 @@ function NewTaskForm({
         )}
       </Button>
 
+      {generationMessage && <p role="status" aria-live="polite" data-testid="generation-message">{generationMessage}</p>}
+
       {!!response && (
         <div className="flex flex-col">
           <h3 className="text-foreground mb-4 text-lg font-semibold">
-            本次日程
+            {isCurrentResult ? "本次日程" : "上次生成结果"}
           </h3>
           <Schedule schedule={response} />
         </div>

@@ -72,6 +72,8 @@ npx tsc --project tsconfig.wasp.json --noEmit
 
 运行检查前需要完成依赖安装。首次启动前需要执行数据库迁移。
 
+额度改进的设计与交付入口见 [SPEC.md](SPEC.md) 和 [SUBMISSION.md](SUBMISSION.md)。单元、真实 PostgreSQL 和 HTTP 并发验证的准备与命令见 [验证说明](docs/VERIFICATION.md)。
+
 ## 开源许可
 
 第三方代码的版权声明与使用条件见 [LICENSE](LICENSE) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

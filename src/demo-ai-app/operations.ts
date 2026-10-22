@@ -1,5 +1,4 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
+import type { PlanResult, Task } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateTask,
@@ -13,11 +12,13 @@ import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
 import type { GeneratedSchedule } from "./schedule";
 import { generateMockSchedule } from "./mockAi";
+import { generateWithQuota, QuotaError } from "./quota";
+import { createQuotaStore } from "./quotaStore";
 
 
 //#region Actions
 const generatePlanInputSchema = z.object({
-  hours: z.number(),
+  hours: z.number().min(1).max(24),
 });
 
 type GeneratePlanInput = z.infer<typeof generatePlanInputSchema>;
@@ -45,38 +46,24 @@ export const generatePlan: GeneratePlan<
     },
   });
 
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
-    );
+  if (tasks.length === 0) {
+    throw new HttpError(400, "请先添加待办任务。", { code: "NO_TASKS" });
   }
-
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
-  });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
+  try {
+    return await generateWithQuota({
+      userId: context.user.id,
+      store: createQuotaStore(prisma),
+      generate: () => generateMockSchedule(tasks, hours),
+    });
+  } catch (error) {
+    if (error instanceof QuotaError) {
+      throw new HttpError(error.statusCode, error.message, {
+        code: error.code,
+        requestId: error.requestId,
+      });
+    }
+    throw error;
   }
-
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
-
-  return generatedSchedule;
 };
 
 const createTaskInputSchema = z.object({
