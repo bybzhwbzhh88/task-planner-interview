@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-10-21T09:18:30.298Z",
+  "browser": "Chrome/149.0.7827.55",
+  "checks": [
+    "UI01 normal success, immediate double click protection and stale-window refresh",
+    "UI02 empty quota prevents calls; controlled direct intentions also refused",
+    "UI03 two windows compete for last credit; one call and one result",
+    "UI04 clear model failure returns credit; removing fail marker enables retry",
+    "UI05 failed save leaves balance and history unchanged",
+    "UI06 lost response stays uncertain; refreshing reveals saved result without another call",
+    "UI07 task text is rendered as text, including HTML-like input",
+    "UI08 desktop 1240px, mobile 390px and 320px: no horizontal overflow",
+    "UI09 direct local HTML opening works without server or dependencies",
+    "UI10 no uncaught browser exceptions"
+  ],
+  "errors": [],
+  "scope": "Product prototype only; no real backend or database assertions."
+}
