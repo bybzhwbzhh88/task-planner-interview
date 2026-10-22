@@ -1,0 +1,42 @@
+name: Verify quota behavior
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: task_planner_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d task_planner_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      WASP_TELEMETRY_DISABLE: "1"
+      TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/task_planner_test?connection_limit=12
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.14.1
+          cache: npm
+      - run: npm install --global @wasp.sh/wasp-cli@0.25.0
+      - run: wasp install
+      - run: wasp compile
+      - run: npm run check:types
+      - run: npm test
+      - run: npm run test:integration

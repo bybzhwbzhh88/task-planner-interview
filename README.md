@@ -4,7 +4,7 @@
 
 ## 任务
 
-请阅读 [TASK.md](TASK.md)。项目中的额度处理是待改进的初始版本。
+请阅读 [TASK.md](TASK.md)。额度处理的设计与验收见 [SPEC.md](SPEC.md)，提交概览见 [SUBMISSION.md](SUBMISSION.md)。
 
 ## 环境
 
@@ -71,6 +71,31 @@ npx tsc --project tsconfig.wasp.json --noEmit
 ```
 
 运行检查前需要完成依赖安装。首次启动前需要执行数据库迁移。
+
+## 额度验证
+
+完成 `wasp install` 和 `wasp compile` 后：
+
+```sh
+npm test
+```
+
+真实数据库验收需使用专用 PostgreSQL 数据库，库名必须以 `_test` 结尾。以下连接仅为本地测试示例：
+
+```sh
+# 如已有 PostgreSQL，建立独立的 task_planner_test 库后直接配置连接即可。
+docker run --rm --name task-planner-quota-test \
+  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=task_planner_test \
+  -p 127.0.0.1:55432:5432 postgres:17
+
+# 在另一终端运行；可重复执行，无需重置数据库。
+export TEST_DATABASE_URL='postgresql://postgres:postgres@127.0.0.1:55432/task_planner_test?connection_limit=12'
+npm run test:integration
+```
+
+脚本先应用已有迁移，再直接调用与应用相同的操作与事务函数。使用真实 PostgreSQL 和原有模拟模型；仅替换 Wasp 运行时导出，不覆盖 HTTP 认证中间件。每轮创建独立账号，只清理本轮账号及其任务、结果；不重置或清空整库。任何断言失败会以非零状态退出。输出逐项包含余额、结果数及模型调用计数。
+
+Windows PowerShell 设置连接用 `$env:TEST_DATABASE_URL = '连接串'`。项目完整运行仍按上文使用 WSL2。测试场景和已执行结果见 [验证记录](docs/verification.md)，CI 使用同样的编译、类型和数据库验收命令。
 
 ## 开源许可
 

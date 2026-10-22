@@ -1,0 +1,30 @@
+
+> test:integration
+> node scripts/test-integration.mjs
+
+Prisma schema loaded from schema.prisma
+Datasource "db": PostgreSQL database "task_planner_test", schema "public" at "127.0.0.1:55432"
+
+1 migration found in prisma/migrations
+
+
+No pending migrations to apply.
+
+ RUN  v4.1.11 D:/A/work/codex/task-planner-interview-main
+
+{"case":"A1","credits":2,"results":1,"started":1,"succeeded":1,"failed":0}
+{"case":"A2","status":402,"credits":0,"results":0,"started":0,"succeeded":0,"failed":0}
+{"case":"A3-failure","status":502,"credits":1,"results":0,"started":1,"succeeded":0,"failed":1}
+{"case":"A3-retry","credits":0,"results":1,"started":2,"succeeded":1,"failed":1}
+{"case":"A4","requests":10,"success":1,"rejected402":9,"credits":0,"results":1,"started":1,"succeeded":1,"failed":0}
+{"case":"A5","requests":10,"success":3,"rejected402":7,"credits":0,"results":3,"started":3,"succeeded":3,"failed":0}
+{"case":"A6","credits":0,"results":1,"started":2,"succeeded":1,"failed":1}
+{"case":"A7","databaseError":"P2003","credits":1,"results":0,"started":1,"succeeded":1,"failed":0}
+{"case":"A8-empty","status":400,"credits":1,"results":0,"started":0,"succeeded":0,"failed":0}
+{"case":"A9","independentAccounts":2,"creditsEach":0,"resultsEach":1,"started":2,"succeeded":2,"failed":0}
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  19:26:09
+   Duration  6.83s (transform 54ms, setup 0ms, import 242ms, tests 6.38s, environment 0ms)
+

@@ -1,0 +1,4 @@
+
+> check:types
+> tsc --project tsconfig.src.json --noEmit && tsc --project tsconfig.wasp.json --noEmit
+

@@ -37,5 +37,10 @@
   "private": true,
   "engines": {
     "node": ">=24.14.1"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:integration": "node scripts/test-integration.mjs",
+    "check:types": "tsc --project tsconfig.src.json --noEmit && tsc --project tsconfig.wasp.json --noEmit"
   }
 }
