@@ -1,0 +1,44 @@
+name: Reproduce quota acceptance
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CI: "true"
+      WASP_TELEMETRY_DISABLE: "1"
+      VERIFY_DB_DRIVER: docker
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.14.1
+      - name: Install the repository's Wasp version
+        run: npm install --global @wasp.sh/wasp-cli@0.25.0
+      - name: Reproduce compile, types, PostgreSQL, HTTP and browser acceptance
+        run: npm run verify:all
+      - name: Preserve reproducible test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quota-verification
+          if-no-files-found: warn
+          path: |
+            test-results/quota/verify-summary.json
+            test-results/quota/vitest.json
+            test-results/quota/service-observations.json
+            test-results/quota/http.json
+            test-results/quota/browser/
+            test-results/quota/compile.log
+            test-results/quota/typescript-*.log
+            test-results/quota/database-tests.log
+            test-results/quota/http-tests.log
+            test-results/quota/browser-tests.log

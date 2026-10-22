@@ -1,0 +1,343 @@
+{
+  "recordedAt": "2026-10-21T21:46:10.7556398+08:00",
+  "designCommit": "99cecc9994a24fbd78549f54dd2f9166a6bf2cfd",
+  "scope": "Actual local run; raw logs and screenshots remain ignored; SQL/transport/UI injection boundaries are documented in VERIFICATION.md",
+  "checks": [
+    {"log":"test-results/quota/compile.log","command":"wasp compile","exitCode":0},
+    {"log":"test-results/quota/typescript-src.log","command":"npx tsc --project tsconfig.src.json --noEmit","exitCode":0},
+    {"log":"test-results/quota/typescript-wasp.log","command":"npx tsc --project tsconfig.wasp.json --noEmit","exitCode":0}
+  ],
+  "service": {
+    "pendingTests": 0,
+    "passedTests": 17,
+    "passed": true,
+    "failedTests": 0,
+    "observations": [
+      {"label":"AC01","expected":{"C":3,"P":0,"R":0,"M":0},"actual":{"C":3,"P":0,"R":0,"M":0,"succeeded":0,"failed":0}},
+      {"label":"AC02","expected":{"C":2,"P":0,"R":1,"M":1},"actual":{"C":2,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC03","expected":{"C":0,"P":0,"R":3,"M":1},"actual":{"C":0,"P":0,"R":3,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC04","expected":{"C":0,"P":0,"R":3,"M":0},"actual":{"C":0,"P":0,"R":3,"M":0,"succeeded":0,"failed":0}},
+      {"label":"AC05","expected":{"C":1,"P":0,"R":0,"M":1},"actual":{"C":1,"P":0,"R":0,"M":1,"succeeded":0,"failed":1}},
+      {"label":"AC06","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC07 round 0","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC07 round 1","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC07 round 2","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC07 round 3","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC07 round 4","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC07 round 5","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC07 round 6","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC07 round 7","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC07 round 8","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC07 round 9","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC08 round 0","expected":{"C":0,"P":0,"R":3,"M":3},"actual":{"C":0,"P":0,"R":3,"M":3,"succeeded":3,"failed":0}},
+      {"label":"AC08 round 1","expected":{"C":0,"P":0,"R":3,"M":3},"actual":{"C":0,"P":0,"R":3,"M":3,"succeeded":3,"failed":0}},
+      {"label":"AC08 round 2","expected":{"C":0,"P":0,"R":3,"M":3},"actual":{"C":0,"P":0,"R":3,"M":3,"succeeded":3,"failed":0}},
+      {"label":"AC08 round 3","expected":{"C":0,"P":0,"R":3,"M":3},"actual":{"C":0,"P":0,"R":3,"M":3,"succeeded":3,"failed":0}},
+      {"label":"AC08 round 4","expected":{"C":0,"P":0,"R":3,"M":3},"actual":{"C":0,"P":0,"R":3,"M":3,"succeeded":3,"failed":0}},
+      {"label":"AC08 round 5","expected":{"C":0,"P":0,"R":3,"M":3},"actual":{"C":0,"P":0,"R":3,"M":3,"succeeded":3,"failed":0}},
+      {"label":"AC08 round 6","expected":{"C":0,"P":0,"R":3,"M":3},"actual":{"C":0,"P":0,"R":3,"M":3,"succeeded":3,"failed":0}},
+      {"label":"AC08 round 7","expected":{"C":0,"P":0,"R":3,"M":3},"actual":{"C":0,"P":0,"R":3,"M":3,"succeeded":3,"failed":0}},
+      {"label":"AC08 round 8","expected":{"C":0,"P":0,"R":3,"M":3},"actual":{"C":0,"P":0,"R":3,"M":3,"succeeded":3,"failed":0}},
+      {"label":"AC08 round 9","expected":{"C":0,"P":0,"R":3,"M":3},"actual":{"C":0,"P":0,"R":3,"M":3,"succeeded":3,"failed":0}},
+      {"label":"AC09 failure phase","expected":{"C":1,"P":0,"R":0,"M":1},"actual":{"C":1,"P":0,"R":0,"M":1,"succeeded":0,"failed":1}},
+      {"label":"AC09 recovery","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC10 rollback","expected":{"C":1,"P":0,"R":0,"M":1},"actual":{"C":1,"P":0,"R":0,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC10 recovery","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC11 A","expected":{"C":0,"P":0,"R":1,"M":2},"actual":{"C":0,"P":0,"R":1,"M":2,"succeeded":2,"failed":0}},
+      {"label":"AC11 B","expected":{"C":0,"P":0,"R":1,"M":2},"actual":{"C":0,"P":0,"R":1,"M":2,"succeeded":2,"failed":0}},
+      {"label":"AC12 rejected","expected":{"C":3,"P":0,"R":0,"M":0},"actual":{"C":3,"P":0,"R":0,"M":0,"succeeded":0,"failed":0}},
+      {"label":"AC12 valid 1","expected":{"C":2,"P":0,"R":1,"M":1},"actual":{"C":2,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC12 valid 24","expected":{"C":2,"P":0,"R":1,"M":1},"actual":{"C":2,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC12 valid 1.25","expected":{"C":2,"P":0,"R":1,"M":1},"actual":{"C":2,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC14 stale high","expected":{"C":0,"P":0,"R":0,"M":0},"actual":{"C":0,"P":0,"R":0,"M":0,"succeeded":0,"failed":0}},
+      {"label":"AC14 stale low","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC15 rollback","expected":{"C":1,"P":0,"R":0,"M":0},"actual":{"C":1,"P":0,"R":0,"M":0,"succeeded":0,"failed":0}},
+      {"label":"AC15 recovery","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC16 release","expected":{"C":1,"P":0,"R":0,"M":0},"actual":{"C":1,"P":0,"R":0,"M":0,"succeeded":0,"failed":0}},
+      {"label":"AC16 committed success","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC17 recovered commit","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC17 repeated confirmation","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC18 failed but reserved","expected":{"C":0,"P":1,"R":0,"M":1},"actual":{"C":0,"P":1,"R":0,"M":1,"succeeded":0,"failed":1}},
+      {"label":"AC18 committed but unconfirmed","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC19","expected":{"C":1,"P":0,"R":2,"M":3},"actual":{"C":1,"P":0,"R":2,"M":3,"succeeded":2,"failed":1}},
+      {"label":"AC20 five processes","expected":{"C":0,"P":0,"R":1,"M":1},"actual":{"C":0,"P":0,"R":1,"M":1,"succeeded":1,"failed":0}},
+      {"label":"AC22","expected":{"C":1,"P":0,"R":0,"M":1},"actual":{"C":1,"P":0,"R":0,"M":1,"succeeded":0,"failed":1}},
+      {"label":"AC23 unavailable=false","expected":{"C":1,"P":0,"R":0,"M":0},"actual":{"C":1,"P":0,"R":0,"M":0,"succeeded":0,"failed":0}},
+      {"label":"AC23 unavailable=true","expected":{"C":0,"P":1,"R":0,"M":0},"actual":{"C":0,"P":1,"R":0,"M":0,"succeeded":0,"failed":0}},
+      {"label":"AC21","cases":[{"negative":false,"exitCode":0,"credits":2,"tasks":1,"results":1,"modelCalls":0},{"negative":true,"exitCode":3,"credits":-1,"tasks":1,"results":1,"modelCalls":0}]}
+    ],
+    "tests": 17
+  },
+  "http": {
+    "rounds": 10,
+    "passed": true,
+    "finishedAt": "2026-10-21T13:27:03.408Z",
+    "cases": [
+      {"id":"AC01","before":{"C":3,"P":0,"R":0},"after":{"C":3,"P":0,"R":0},"deltaR":0,"statuses":[],"codes":[],"model":{"started":0,"succeeded":0,"failed":0},"callIds":[],"passed":true},
+      {"id":"AC02","before":{"C":3,"P":0,"R":0},"after":{"C":2,"P":0,"R":1},"deltaR":1,"statuses":[200],"codes":[null],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["31b5f721-1858-47db-a156-da1eae7ba141"],"passed":true},
+      {"id":"AC03","before":{"C":1,"P":0,"R":2},"after":{"C":0,"P":0,"R":3},"deltaR":1,"statuses":[200],"codes":[null],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["67ff4115-5a77-4b7c-a68a-0b9a72fa7ac2"],"passed":true},
+      {"id":"AC04","before":{"C":0,"P":0,"R":3},"after":{"C":0,"P":0,"R":3},"deltaR":0,"statuses":[402],"codes":["NO_AVAILABLE_CREDIT"],"model":{"started":0,"succeeded":0,"failed":0},"callIds":[],"passed":true},
+      {"id":"AC05","before":{"C":1,"P":0,"R":2},"after":{"C":1,"P":0,"R":2},"deltaR":0,"statuses":[502],"codes":["PROVIDER_FAILED"],"model":{"started":1,"succeeded":0,"failed":1},"callIds":["a191163a-47db-4079-bd26-aedd0790ab21"],"passed":true},
+      {"id":"AC06","before":{"C":1,"P":0,"R":2},"after":{"C":0,"P":0,"R":3},"deltaR":1,"statuses":[200],"codes":[null],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["a9b0ea7b-e0a8-4641-9d4c-e72584eb0bf9"],"passed":true},
+      {"id":"AC07-1","before":{"C":1,"P":0,"R":2},"after":{"C":0,"P":0,"R":3},"deltaR":1,"statuses":[402,402,402,200,402],"codes":["NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT",null,"NO_AVAILABLE_CREDIT"],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["45c4d384-5a34-455f-9352-553fe0a99d48"],"passed":true},
+      {"id":"AC07-2","before":{"C":1,"P":0,"R":2},"after":{"C":0,"P":0,"R":3},"deltaR":1,"statuses":[200,402,402,402,402],"codes":[null,"NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT"],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["7f48fd9e-fc09-4edd-b4ad-4329ca606ddb"],"passed":true},
+      {"id":"AC07-3","before":{"C":1,"P":0,"R":2},"after":{"C":0,"P":0,"R":3},"deltaR":1,"statuses":[200,402,402,402,402],"codes":[null,"NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT"],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["40c4b1ef-51ec-4ea3-a54f-7b3147fd320b"],"passed":true},
+      {"id":"AC07-4","before":{"C":1,"P":0,"R":2},"after":{"C":0,"P":0,"R":3},"deltaR":1,"statuses":[402,402,200,402,402],"codes":["NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT",null,"NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT"],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["85c0f110-1057-4385-99c0-aba7ebc06436"],"passed":true},
+      {"id":"AC07-5","before":{"C":1,"P":0,"R":2},"after":{"C":0,"P":0,"R":3},"deltaR":1,"statuses":[200,402,402,402,402],"codes":[null,"NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT"],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["9e53802d-377a-44e2-9bc6-5b381f36cadb"],"passed":true},
+      {"id":"AC07-6","before":{"C":1,"P":0,"R":2},"after":{"C":0,"P":0,"R":3},"deltaR":1,"statuses":[200,402,402,402,402],"codes":[null,"NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT"],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["9b46ef48-0546-423a-a502-5796db962a92"],"passed":true},
+      {"id":"AC07-7","before":{"C":1,"P":0,"R":2},"after":{"C":0,"P":0,"R":3},"deltaR":1,"statuses":[402,200,402,402,402],"codes":["NO_AVAILABLE_CREDIT",null,"NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT"],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["2e51311e-bd9f-4797-88f2-04e23c657c6d"],"passed":true},
+      {"id":"AC07-8","before":{"C":1,"P":0,"R":2},"after":{"C":0,"P":0,"R":3},"deltaR":1,"statuses":[402,402,402,200,402],"codes":["NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT",null,"NO_AVAILABLE_CREDIT"],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["11ac9c9a-da5c-4b9e-ac14-83a8d98ce3ac"],"passed":true},
+      {"id":"AC07-9","before":{"C":1,"P":0,"R":2},"after":{"C":0,"P":0,"R":3},"deltaR":1,"statuses":[402,200,402,402,402],"codes":["NO_AVAILABLE_CREDIT",null,"NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT"],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["b5639e56-f3d2-423d-ad5d-ac25d41a0558"],"passed":true},
+      {"id":"AC07-10","before":{"C":1,"P":0,"R":2},"after":{"C":0,"P":0,"R":3},"deltaR":1,"statuses":[200,402,402,402,402],"codes":[null,"NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT"],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["2fd64f3a-ec0f-4514-8a4b-258258e35bb0"],"passed":true},
+      {"id":"AC08-1","before":{"C":3,"P":0,"R":0},"after":{"C":0,"P":0,"R":3},"deltaR":3,"statuses":[200,200,402,200,402],"codes":[null,null,"NO_AVAILABLE_CREDIT",null,"NO_AVAILABLE_CREDIT"],"model":{"started":3,"succeeded":3,"failed":0},"callIds":["26903dfd-4471-49bf-b67e-f350a8212504","beb2892f-404d-426b-b6ef-af3f2ee121e0","45827226-d6ea-42e7-8d0d-e2f94c724f5e"],"passed":true},
+      {"id":"AC08-2","before":{"C":3,"P":0,"R":0},"after":{"C":0,"P":0,"R":3},"deltaR":3,"statuses":[402,200,200,200,402],"codes":["NO_AVAILABLE_CREDIT",null,null,null,"NO_AVAILABLE_CREDIT"],"model":{"started":3,"succeeded":3,"failed":0},"callIds":["21d4c51e-aa8d-4fd7-a08a-09b59bf733a9","d287cd64-5187-45bd-93a7-50d646f2f387","806891fb-14cf-45ad-b426-ea2b9b4054a1"],"passed":true},
+      {"id":"AC08-3","before":{"C":3,"P":0,"R":0},"after":{"C":0,"P":0,"R":3},"deltaR":3,"statuses":[200,200,402,402,200],"codes":[null,null,"NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT",null],"model":{"started":3,"succeeded":3,"failed":0},"callIds":["c3720d5c-a216-4d76-9ff1-14cb65a1e7ee","b04d789c-3d55-4bdf-aba3-13667468844b","631fd5b8-f12b-4e88-965f-352ea9be1fb5"],"passed":true},
+      {"id":"AC08-4","before":{"C":3,"P":0,"R":0},"after":{"C":0,"P":0,"R":3},"deltaR":3,"statuses":[200,200,402,200,402],"codes":[null,null,"NO_AVAILABLE_CREDIT",null,"NO_AVAILABLE_CREDIT"],"model":{"started":3,"succeeded":3,"failed":0},"callIds":["3f894eea-53a6-482c-9f87-30053b1e1473","98270292-cc98-4360-b18c-6be5506a9fb2","149a5945-f65c-4e45-966f-745b1d086b9b"],"passed":true},
+      {"id":"AC08-5","before":{"C":3,"P":0,"R":0},"after":{"C":0,"P":0,"R":3},"deltaR":3,"statuses":[402,200,200,402,200],"codes":["NO_AVAILABLE_CREDIT",null,null,"NO_AVAILABLE_CREDIT",null],"model":{"started":3,"succeeded":3,"failed":0},"callIds":["fe95509a-8c1c-4c06-aed7-0d7043131cb3","922535ad-31e5-47f0-9a8b-dcc295040183","d0ec5c51-3044-4ff1-9b6f-b3db8b697fa0"],"passed":true},
+      {"id":"AC08-6","before":{"C":3,"P":0,"R":0},"after":{"C":0,"P":0,"R":3},"deltaR":3,"statuses":[200,200,402,200,402],"codes":[null,null,"NO_AVAILABLE_CREDIT",null,"NO_AVAILABLE_CREDIT"],"model":{"started":3,"succeeded":3,"failed":0},"callIds":["9f8d656c-2be3-457b-bbae-7635fa1fc115","d72a918f-c9e0-4c96-9b60-b58e7a0bf38e","aad5d6b1-ea13-49dc-b01a-01e5dc573fa5"],"passed":true},
+      {"id":"AC08-7","before":{"C":3,"P":0,"R":0},"after":{"C":0,"P":0,"R":3},"deltaR":3,"statuses":[200,402,200,402,200],"codes":[null,"NO_AVAILABLE_CREDIT",null,"NO_AVAILABLE_CREDIT",null],"model":{"started":3,"succeeded":3,"failed":0},"callIds":["f8287930-22c0-4625-baab-fbce8f95c5a1","63a348fd-99d9-450a-8b3d-b587cde3fa37","8df6b986-6a73-403a-998e-fa2f31447d6a"],"passed":true},
+      {"id":"AC08-8","before":{"C":3,"P":0,"R":0},"after":{"C":0,"P":0,"R":3},"deltaR":3,"statuses":[200,200,402,200,402],"codes":[null,null,"NO_AVAILABLE_CREDIT",null,"NO_AVAILABLE_CREDIT"],"model":{"started":3,"succeeded":3,"failed":0},"callIds":["9332c354-3df0-4da3-8ece-ea127a1e46f9","97f0ea05-183b-4142-940f-8cd017256a25","2853fdee-e6c0-4d7b-ad85-febf62688ed6"],"passed":true},
+      {"id":"AC08-9","before":{"C":3,"P":0,"R":0},"after":{"C":0,"P":0,"R":3},"deltaR":3,"statuses":[200,200,200,402,402],"codes":[null,null,null,"NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT"],"model":{"started":3,"succeeded":3,"failed":0},"callIds":["cdd2a3be-b355-4a8f-8bdc-509e3c8a6b14","1ad46d72-2e34-4e73-8221-ac1affd7b7e1","bf5faeaf-558e-4da4-9aea-cd5ea9dbb121"],"passed":true},
+      {"id":"AC08-10","before":{"C":3,"P":0,"R":0},"after":{"C":0,"P":0,"R":3},"deltaR":3,"statuses":[200,200,402,200,402],"codes":[null,null,"NO_AVAILABLE_CREDIT",null,"NO_AVAILABLE_CREDIT"],"model":{"started":3,"succeeded":3,"failed":0},"callIds":["652c9ff4-053d-439f-b5ea-6180fc3ba802","426293fe-537d-4250-aa66-e28b9d068e79","715153f4-09da-4dcf-b195-d386ba5d019d"],"passed":true},
+      {"id":"AC09-unbarriered","before":{"C":1,"P":0,"R":2},"after":{"C":1,"P":0,"R":2},"deltaR":0,"statuses":[502,402,402],"codes":["PROVIDER_FAILED","NO_AVAILABLE_CREDIT","NO_AVAILABLE_CREDIT"],"model":{"started":1,"succeeded":0,"failed":1},"callIds":["d9bf0a79-f26a-4966-84d9-ae5aff5e1317"],"passed":true},
+      {"id":"AC12-unauthenticated","before":{"C":3,"P":0,"R":0},"after":{"C":3,"P":0,"R":0},"deltaR":0,"statuses":[401],"codes":["AUTH_REQUIRED"],"model":{"started":0,"succeeded":0,"failed":0},"callIds":[],"passed":true},
+      {"id":"AC12-hours-0","before":{"C":3,"P":0,"R":0},"after":{"C":3,"P":0,"R":0},"deltaR":0,"statuses":[400],"codes":["INVALID_INPUT"],"model":{"started":0,"succeeded":0,"failed":0},"callIds":[],"passed":true},
+      {"id":"AC12-hours-25","before":{"C":3,"P":0,"R":0},"after":{"C":3,"P":0,"R":0},"deltaR":0,"statuses":[400],"codes":["INVALID_INPUT"],"model":{"started":0,"succeeded":0,"failed":0},"callIds":[],"passed":true},
+      {"id":"AC12-hours-8","before":{"C":3,"P":0,"R":0},"after":{"C":3,"P":0,"R":0},"deltaR":0,"statuses":[400],"codes":["INVALID_INPUT"],"model":{"started":0,"succeeded":0,"failed":0},"callIds":[],"passed":true},
+      {"id":"AC12-empty","before":{"C":3,"P":0,"R":0},"after":{"C":3,"P":0,"R":0},"deltaR":0,"statuses":[400],"codes":["INVALID_INPUT"],"model":{"started":0,"succeeded":0,"failed":0},"callIds":[],"passed":true},
+      {"id":"AC12-valid-1","before":{"C":3,"P":0,"R":0},"after":{"C":2,"P":0,"R":1},"deltaR":1,"statuses":[200],"codes":[null],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["519ba8c2-63ed-4ef6-baf0-fc6eb1e0bb6a"],"passed":true},
+      {"id":"AC12-valid-24","before":{"C":3,"P":0,"R":0},"after":{"C":2,"P":0,"R":1},"deltaR":1,"statuses":[200],"codes":[null],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["19b3f9c4-250c-4cac-8a7a-eca620425c5b"],"passed":true},
+      {"id":"AC12-valid-1.25","before":{"C":3,"P":0,"R":0},"after":{"C":2,"P":0,"R":1},"deltaR":1,"statuses":[200],"codes":[null],"model":{"started":1,"succeeded":1,"failed":0},"callIds":["9a6a817b-a3fd-4c16-8192-99592f325730"],"passed":true}
+    ],
+    "startedAt": "2026-10-21T13:26:30.374Z"
+  },
+  "browser": {
+    "browser": "Chromium/Edge 155.0.4283.62",
+    "passed": true,
+    "steps": [
+      {"id":"AC01-UI","passed":true,"C":3,"emptyTaskButtonDisabled":true},
+      {"id":"AC02-UI","passed":true,"status":200,"before":{"C":3,"R":0},"after":{"C":2,"R":1},"deltaR":1,"modelCalls":1},
+      {"id":"prepare-last-credit","passed":true,"status":200,"before":{"C":2,"R":1},"after":{"C":1,"R":2},"deltaR":1,"modelCalls":1},
+      {"id":"AC05-UI","passed":true,"status":502,"before":{"C":1,"R":2},"after":{"C":1,"R":2},"deltaR":0,"modelCalls":1},
+      {"id":"AC03-AC06-UI","passed":true,"status":200,"before":{"C":1,"R":2},"after":{"C":0,"R":3},"deltaR":1,"modelCalls":1},
+      {"id":"AC04-AC13-stale-direct-request","passed":true,"status":402,"before":{"C":0,"R":3},"after":{"C":0,"R":3},"deltaR":0,"modelCalls":0},
+      {"id":"AC12-UI","passed":true,"invalidHoursDisabled":true},
+      {"id":"ui-error-fixture-success","passed":true,"status":200,"before":{"C":3,"R":0},"after":{"C":2,"R":1},"deltaR":1,"modelCalls":1},
+      {"id":"AC10-UI-injected","passed":true,"status":500,"before":{"C":2,"R":1},"after":{"C":2,"R":1},"deltaR":0,"modelCalls":0},
+      {"id":"AC18-UI-injected","passed":true,"status":503,"before":{"C":2,"R":1},"after":{"C":2,"R":1},"deltaR":0,"modelCalls":0},
+      {"id":"AC15-UI-injected","passed":true,"status":503,"before":{"C":2,"R":1},"after":{"C":2,"R":1},"deltaR":0,"modelCalls":0},
+      {"id":"non-json-error-UI-injected","passed":true,"status":500,"before":{"C":2,"R":1},"after":{"C":2,"R":1},"deltaR":0,"modelCalls":0}
+    ],
+    "finishedAt": "2026-10-21T13:29:37.652Z",
+    "startedAt": "2026-10-21T13:29:28.311Z",
+    "pageErrors": []
+  },
+  "finalDatabaseState": {
+    "negativeBalances": 0,
+    "pendingReservations": 0,
+    "migrated": [
+      "20261015081629_init",
+      "20261021133000_quota_reservation"
+    ]
+  },
+  "implementationCommit": "da266a9146fc173213840f87328c36dafdc47f1c",
+  "reviewFollowup": {
+    "recordedAt": "2026-10-21T22:32:10.6306155+08:00",
+    "baseCommit": "c1f2976a6e531175bb8d409337ac3aac040730da",
+    "scope": "Review follow-up: confirmed applicant details and actual auth-refresh failure/page guard fix; psql changes withdrawn at user request; core quota service unchanged",
+    "service": {
+      "tests": 17,
+      "failedTests": 0,
+      "log": "test-results/quota/review/service.log",
+      "passedTests": 17,
+      "passed": true
+    },
+    "browser": {
+      "passed": true,
+      "browser": "Chromium/Edge 155.0.4283.62",
+      "startedAt": "2026-10-21T14:30:04.041Z",
+      "finishedAt": "2026-10-21T14:30:44.906Z",
+      "steps": [
+        {"id":"AC12-AC24-unauthenticated-guard","passed":true,"redirectedToLogin":true,"protectedRoutes":["/","/demo-app"],"status":401,"modelCalls":0,"deltaR":0},
+        {"id":"AC01-UI","passed":true,"C":3,"emptyTaskButtonDisabled":true},
+        {"id":"AC02-UI","passed":true,"status":200,"before":{"C":3,"R":0},"after":{"C":2,"R":1},"deltaR":1,"modelCalls":1},
+        {"id":"prepare-last-credit","passed":true,"status":200,"before":{"C":2,"R":1},"after":{"C":1,"R":2},"deltaR":1,"modelCalls":1},
+        {"id":"AC05-UI","passed":true,"status":502,"before":{"C":1,"R":2},"after":{"C":1,"R":2},"deltaR":0,"modelCalls":1},
+        {"id":"AC03-AC06-UI","passed":true,"status":200,"before":{"C":1,"R":2},"after":{"C":0,"R":3},"deltaR":1,"modelCalls":1},
+        {"id":"AC04-AC13-stale-direct-request","passed":true,"status":402,"before":{"C":0,"R":3},"after":{"C":0,"R":3},"deltaR":0,"modelCalls":0},
+        {"id":"AC12-UI","passed":true,"invalidHoursDisabled":true},
+        {"id":"AC24-success-auth-refresh-failed","passed":true,"status":200,"before":{"C":3,"R":0},"after":{"C":2,"R":1},"deltaR":1,"modelCalls":1,"generationRequests":1,"failedAuthResponses":24,"successScheduleRetained":true,"quotaReadErrorVisible":true},
+        {"id":"AC24-auth-refresh-recovered","passed":true,"before":{"C":2,"R":1},"after":{"C":2,"R":1},"deltaR":0,"modelCalls":0,"generationRequestsAfterRecovery":1,"displayedCredits":2},
+        {"id":"AC10-UI-injected","passed":true,"status":500,"before":{"C":2,"R":1},"after":{"C":2,"R":1},"deltaR":0,"modelCalls":0},
+        {"id":"AC18-UI-injected","passed":true,"status":503,"before":{"C":2,"R":1},"after":{"C":2,"R":1},"deltaR":0,"modelCalls":0},
+        {"id":"AC15-UI-injected","passed":true,"status":503,"before":{"C":2,"R":1},"after":{"C":2,"R":1},"deltaR":0,"modelCalls":0},
+        {"id":"non-json-error-UI-injected","passed":true,"status":500,"before":{"C":2,"R":1},"after":{"C":2,"R":1},"deltaR":0,"modelCalls":0},
+        {"id":"AC24-auth-rejected-UI-injected","passed":true,"cachedViewBlocked":true,"noRedirectLoop":true,"before":{"C":2,"R":1},"after":{"C":2,"R":1},"modelCalls":0,"deltaR":0}
+      ],
+      "pageErrors": []
+    },
+    "checks": [
+      {"log":"test-results/quota/review/compile.log","exitCode":0,"command":"wasp compile"},
+      {"log":"test-results/quota/review/typescript-src.log","exitCode":0,"command":"npx tsc --project tsconfig.src.json --noEmit"},
+      {"log":"test-results/quota/review/typescript-wasp.log","exitCode":0,"command":"npx tsc --project tsconfig.wasp.json --noEmit"}
+    ],
+    "http": {
+      "reason": "No quota-service, model, schema, migration, dependency or HTTP-operation changes; original 35-case evidence retained",
+      "rerun": false
+    },
+    "submission": {
+      "deadline": "2026-10-23T17:38:00+08:00",
+      "prPublished": false,
+      "direction": "技术",
+      "forkCreated": false,
+      "notificationTime": "2026-10-21T17:38:00+08:00"
+    }
+  },
+  "finalDelivery": {
+    "checkedDate": "2026-10-21",
+    "validatedCodeCommit": "2b46f01f487be8931d468cbc2b88d1233fcad9c6",
+    "codeUnchangedSinceValidation": true,
+    "businessTestsRerunThisCloseout": false,
+    "staticChecks": {
+      "diffCheckPassed": true,
+      "designCommitDirectParentOfImplementation": true,
+      "upstreamHistoryPreserved": true,
+      "sensitiveContentFindings": 0,
+      "missingLocalLinks": 0
+    },
+    "evidenceCrossCheck": {
+      "servicePassed": 17,
+      "browserSteps": 15,
+      "pageErrors": 0,
+      "httpCases": 35,
+      "httpCallIdsMatchedToUniqueStartAndEnd": 48
+    },
+    "baseRepository": "bybzhwbzhh88/task-planner-interview",
+    "baseBranch": "main",
+    "remoteBaseCommit": "114aeb28f6368e96c08a25627ac094b8d102fd1b",
+    "sourceBranch": "chore/original-baseline",
+    "forkCreated": false,
+    "branchPushed": false,
+    "prPublished": false,
+    "note": "Local commits preserve spec before implementation; no GitHub PR has been submitted. Final closeout changes documentation only."
+  },
+  "forkDelivery": {
+    "recordedDate": "2026-10-21",
+    "account": "Theodora-Y",
+    "fork": "https://github.com/Theodora-Y/task-planner-interview",
+    "parentRepository": "bybzhwbzhh88/task-planner-interview",
+    "sourceBranch": "chore/original-baseline",
+    "baseBranch": "main",
+    "forkCreated": true,
+    "branchPushed": true,
+    "firstVerifiedRemoteCommit": "a090375b8a898355240bb95cb7b19b5a7ece2de4",
+    "historyPreserved": true,
+    "prCreated": false,
+    "businessCodeChanged": false,
+    "testsRerun": false,
+    "note": "Historical fork/push stage; later publication state is recorded in prDelivery. Subsequent changes synchronize documentation only."
+  },
+  "prDelivery": {
+    "recordedDate": "2026-10-21",
+    "url": "https://github.com/bybzhwbzhh88/task-planner-interview/pull/3",
+    "number": 3,
+    "title": "技术｜郑女士｜132****3133",
+    "sourceRepository": "Theodora-Y/task-planner-interview",
+    "sourceBranch": "chore/original-baseline",
+    "baseRepository": "bybzhwbzhh88/task-planner-interview",
+    "baseBranch": "main",
+    "stateAtCreation": "open",
+    "draft": false,
+    "handoffSpecCommit": "21bad24a39e1e304a96de6f23173565e26cc1612",
+    "acceptanceRowsPreserved": 24,
+    "localLinksCheckedBeforePublication": 122,
+    "businessCodeChanged": false,
+    "businessTestsRerun": false,
+    "note": "Current publication record; prior delivery sections retain historical states. PR status may change after this snapshot."
+  },
+  "reproductionRepair": {
+    "recordedDate": "2026-10-22",
+    "toolingCommit": "ebb08bb8005382a90f5884d4eb046f17054b5ca6",
+    "quotaBusinessCodeUnchanged": true,
+    "originalAcceptanceAssertionsPreserved": true,
+    "applicationDependenciesUnchanged": true,
+    "newDevDependency": "playwright@1.64.1",
+    "commands": {
+      "core": "npm run verify",
+      "complete": "npm run verify:all"
+    },
+    "local": {
+      "cachedCoreSeconds": 33,
+      "cleanCheckoutCoreSeconds": 57,
+      "cleanCheckoutAll": {
+        "startedAt": "2026-10-22T14:26:12.370Z",
+        "mode": "all",
+        "stages": [
+          {"name":"database-init","startedAt":"2026-10-22T14:26:13.464Z","exitCode":0,"finishedAt":"2026-10-22T14:26:13.882Z"},
+          {"name":"database-start","startedAt":"2026-10-22T14:26:13.883Z","exitCode":0,"finishedAt":"2026-10-22T14:26:13.989Z"},
+          {"name":"database-create","startedAt":"2026-10-22T14:26:13.989Z","exitCode":0,"finishedAt":"2026-10-22T14:26:14.019Z"},
+          {"name":"install","startedAt":"2026-10-22T14:26:14.020Z","exitCode":0,"finishedAt":"2026-10-22T14:26:18.744Z"},
+          {"name":"compile","startedAt":"2026-10-22T14:26:18.744Z","exitCode":0,"finishedAt":"2026-10-22T14:26:39.887Z"},
+          {"name":"typescript-src","startedAt":"2026-10-22T14:26:39.887Z","exitCode":0,"finishedAt":"2026-10-22T14:26:41.244Z"},
+          {"name":"typescript-wasp","startedAt":"2026-10-22T14:26:41.244Z","exitCode":0,"finishedAt":"2026-10-22T14:26:43.488Z"},
+          {"name":"migrations","startedAt":"2026-10-22T14:26:43.488Z","exitCode":0,"finishedAt":"2026-10-22T14:26:43.860Z"},
+          {"name":"database-tests","startedAt":"2026-10-22T14:26:43.860Z","exitCode":0,"finishedAt":"2026-10-22T14:27:06.438Z"},
+          {"name":"browser-install","startedAt":"2026-10-22T14:27:06.438Z","exitCode":0,"finishedAt":"2026-10-22T14:27:06.765Z"},
+          {"name":"http-tests","startedAt":"2026-10-22T14:27:15.662Z","exitCode":0,"finishedAt":"2026-10-22T14:27:49.454Z"},
+          {"name":"browser-tests","startedAt":"2026-10-22T14:27:49.454Z","exitCode":0,"finishedAt":"2026-10-22T14:28:28.381Z"}
+        ],
+        "passed": true,
+        "database": "disposable local PostgreSQL cluster",
+        "databaseTests": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0
+        },
+        "httpCases": 35,
+        "browserSteps": 15,
+        "pageErrors": 0,
+        "finishedAt": "2026-10-22T14:28:28.501Z",
+        "durationSeconds": 136
+      }
+    },
+    "ci": {
+      "url": "https://github.com/Theodora-Y/task-planner-interview/actions/runs/39793738843",
+      "artifactName": "quota-verification",
+      "artifactId": 12432771536,
+      "report": {
+        "startedAt": "2026-10-22T14:12:59.316Z",
+        "mode": "all",
+        "stages": [
+          {"name":"database-start","startedAt":"2026-10-22T14:13:02.378Z","exitCode":0,"finishedAt":"2026-10-22T14:13:15.767Z"},
+          {"name":"install","startedAt":"2026-10-22T14:13:16.94Z","exitCode":0,"finishedAt":"2026-10-22T14:13:21.039Z"},
+          {"name":"compile","startedAt":"2026-10-22T14:13:21.039Z","exitCode":0,"finishedAt":"2026-10-22T14:13:45.6Z"},
+          {"name":"typescript-src","startedAt":"2026-10-22T14:13:45.6Z","exitCode":0,"finishedAt":"2026-10-22T14:13:47.045Z"},
+          {"name":"typescript-wasp","startedAt":"2026-10-22T14:13:47.045Z","exitCode":0,"finishedAt":"2026-10-22T14:13:48.6Z"},
+          {"name":"migrations","startedAt":"2026-10-22T14:13:48.6Z","exitCode":0,"finishedAt":"2026-10-22T14:13:49.018Z"},
+          {"name":"database-tests","startedAt":"2026-10-22T14:13:49.018Z","exitCode":0,"finishedAt":"2026-10-22T14:14:12.574Z"},
+          {"name":"browser-install","startedAt":"2026-10-22T14:14:12.574Z","exitCode":0,"finishedAt":"2026-10-22T14:14:29.328Z"},
+          {"name":"http-tests","startedAt":"2026-10-22T14:14:37.379Z","exitCode":0,"finishedAt":"2026-10-22T14:15:10.105Z"},
+          {"name":"browser-tests","startedAt":"2026-10-22T14:15:10.105Z","exitCode":0,"finishedAt":"2026-10-22T14:15:49.412Z"}
+        ],
+        "passed": true,
+        "database": "disposable Docker PostgreSQL",
+        "databaseTests": {
+          "passed": 17,
+          "failed": 0,
+          "skipped": 0
+        },
+        "httpCases": 35,
+        "browserSteps": 15,
+        "pageErrors": 0,
+        "finishedAt": "2026-10-22T14:15:49.544Z",
+        "durationSeconds": 170
+      }
+    },
+    "unsafeDatabaseGuard": {
+      "rejectedBeforeMigration": true,
+      "exitCode": 1
+    },
+    "initialLocalBrowserFailure": "Linux system libraries missing; installed documented dependencies, then reran all checks from another clean checkout successfully",
+    "scope": "Tooling and documentation only; mock provider and all original acceptance assertions unchanged. Prior snapshots retain historical run data."
+  }
+}

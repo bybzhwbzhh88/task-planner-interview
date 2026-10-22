@@ -1,5 +1,4 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
+import type { PlanResult, Task } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateTask,
@@ -12,73 +11,21 @@ import type {
 import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
 import type { GeneratedSchedule } from "./schedule";
-import { generateMockSchedule } from "./mockAi";
+import { generatePlanForUser } from "./planService";
+import { PlanError } from "./planError";
 
 
 //#region Actions
-const generatePlanInputSchema = z.object({
-  hours: z.number(),
-});
-
-type GeneratePlanInput = z.infer<typeof generatePlanInputSchema>;
-
-export const generatePlan: GeneratePlan<
-  GeneratePlanInput,
-  GeneratedSchedule
-> = async (rawArgs, context) => {
-  if (!context.user) {
-    throw new HttpError(
-      401,
-      "Only authenticated users are allowed to perform this operation",
-    );
+export const generatePlan: GeneratePlan<{ hours: number }, GeneratedSchedule> = async (rawArgs, context) => {
+  try {
+    return await generatePlanForUser(rawArgs, context.user, { db: prisma });
+  } catch (error) {
+    if (error instanceof PlanError) {
+      throw new HttpError(error.statusCode, error.message, { code: error.code, attemptId: error.attemptId });
+    }
+    throw new HttpError(503, "结果暂无法确认，请刷新核对。", { code: "OUTCOME_UNKNOWN" });
   }
-
-  const { hours } = ensureArgsSchemaOrThrowHttpError(
-    generatePlanInputSchema,
-    rawArgs,
-  );
-  const tasks = await context.entities.Task.findMany({
-    where: {
-      user: {
-        id: context.user.id,
-      },
-    },
-  });
-
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
-    );
-  }
-
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
-  });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
-  }
-
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
-
-  return generatedSchedule;
 };
-
 const createTaskInputSchema = z.object({
   description: z.string().nonempty(),
 });

@@ -1,3 +1,5 @@
+import { useAuth } from "wasp/client/auth";
+import { Navigate } from "react-router";
 import { type Task } from "wasp/entities";
 
 import {
@@ -31,6 +33,21 @@ import type {
 } from "./schedule";
 
 export function DemoAppPage() {
+  const auth = useAuth();
+  const authStatus = (auth.error as { statusCode?: number } | null)?.statusCode;
+  const authRejected = authStatus === 401 || authStatus === 403;
+  if (!auth.data && !auth.isLoading && !auth.isError) {
+    return <Navigate to="/login" replace />;
+  }
+  if (!auth.data || authRejected) {
+    return <div className="p-6" role="status">
+      {auth.isError
+        ? <><p>{authRejected ? "登录状态已失效，请退出后重新登录。" : "暂时无法确认登录状态，请刷新后重试。"}</p><Button type="button" onClick={() => void auth.refetch()}>刷新登录状态</Button></>
+        : "正在确认登录状态…"}
+    </div>;
+  }
+  // Cached identity preserves the successful view during refresh errors only.
+  // Every operation still authenticates on the server; stale credits never admit a request.
   return (
     <div className="py-10 lg:mt-10">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -59,155 +76,104 @@ function NewTaskForm({
 }: {
   handleCreateTask: typeof createTask;
 }) {
-  const [description, setDescription] = useState<string>("");
-  const [todaysHours, setTodaysHours] = useState<number>(8);
+  const [description, setDescription] = useState("");
+  const [todaysHours, setTodaysHours] = useState(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
-  const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
-
-  const { data: tasks, isLoading: isTasksLoading } =
+  const [isPreviousResult, setIsPreviousResult] = useState(false);
+  const [isPlanGenerating, setIsPlanGenerating] = useState(false);
+  const [feedback, setFeedback] = useState("");
+  const auth = useAuth();
+  const { data: tasks, isLoading: isTasksLoading, isError: isTasksError, refetch: refetchTasks } =
     useQuery(getAllTasksByUser);
 
   const handleSubmit = async () => {
     try {
       await handleCreateTask({ description });
       setDescription("");
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Something went wrong";
-      window.alert("Error: " + message);
+    } catch {
+      toast({ title: "添加失败", description: "请稍后重试。", variant: "destructive" });
     }
   };
 
   const handleGeneratePlan = async () => {
+    if (isPlanGenerating) return;
+    setIsPlanGenerating(true);
+    setFeedback("");
+    setIsPreviousResult(!!response);
     try {
-      setIsPlanGenerating(true);
-      const response = await generatePlan({
-        hours: todaysHours,
-      });
-      if (response) {
-        setResponse(response);
-      }
-    } catch (err) {
-      const statusCode =
-        err && typeof err === "object" && "statusCode" in err
-          ? err.statusCode
-          : undefined;
-      if (statusCode === 402) {
-        toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
-          variant: "destructive",
-        });
-      }
+      const result = await generatePlan({ hours: todaysHours });
+      setResponse(result);
+      setIsPreviousResult(false);
+      setFeedback("生成成功，已消费 1 个额度。");
+    } catch (error) {
+      const failure = error as { statusCode?: number; data?: { code?: string; attemptId?: string; data?: { code?: string; attemptId?: string } } };
+      const details = failure?.data?.data ?? failure?.data;
+      const code = details?.code;
+      let message = "结果暂无法确认，请刷新核对；仍不确定请保留请求编号反馈。";
+      if (code === "PROVIDER_FAILED") message = "生成失败，额度已释放；请调整任务后重试。";
+      else if (code === "SAVE_FAILED") message = "日程保存失败，额度已释放；请稍后重试。";
+      else if (code === "DB_UNAVAILABLE") message = "服务暂不可用，本次未消费额度；请稍后重试。";
+      else if (code === "NO_AVAILABLE_CREDIT" || failure?.statusCode === 402) {
+        message = "当前没有可用额度；若其他页面正在生成，请完成后刷新。";
+      } else if (failure?.statusCode === 401) message = "登录已失效，请重新登录后操作。";
+      else if (failure?.statusCode === 400) message = "请添加任务，并将可用时长设为 1～24 小时。";
+      if (details?.attemptId) message += " 请求编号：" + details.attemptId;
+      setFeedback(message);
+      toast({ title: "本次未完成", description: message, variant: "destructive" });
     } finally {
+      // Refresh failures must not turn an already committed success into a failure.
+      await auth.refetch().catch(() => undefined);
       setIsPlanGenerating(false);
     }
   };
 
+  const noCredit = auth.data != null && auth.data.credits < 1;
+  const invalidHours = !Number.isFinite(todaysHours) || todaysHours < 1 || todaysHours > 24;
   return (
-    <div className="flex flex-col justify-center gap-10">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <Input
-            type="text"
-            id="description"
-            className="flex-1"
-            placeholder="输入待办事项"
-            value={description}
-            onChange={(e) => setDescription(e.currentTarget.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSubmit();
-              }
-            }}
-          />
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!description}
-            variant="default"
-            size="default"
-          >
-            添加任务
-          </Button>
+    <div className="flex flex-col justify-center gap-6">
+      <div className="flex items-center justify-between gap-3">
+        <Input
+          type="text" id="description" className="flex-1" placeholder="输入待办事项"
+          value={description} onChange={(event) => setDescription(event.currentTarget.value)}
+          onKeyDown={(event) => { if (event.key === "Enter" && description) void handleSubmit(); }}
+        />
+        <Button type="button" onClick={handleSubmit} disabled={!description}>添加任务</Button>
+      </div>
+
+      {isTasksLoading ? <p>任务加载中…</p> : isTasksError ? (
+        <p>任务读取失败。<button type="button" onClick={() => void refetchTasks()}>刷新任务</button></p>
+      ) : tasks?.length ? (
+        <div className="space-y-4">
+          {tasks.map((task: Task) => <Todo key={task.id} {...task} />)}
+          <div className="flex items-center justify-between gap-3">
+            <Label htmlFor="todays-hours">今天可用的工作时长</Label>
+            <Input type="number" id="todays-hours" min={1} max={24} step="any"
+              className="min-w-28 text-center" value={todaysHours}
+              onChange={(event) => setTodaysHours(event.currentTarget.valueAsNumber)} />
+          </div>
+          {invalidHours && <p role="alert">可用时长须为 1～24 小时。</p>}
         </div>
+      ) : <p>请先添加待办事项</p>}
+
+      <div className="text-muted-foreground space-y-2 text-sm">
+        <p>生成时暂占 1 个额度，成功后消费，失败后释放。</p>
+        {auth.isLoading && <p>可用额度加载中…</p>}
+        {auth.isError && <p role="alert">无法确认可用额度，请刷新后再生成。</p>}
+        {noCredit && <p data-testid="no-credit-message">当前没有可用额度；若其他页面正在生成，请完成后刷新。</p>}
+        <Button type="button" variant="outline" onClick={() => void auth.refetch()}>刷新额度</Button>
       </div>
 
-      <div className="col-span-full space-y-10">
-        {isTasksLoading && (
-          <div className="text-muted-foreground">Loading...</div>
-        )}
-        {tasks! && tasks.length > 0 ? (
-          <div className="space-y-4">
-            {tasks.map((task: Task) => (
-              <Todo
-                key={task.id}
-                id={task.id}
-                isDone={task.isDone}
-                description={task.description}
-                time={task.time}
-              />
-            ))}
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-3">
-                <Label
-                  htmlFor="time"
-                  className="text-muted-foreground text-nowrap text-sm font-semibold"
-                >
-                  今天可用的工作时长
-                </Label>
-                <Input
-                  type="number"
-                  id="time"
-                  step={0.5}
-                  min={1}
-                  max={24}
-                  className="min-w-28 text-center"
-                  value={todaysHours}
-                  onChange={(e) => setTodaysHours(+e.currentTarget.value)}
-                />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="text-muted-foreground text-center">
-            请先添加待办事项
-          </div>
-        )}
-      </div>
-
-      <Button
-        type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
-        onClick={() => handleGeneratePlan()}
-        variant="default"
-        size="default"
-        className="w-full"
-        data-testid="generate-schedule-button"
-      >
-        {isPlanGenerating ? (
-          <>
-            <Loader2 className="mr-2 inline-block animate-spin" />
-            生成中…
-          </>
-        ) : (
-          "生成日程"
-        )}
+      <Button type="button"
+        disabled={isPlanGenerating || isTasksLoading || isTasksError || !tasks?.length ||
+          auth.isLoading || auth.isError || !auth.data || noCredit || invalidHours}
+        onClick={() => void handleGeneratePlan()} className="w-full" data-testid="generate-schedule-button">
+        {isPlanGenerating ? <><Loader2 className="mr-2 inline-block animate-spin" />生成中…</> : "生成日程"}
       </Button>
-
-      {!!response && (
+      <p role="status" aria-live="polite" data-testid="plan-feedback">{feedback}</p>
+      {response && (
         <div className="flex flex-col">
-          <h3 className="text-foreground mb-4 text-lg font-semibold">
-            本次日程
+          <h3 className="text-foreground mb-4 text-lg font-semibold" data-testid="schedule-heading">
+            {isPreviousResult ? "上次成功生成的日程" : "本次日程"}
           </h3>
           <Schedule schedule={response} />
         </div>

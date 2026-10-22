@@ -15,7 +15,7 @@ export default app({
   auth: authConfig,
   client: { rootComponent: App },
   spec: [
-    route("HomeRoute", "/", page(DemoAppPage, { authRequired: true })),
+    route("HomeRoute", "/", page(DemoAppPage)),
     route("NotFoundRoute", "*", page(NotFoundPage)),
     authSpec,
     demoAiAppSpec,

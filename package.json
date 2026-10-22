@@ -29,6 +29,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.7",
     "@wasp.sh/spec": "file:.wasp/spec",
+    "playwright": "1.64.1",
     "prisma": "5.19.1",
     "typescript": "6.0.3",
     "vite": "^8.1.0",
@@ -37,5 +38,14 @@
   "private": true,
   "engines": {
     "node": ">=24.14.1"
+  },
+  "scripts": {
+    "verify": "node scripts/verify.mjs",
+    "verify:all": "node scripts/verify.mjs --e2e",
+    "test": "node scripts/verify.mjs --database-only",
+    "check:types": "tsc --project tsconfig.src.json --noEmit && tsc --project tsconfig.wasp.json --noEmit",
+    "verify:http": "node scripts/verify-quota.mjs --server-log test-results/quota/server.log",
+    "verify:browser": "node scripts/verify-browser.cjs",
+    "start:logged": "mkdir -p test-results/quota && wasp start 2>&1 | tee test-results/quota/server.log"
   }
 }
