@@ -7,7 +7,8 @@ import { Button } from "../client/components/ui/button";
 // which unmounts the result page on every authentication refetch error.
 export function PlannerAuthBoundary({ children }: { children: ReactNode }) {
   const { data: user, isLoading, isError, error, isFetching, refetch } = useAuth();
-  const status = error && "statusCode" in error ? error.statusCode : undefined;
+  const status = error && typeof error === "object" && "statusCode" in error
+    ? error.statusCode : undefined;
   const temporary = status === undefined ||
     (typeof status === "number" && status >= 500 && status <= 599);
 

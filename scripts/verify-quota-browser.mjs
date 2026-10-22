@@ -151,18 +151,25 @@ try {
       scenario = `${entry}: cached identity + ${status} blocks private page`;
       fault = status;
       await page.getByRole("button", { name: "刷新额度", exact: true }).click();
-      await visible(page.getByRole("alert").filter({ hasText: "登录已失效" }));
+      const expired = page.getByRole("alert").filter({ hasText: "登录已失效" });
+      // Wasp clears the session on 401; a redirect to login is also correct.
+      await visible(status === 401 ? expired.or(page.locator('input[name="username"]')) : expired);
       assert.equal(await page.getByTestId("schedule").count(), 0);
       assert.equal(await page.getByPlaceholder("输入待办事项").count(), 0);
       if (status === 401) {
-        await page.getByRole("link", { name: "前往登录", exact: true }).click();
+        if (await expired.isVisible()) await page.getByRole("link", { name: "前往登录", exact: true }).click();
         await visible(page.locator('input[name="username"]'));
         assert.equal(new URL(page.url()).pathname, "/login", "stale identity must not redirect back to planner");
+        fault = 0;
+        await page.locator('input[name="username"]').fill(username);
+        await page.locator('input[name="password"]').fill(password);
+        await page.getByRole("button", { name: "Log in", exact: true }).click();
+        await visible(page.getByPlaceholder("输入待办事项"));
         await page.goto(new URL(entry, values["base-url"]).href);
-        await visible(page.getByRole("alert").filter({ hasText: "登录已失效" }));
+      } else {
+        fault = 0;
+        await page.getByRole("button", { name: "重试身份验证", exact: true }).click();
       }
-      fault = 0;
-      await page.getByRole("button", { name: "重试身份验证", exact: true }).click();
       await visible(page.getByPlaceholder("输入待办事项"));
       passed(scenario);
     }
