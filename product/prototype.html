@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>任务规划 · 额度处理原型</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --surface:#fff; --surface-2:#fafafa;
+    --line:#e5e7eb; --line-strong:#d4d4d8;
+    --text:#18181b; --muted:#71717a; --faint:#a1a1aa;
+    --primary:#2563eb; --primary-soft:#eff6ff;
+    --danger:#dc2626; --danger-soft:#fef2f2;
+    --warn:#b45309; --warn-soft:#fffbeb;
+    --ok:#15803d; --ok-soft:#f0fdf4;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font:14px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:1040px;margin:0 auto;padding:40px 20px 80px}
+  header.top{text-align:center;margin-bottom:28px}
+  header.top h1{font-size:28px;margin:0 0 8px;letter-spacing:-.02em}
+  header.top h1 span{color:var(--primary)}
+  header.top p{margin:0;color:var(--muted);font-size:13px}
+  .layout{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
+  @media (max-width:900px){.layout{grid-template-columns:1fr}}
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;
+  }
+  .card + .card{margin-top:16px}
+  .kicker{
+    font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--faint);margin:0 0 12px;
+  }
+  /* ---------- 任务输入 ---------- */
+  .row{display:flex;gap:8px}
+  input[type=text],input[type=number]{
+    width:100%;padding:9px 12px;border:1px solid var(--line-strong);border-radius:8px;
+    background:#fff;color:var(--text);font-size:14px;outline:none;
+  }
+  input[type=text]:focus,input[type=number]:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  button{
+    font:inherit;cursor:pointer;border-radius:8px;border:1px solid transparent;
+    padding:9px 16px;background:var(--primary);color:#fff;font-weight:500;white-space:nowrap;
+    transition:opacity .15s,background .15s;
+  }
+  button:hover:not(:disabled){opacity:.9}
+  button:disabled{background:#e4e4e7;color:#a1a1aa;cursor:not-allowed}
+  button.ghost{background:#fff;border-color:var(--line-strong);color:var(--text)}
+  button.ghost:disabled{color:#a1a1aa;background:#f4f4f5}
+  button.small{padding:5px 10px;font-size:12px}
+  .tasks{margin:16px 0 0;display:flex;flex-direction:column;gap:8px}
+  .task{
+    display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:8px;
+    padding:8px 10px;background:var(--surface-2);
+  }
+  .task input[type=checkbox]{width:15px;height:15px;accent-color:var(--primary);flex:none}
+  .task .desc{flex:1;font-size:13.5px}
+  .task.done .desc{text-decoration:line-through;color:var(--faint)}
+  .task .del{background:none;border:none;color:var(--faint);padding:2px 6px;font-size:15px}
+  .task .del:hover{color:var(--danger);opacity:1}
+  .hours{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}
+  .hours label{font-size:13px;color:var(--muted);font-weight:600}
+  .hours input{width:88px;text-align:center}
+  .empty{color:var(--faint);text-align:center;font-size:13px;padding:14px 0}
+  /* ---------- 额度徽标 ---------- */
+  .creditbar{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    margin:18px 0 10px;padding:10px 12px;border-radius:9px;
+    background:var(--primary-soft);border:1px solid #dbeafe;
+  }
+  .creditbar .label{font-size:12.5px;color:#1e40af;font-weight:600}
+  .creditbar .value{font-variant-numeric:tabular-nums;font-weight:700;color:#1e3a8a}
+  .creditbar.zero{background:var(--danger-soft);border-color:#fecaca}
+  .creditbar.zero .label,.creditbar.zero .value{color:#991b1b}
+  .genbtn{width:100%;padding:11px 16px;font-size:14.5px}
+  #genHint{text-align:center;font-size:12px;color:var(--faint);margin-top:8px;min-height:18px}
+  /* ---------- 日程 ---------- */
+  .result{margin-top:20px}
+  .result .stale{
+    font-size:12px;color:var(--warn);background:var(--warn-soft);border:1px solid #fde68a;
+    padding:6px 10px;border-radius:7px;margin-bottom:10px;
+  }
+  .plan-item{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin-bottom:8px}
+  .plan-item .head{display:flex;justify-content:space-between;font-weight:600;font-size:13.5px}
+  .plan-item .tag{font-size:11px;color:var(--muted);font-weight:500}
+  .plan-item ul{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:5px}
+  .plan-item li{display:flex;justify-content:space-between;font-size:12.5px;color:#3f3f46}
+  .plan-item li span:last-child{color:var(--faint);font-variant-numeric:tabular-nums}
+  /* ---------- 控制台 ---------- */
+  .console .note{
+    font-size:11.5px;color:var(--muted);line-height:1.6;background:var(--surface-2);
+    border:1px dashed var(--line-strong);border-radius:8px;padding:8px 10px;margin-bottom:12px;
+  }
+  .console .group{margin-bottom:14px}
+  .console .group > .t{font-size:11px;font-weight:700;color:var(--faint);margin-bottom:6px;letter-spacing:.04em}
+  .stat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+  .stat div{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center}
+  .stat .n{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+  .stat .k{font-size:10.5px;color:var(--faint);margin-top:2px}
+  .log{
+    font:11.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    background:#0f172a;border-radius:8px;padding:10px;height:190px;overflow:auto;color:#cbd5e1;
+  }
+  .log div{white-space:pre-wrap;word-break:break-all}
+  .log .e-started{color:#7dd3fc}
+  .log .e-ok{color:#86efac}
+  .log .e-bad{color:#fca5a5}
+  .log .e-mute{color:#64748b}
+  /* ---------- toast ---------- */
+  #toasts{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:10px;z-index:50;width:340px}
+  .toast{
+    background:#fff;border:1px solid var(--line);border-left:4px solid var(--primary);
+    border-radius:9px;padding:11px 13px;box-shadow:0 8px 24px rgba(15,23,42,.10);
+    animation:in .18s ease-out;
+  }
+  .toast .tt{font-weight:700;font-size:13.5px;margin-bottom:2px}
+  .toast .td{font-size:12.5px;color:var(--muted);line-height:1.5}
+  .toast.err{border-left-color:var(--danger)} .toast.err .tt{color:#991b1b}
+  .toast.warn{border-left-color:#d97706} .toast.warn .tt{color:#92400e}
+  .toast.ok{border-left-color:var(--ok)} .toast.ok .tt{color:#166534}
+  @keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .spin{display:inline-block;animation:sp .8s linear infinite;margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <h1><span>AI</span> 任务规划</h1>
+    <p>额度处理改进 · 交互原型（可点击，1 分钟内可走完 5 个核心场景）</p>
+  </header>
+
+  <div class="layout">
+    <!-- 主界面 -->
+    <main>
+      <section class="card">
+        <p class="kicker">待办任务</p>
+        <div class="row">
+          <input type="text" id="taskInput" placeholder="输入待办事项，回车添加" />
+          <button class="ghost" id="addBtn">添加任务</button>
+        </div>
+        <div class="tasks" id="taskList"></div>
+        <div class="hours">
+          <label for="hoursInput">今天可用的工作时长</label>
+          <input type="number" id="hoursInput" value="8" min="1" max="24" step="0.5" />
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="creditbar" id="creditBar">
+          <span class="label">剩余额度</span>
+          <span class="value"><span id="creditText">3 / 3</span> 次</span>
+        </div>
+        <button class="genbtn" id="genBtn" data-testid="generate-schedule-button">生成日程</button>
+        <div id="genHint"></div>
+        <div class="result" id="resultBox"></div>
+      </section>
+    </main>
+
+    <!-- 演示控制台 -->
+    <aside class="card console">
+      <p class="kicker">演示控制台（原型专用）</p>
+      <div class="note">
+        这个面板只为验收而存在，不属于产品界面。额度规则按 PRD 的顺序在前端模拟：<b>先预扣、再调模型、失败退款</b>。
+        真实并发安全依赖服务端的原子更新（PRD §5.2），前端模拟只能证明规则与交互，不能证明后端实现。
+      </div>
+
+      <div class="stat">
+        <div><div class="n" id="statCredits">3</div><div class="k">credits</div></div>
+        <div><div class="n" id="statStarted">0</div><div class="k" title="mock-ai.started 次数">started</div></div>
+        <div><div class="n" id="statPlans">0</div><div class="k">PlanResult</div></div>
+      </div>
+
+      <div class="group">
+        <div class="t">额度设置</div>
+        <div class="row">
+          <button class="ghost small" data-credits="3">设为 3</button>
+          <button class="ghost small" data-credits="1">设为 1</button>
+          <button class="ghost small" data-credits="0">设为 0</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="t">场景</div>
+        <div class="row" style="flex-wrap:wrap;gap:6px">
+          <button class="ghost small" id="failToggle">模拟模型失败：关</button>
+          <button class="ghost small" id="concurBtn">并发 3 次（AC-05/06）</button>
+          <button class="ghost small" id="resetBtn">重置</button>
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="t">事件日志</div>
+        <div class="log" id="log"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+/* ================= 服务端语义模拟 =================
+   规则与 PRD 一致：
+   1. 预扣（credits>0 才成功）在调用之前完成，扣不到直接 402，不产生 started
+   2. 成功写 PlanResult；失败退款，净消耗 0
+   3. 单线程 JS 中，预扣是同步的，等价于数据库的行锁原子更新
+*/
+const state = {
+  credits: 3,
+  maxCredits: 3,
+  plans: 0,
+  started: 0,
+  taskSeq: 1,
+  forceFail: false,
+  uiBusy: false,
+  tasks: [
+    { id: 1, desc: "写周报", done: false },
+    { id: 2, desc: "准备面试材料", done: false },
+  ],
+};
+
+let uid = 0;
+const nextCallId = () => "call_" + (++uid).toString().padStart(3, "0");
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function log(kind, text) {
+  const box = document.getElementById("log");
+  const line = document.createElement("div");
+  line.className = "e-" + kind;
+  line.textContent = text;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+function toast(title, desc, variant) {
+  const host = document.getElementById("toasts");
+  const el = document.createElement("div");
+  el.className = "toast " + (variant || "");
+  el.innerHTML = '<div class="tt"></div><div class="td"></div>';
+  el.querySelector(".tt").textContent = title;
+  el.querySelector(".td").textContent = desc;
+  host.appendChild(el);
+  setTimeout(() => el.remove(), 4200);
+}
+
+/* ---------- 核心：一次生成请求（服务端视角） ---------- */
+async function request(tag) {
+  const callId = nextCallId();
+
+  // 1) 预扣：先裁决，再调用。扣不到就没有 started
+  if (state.credits <= 0) {
+    log("bad", `${tag} ${callId} → 402 额度不足（未调用模型）`);
+    return { ok: false, code: 402, credits: state.credits };
+  }
+  state.credits -= 1;
+  log("mute", `${tag} ${callId} → 预扣成功 credits=${state.credits}`);
+
+  // 2) 调用模型
+  state.started += 1;
+  log("started", `${tag} ${callId} → mock-ai.started（累计 ${state.started}）`);
+  renderStats();
+  await sleep(500);
+
+  // 3) 结算
+  if (state.forceFail) {
+    state.credits += 1;
+    log("bad", `${tag} ${callId} → mock-ai.failed → 退款 credits=${state.credits}`);
+    renderStats();
+    return { ok: false, code: 502, credits: state.credits };
+  }
+  state.plans += 1;
+  log("ok", `${tag} ${callId} → mock-ai.succeeded → 写 PlanResult（共 ${state.plans}）`);
+  renderStats();
+  return { ok: true, code: 200, credits: state.credits, callId };
+}
+
+/* ---------- 界面：一次点击（带客户端锁） ---------- */
+async function clickGenerate() {
+  if (state.uiBusy) return;          // T7：同步锁，挡住双击
+  if (state.tasks.length === 0) return;
+  state.uiBusy = true;
+  render();
+
+  const res = await request("[UI]");
+
+  if (res.ok) {
+    renderSchedule();
+    toast("日程已生成", `本次消耗 1 次额度，剩余 ${res.credits} 次`, "ok");
+  } else if (res.code === 402) {
+    toast("额度已用完", `本次未生成，也未消耗额度（剩余 ${res.credits} 次）。调整任务后可稍后再试。`, "warn");
+  } else {
+    toast("生成失败，本次未扣额度", `剩余额度 ${res.credits} 次不变。可直接重试；若反复失败，检查任务描述。`, "err");
+    markScheduleStale();
+  }
+
+  state.uiBusy = false;
+  render();
+}
+
+/* ---------- 并发：绕过客户端锁，模拟 3 个独立请求同时到达 ---------- */
+async function runConcurrent(n) {
+  const before = state.credits;
+  log("mute", `--- 并发 ${n} 个请求，起始 credits=${before} ---`);
+  const results = await Promise.all(
+    Array.from({ length: n }, (_, i) => request(`[R${i + 1}]`))
+  );
+  const ok = results.filter((r) => r.ok).length;
+  const rejected = results.filter((r) => !r.ok).length;
+  renderStats();
+  log(
+    "mute",
+    `--- 结果：成功 ${ok}，拒绝 ${rejected}，最终 credits=${state.credits}（不允许为负） ---`
+  );
+  toast(
+    "并发结果",
+    `${n} 个请求：成功 ${ok} 个，拒绝 ${rejected} 个；最终 credits=${state.credits}，PlanResult=${state.plans}，started=${state.started}`,
+    state.credits < 0 ? "err" : "ok"
+  );
+  render();
+}
+
+/* ================= 渲染 ================= */
+function render() {
+  renderStats();
+  renderCredit();
+  renderTasks();
+  renderButton();
+}
+
+function renderStats() {
+  document.getElementById("statCredits").textContent = state.credits;
+  document.getElementById("statStarted").textContent = state.started;
+  document.getElementById("statPlans").textContent = state.plans;
+}
+
+function renderCredit() {
+  const bar = document.getElementById("creditBar");
+  document.getElementById("creditText").textContent = `${state.credits} / ${state.maxCredits}`;
+  bar.classList.toggle("zero", state.credits <= 0);
+}
+
+function renderTasks() {
+  const host = document.getElementById("taskList");
+  host.innerHTML = "";
+  if (state.tasks.length === 0) {
+    host.innerHTML = '<div class="empty">请先添加待办事项</div>';
+    return;
+  }
+  state.tasks.forEach((t) => {
+    const el = document.createElement("div");
+    el.className = "task" + (t.done ? " done" : "");
+    el.dataset.taskId = t.id;
+    el.innerHTML =
+      '<input type="checkbox" ' + (t.done ? "checked" : "") + ' />' +
+      '<span class="desc"></span>' +
+      '<button class="del" title="删除">✕</button>';
+    el.querySelector(".desc").textContent = t.desc;
+    el.querySelector("input").addEventListener("change", (e) => {
+      t.done = e.target.checked;
+      renderTasks();
+    });
+    el.querySelector(".del").addEventListener("click", () => {
+      state.tasks = state.tasks.filter((x) => x.id !== t.id);
+      render();
+    });
+    host.appendChild(el);
+  });
+}
+
+function renderButton() {
+  const btn = document.getElementById("genBtn");
+  const hint = document.getElementById("genHint");
+  btn.disabled = state.uiBusy || state.credits <= 0 || state.tasks.length === 0;
+  if (state.uiBusy) {
+    btn.innerHTML = '<span class="spin">◐</span>生成中…';
+  } else if (state.tasks.length === 0) {
+    btn.textContent = "生成日程";
+  } else if (state.credits <= 0) {
+    btn.textContent = "额度已用完";
+  } else {
+    btn.textContent = "生成日程";
+  }
+  hint.textContent = state.tasks.length === 0
+    ? "请先添加待办事项"
+    : state.credits <= 0
+      ? "剩余 0 次，调整任务后可稍后再试"
+      : `本次将消耗 1 次额度，完成后剩余 ${Math.max(state.credits - 1, 0)} 次`;
+}
+
+function renderSchedule() {
+  const box = document.getElementById("resultBox");
+  delete box.dataset.staleAt;
+  const per = (Number(document.getElementById("hoursInput").value) || 8) / Math.max(state.tasks.length, 1) / 3;
+  box.innerHTML = state.tasks.map((t) => {
+    const steps = ["准备", "执行", "复盘"].map(
+      (s) => `<li><span>${s}：${escapeHtml(t.desc)}</span><span>${per.toFixed(2)} 小时</span></li>`
+    ).join("");
+    return `<div class="plan-item"><div class="head"><span>${escapeHtml(t.desc)}</span>
+      <span class="tag">中优先级</span></div><ul>${steps}</ul></div>`;
+  }).join("");
+}
+
+function markScheduleStale() {
+  const box = document.getElementById("resultBox");
+  if (!box.children.length) return;
+  box.dataset.staleAt = new Date().toTimeString().slice(0, 5);
+  const first = box.firstElementChild;
+  if (!first.classList.contains("stale")) {
+    const div = document.createElement("div");
+    div.className = "stale";
+    div.textContent = `以下为上次成功生成的结果（${box.dataset.staleAt}）`;
+    box.prepend(div);
+  }
+}
+
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ================= 事件绑定 ================= */
+document.getElementById("addBtn").addEventListener("click", addTask);
+document.getElementById("taskInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") addTask();
+});
+
+function addTask() {
+  const input = document.getElementById("taskInput");
+  const desc = input.value.trim();
+  if (!desc) return;
+  state.tasks.push({ id: ++state.taskSeq, desc, done: false });
+  input.value = "";
+  render();
+}
+
+document.getElementById("genBtn").addEventListener("click", clickGenerate);
+
+document.querySelectorAll("[data-credits]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    state.credits = Number(btn.dataset.credits);
+    log("mute", `--- 手动设置 credits=${state.credits} ---`);
+    render();
+  });
+});
+
+document.getElementById("failToggle").addEventListener("click", (e) => {
+  state.forceFail = !state.forceFail;
+  e.target.textContent = "模拟模型失败：" + (state.forceFail ? "开" : "关");
+  log("mute", `--- 模型失败开关：${state.forceFail ? "开" : "关"} ---`);
+});
+
+document.getElementById("concurBtn").addEventListener("click", () => runConcurrent(3));
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  state.credits = 3;
+  state.maxCredits = 3;
+  state.plans = 0;
+  state.started = 0;
+  state.forceFail = false;
+  state.uiBusy = false;
+  state.tasks = [
+    { id: 1, desc: "写周报", done: false },
+    { id: 2, desc: "准备面试材料", done: false },
+  ];
+  document.getElementById("failToggle").textContent = "模拟模型失败：关";
+  document.getElementById("resultBox").innerHTML = "";
+  delete document.getElementById("resultBox").dataset.staleAt;
+  document.getElementById("log").innerHTML = "";
+  log("mute", "--- 已重置：credits=3, started=0, PlanResult=0 ---");
+  render();
+});
+
+// 初始状态
+log("mute", "--- 初始化：credits=3, started=0, PlanResult=0 ---");
+render();
+window.__proto = { state, request, clickGenerate, runConcurrent };
+</script>
+</body>
+</html>
