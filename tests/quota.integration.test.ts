@@ -51,10 +51,13 @@ describe("real PostgreSQL admission and persistence", () => {
       const gatedStore = {
         ...store,
         async reserve(userId: string) {
-          const admitted = await store.reserve(userId);
-          observedBalances.push((await state(id)).credits);
-          if (++attempts === 10) allReserved();
-          return admitted;
+          try {
+            const admitted = await store.reserve(userId);
+            observedBalances.push((await state(id)).credits);
+            return admitted;
+          } finally {
+            if (++attempts === 10) allReserved();
+          }
         },
       };
       const spy = vi.spyOn(console, "info").mockImplementation(noLog);

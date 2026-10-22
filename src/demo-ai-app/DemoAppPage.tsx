@@ -112,14 +112,19 @@ function NewTaskForm({
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
           : undefined;
+      // Wasp wraps the server payload in error.data; only explicit codes
+      // justify telling the user that the reserved credit was restored.
+      const code = (err as { data?: { data?: { code?: string } } } | null)?.data?.data?.code;
       if (statusCode === 402) {
         setGenerationMessage("当前没有可用额度。若有其他生成进行中，请稍后刷新额度。");
       } else if (statusCode === 400) {
         setGenerationMessage("请添加任务，并将可用时长设为 1～24 小时。本次未消耗额度。");
       } else if (statusCode === 401) {
         setGenerationMessage("登录已失效，请重新登录后再操作。");
-      } else if (statusCode === 502 || statusCode === 500) {
-        setGenerationMessage(err instanceof Error ? err.message : "暂时无法确认本次结果，请刷新查看，避免重复提交。");
+      } else if (code === "MODEL_FAILED") {
+        setGenerationMessage("本次生成失败，未消耗额度。请检查任务后重试。");
+      } else if (code === "SAVE_FAILED") {
+        setGenerationMessage("结果保存失败，未消耗额度。请稍后重试。");
       } else {
         setGenerationMessage("暂时无法确认本次结果，请刷新查看，避免重复提交。");
       }
