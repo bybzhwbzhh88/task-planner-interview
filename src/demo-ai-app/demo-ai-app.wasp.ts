@@ -16,7 +16,9 @@ export const demoAiAppSpec: Spec = [
 
   query(getPlanResults, { entities: ["User", "PlanResult"] }),
   query(getCreditStatus, { entities: ["User"] }),
-  action(generatePlan, { entities: ["User", "Task", "PlanResult"] }),
+  action(generatePlan, {
+    entities: ["User", "Task", "PlanResult", "CreditLedgerEntry"],
+  }),
 
   query(getAllTasksByUser, { entities: ["Task"] }),
   action(createTask, { entities: ["Task"] }),
