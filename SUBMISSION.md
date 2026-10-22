@@ -10,7 +10,7 @@
 
 ## 交付入口
 
-[PRODUCT_SPEC.md](PRODUCT_SPEC.md) 包含需求与范围、用户流程、开发任务拆解、验收案例 A1–A8 及交接事项。
+[PRODUCT_SPEC.md](PRODUCT_SPEC.md) 包含需求与范围、用户流程、开发任务拆解、验收案例 A1–A8 及交接事项；[界面示意图](docs/credit-flow-preview.svg)展示成功生成后的余额和日程，已标注为非运行截图。
 
 ## 验证记录
 
