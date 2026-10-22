@@ -5,6 +5,11 @@
     ".wasp/out/*",
     ".wasp/out/sdk/wasp"
   ],
+  "scripts": {
+    "build:quota-runtime": "wasp compile && npm --prefix .wasp/out/server run bundle",
+    "test:quota": "vitest run tests/quotaGeneration.test.ts",
+    "verify:quota": "npm run build:quota-runtime && node scripts/verify-quota.mjs"
+  },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.2",
     "@radix-ui/react-label": "^2.1.7",
