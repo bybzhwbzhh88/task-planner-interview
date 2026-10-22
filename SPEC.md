@@ -23,6 +23,7 @@
 | [mockAi.ts](src/demo-ai-app/mockAi.ts) | 保留约 500 ms 延迟、`[fail]` 抛异常和 `mock-ai.*` 日志；每个 started 表示一次真实模拟调用 |
 | [DemoAppPage.tsx](src/demo-ai-app/DemoAppPage.tsx) | 保留生成中禁用；复用 useAuth 获取额度、显式刷新，并完善结果分支提示 |
 | [App.tsx](src/client/App.tsx) | 顶栏已有 useAuth 余额显示，统一“可用额度”文案及读取失败状态，避免增加重复余额来源 |
+| [PlannerAuthBoundary.tsx](src/auth/PlannerAuthBoundary.tsx) | 两个入口共用认证守卫；临时刷新失败保留已生成结果，首次身份未确认及明确身份失效仍拦截 |
 | [demo-ai-app.wasp.ts](src/demo-ai-app/demo-ai-app.wasp.ts) | generatePlan 已声明 User 实体；保持此依赖以支持用户查询缓存更新，初版不新增额度查询 |
 | [schema.prisma](schema.prisma) | 复用 User、Task、PlanResult，无新增表或迁移 |
 | [quota.ts](src/demo-ai-app/quota.ts) / [quotaStore.ts](src/demo-ai-app/quotaStore.ts) | 编排预占 / 调用 / 保存 / 补偿；数据库适配器执行条件更新和错误分类；测试复用生产实现 |
@@ -119,7 +120,7 @@ npx tsc --project tsconfig.src.json --noEmit
 npx tsc --project tsconfig.wasp.json --noEmit
 ```
 
-已提供 `npm run test:quota`（流程与故障注入）、`npm run test:quota:integration`（真实数据库并发）和 `npm run test:quota:http`（真实登录与操作入口）。环境变量、专用测试库、账号隔离及清理边界见 [复现命令](docs/VERIFICATION.md)。
+已提供 `npm run test:quota`（流程与故障注入）、`npm run test:quota:integration`（真实数据库并发）、`npm run test:quota:http`（真实登录与操作入口）和 `npm run test:quota:browser`（浏览器故障回归）。环境变量、专用测试库、账号隔离及清理边界见 [复现命令](docs/VERIFICATION.md)。
 
 实际命令、版本、对应 AC、预期、实际结果及证据统一记录在 `SUBMISSION.md` 的验证记录或其引用的单一文件中，不在多份文档重复粘贴。环境启动成功不代表额度改进验收成功。AI 可以辅助实现，但提交者需能解释预占原子性、异常边界、测试方法与未覆盖限制。
 
@@ -127,4 +128,4 @@ npx tsc --project tsconfig.wasp.json --noEmit
 
 - 2026-10-22，R1：跑通原版后确认顶栏已有余额显示，且生成成功后会刷新认证数据；核对 Wasp 0.25 useAuth 的 refetch 能力后，取消初稿中单独新增额度查询的设计，改为复用现有查询。原子预占及异常处理方案不变。
 - 2026-10-22，R2：实现错误分类与返回结构校验，补充最近保存日程查询入口、明确退款错误码提示，以及可重复的数据库 / HTTP 验证。原子预占方案不变。
-- 2026-10-22，R3（实现前修订）：补充 AC13 / AC14 的浏览器故障回归。Wasp 默认认证包装在刷新错误时卸载页面，拟使用源代码中的共享守卫区分临时故障与身份失效；先记录失败，再修复，保留服务端鉴权，不修改生成目录。
+- 2026-10-22，R3：补充 AC13 / AC14 的浏览器故障回归。验收标准先于实现提交（`b957d39`）；复现 Wasp 默认认证包装在刷新错误时卸载页面后，改用源代码中的共享守卫区分临时故障与身份失效，保留服务端鉴权，不修改生成目录。两个入口共 16 个浏览器场景通过。

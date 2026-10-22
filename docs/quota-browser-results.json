@@ -1,0 +1,62 @@
+{
+  "recordedAt": "2026-10-22T09:26:34.020Z",
+  "passed": true,
+  "results": [
+    {
+      "name": "/: success"
+    },
+    {
+      "name": "/: cached identity + persistent 503 retains result",
+      "generated": 1,
+      "modelStarted": 1,
+      "credits": 2,
+      "saved": 1
+    },
+    {
+      "name": "/: explicit model failure preserves old result"
+    },
+    {
+      "name": "/: zero credits and saved-result lookup"
+    },
+    {
+      "name": "/: cached identity + 401 blocks private page"
+    },
+    {
+      "name": "/: cached identity + 403 blocks private page"
+    },
+    {
+      "name": "/: first authentication 503 fails closed and recovers"
+    },
+    {
+      "name": "/: anonymous page and server operation are protected"
+    },
+    {
+      "name": "/demo-app: success"
+    },
+    {
+      "name": "/demo-app: cached identity + persistent 503 retains result",
+      "generated": 1,
+      "modelStarted": 1,
+      "credits": 2,
+      "saved": 1
+    },
+    {
+      "name": "/demo-app: explicit model failure preserves old result"
+    },
+    {
+      "name": "/demo-app: zero credits and saved-result lookup"
+    },
+    {
+      "name": "/demo-app: cached identity + 401 blocks private page"
+    },
+    {
+      "name": "/demo-app: cached identity + 403 blocks private page"
+    },
+    {
+      "name": "/demo-app: first authentication 503 fails closed and recovers"
+    },
+    {
+      "name": "/demo-app: anonymous page and server operation are protected"
+    }
+  ]
+}

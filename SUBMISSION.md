@@ -8,18 +8,18 @@
 
 原版在调用模型后才检查用户额度快照，零额度仍会调用模型，并发时可出现负余额。现通过 PostgreSQL 条件更新在调用前预占额度，明确失败后归还，成功保存结果后保留扣减。实现、页面反馈和实际验证已完成。
 
-10 项单元测试、7 项真实数据库测试、25 个 HTTP 验证场景，以及 Wasp 编译和两项 TypeScript 检查全部通过。并发场景分别以 1 / 3 个额度重复 10 轮，每轮 10 个请求。具体命令、实际结果和证据统一见下方验证记录。
+10 项单元测试、7 项真实数据库测试、25 个 HTTP 验证场景、16 个浏览器场景，以及 Wasp 编译和两项 TypeScript 检查全部通过。并发场景分别以 1 / 3 个额度重复 10 轮，每轮 10 个请求。补充修复认证刷新临时失败导致已生成日程消失的问题，保留成功提示且禁止继续生成；身份失效仍拦截。具体命令、实际结果和证据统一见下方验证记录。
 
 ## 交付入口
 
 - [需求理解、假设、流程、拆解和验收标准](SPEC.md)。初稿提交 `5f8a8a4` 先于实现；修订与实现分别保留在 Git 历史中。
 - [额度编排](src/demo-ai-app/quota.ts)、[数据库条件更新](src/demo-ai-app/quotaStore.ts)、[服务端入口](src/demo-ai-app/operations.ts)、[页面反馈](src/demo-ai-app/DemoAppPage.tsx)。
-- [单元测试](tests/quota.test.ts)、[数据库测试](tests/quota.integration.test.ts)、[真实 HTTP 验证脚本](scripts/verify-quota-http.mjs)。
+- [单元测试](tests/quota.test.ts)、[数据库测试](tests/quota.integration.test.ts)、[真实 HTTP 验证脚本](scripts/verify-quota-http.mjs)、[浏览器故障回归](scripts/verify-quota-browser.mjs)。
 - [启动说明](README.md)、[验证环境与执行命令](docs/VERIFICATION.md)。无需 API Key，复用原有数据库结构，无新增迁移。
 
 ## 验证记录
 
-[实际验证记录](docs/VERIFICATION.md#5-本次实际记录)逐项对应 AC01～AC12，并链接原始 HTTP 结果和页面截图。故障分支采用测试依赖注入，未把注入测试描述成真实网络故障演练。
+[实际验证记录](docs/VERIFICATION.md#5-本次实际记录)逐项对应 AC01～AC14，并链接 HTTP / 浏览器结果、修复前失败基线和页面截图。数据库故障采用测试依赖注入，认证故障采用浏览器响应拦截，未把注入测试描述成真实网络故障演练。
 
 ## 待办与交接
 
