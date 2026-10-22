@@ -4,7 +4,7 @@
 - 作者：李泳春
 - 方向：产品
 - 日期：2026-10-22
-- 状态：方案与原型完成，待评审；未提交 PR
+- 状态：方案与原型完成，已提交 [PR #12](https://github.com/bybzhwbzhh88/task-planner-interview/pull/12)，待评审
 - 关联：[流程与并发时序](FLOW.md) · [可交互原型](prototype/index.html) · [任务拆解](TASKS.md) · [验收案例](ACCEPTANCE.md)
 
 ## 0. 结论
