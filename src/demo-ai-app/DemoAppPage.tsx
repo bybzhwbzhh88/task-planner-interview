@@ -6,6 +6,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getPlanResults,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -29,6 +30,7 @@ import type {
   TaskItem,
   TaskPriority,
 } from "./schedule";
+import { generatedScheduleSchema } from "./schedule";
 
 export function DemoAppPage() {
   return (
@@ -65,6 +67,7 @@ function NewTaskForm({
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
   const [isCurrentResult, setIsCurrentResult] = useState(false);
   const [generationMessage, setGenerationMessage] = useState<string | null>(null);
+  const [isReadingSaved, setIsReadingSaved] = useState(false);
   const generating = useRef(false);
   const { data: user, isError: isQuotaError, isFetching: isQuotaFetching, refetch: refreshQuota } = useAuth();
   const hasNoCredits = !isQuotaError && user?.credits === 0;
@@ -128,6 +131,25 @@ function NewTaskForm({
         generating.current = false;
         setIsPlanGenerating(false);
       }
+    }
+  };
+
+  const handleReadSaved = async () => {
+    setIsReadingSaved(true);
+    try {
+      const plans = await getPlanResults();
+      const latest = plans.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())[0];
+      if (!latest) {
+        setGenerationMessage("当前没有已保存的日程。");
+        return;
+      }
+      setResponse(generatedScheduleSchema.parse(JSON.parse(latest.content)));
+      setIsCurrentResult(false);
+      setGenerationMessage("已读取最近保存的日程，此操作不消耗额度。");
+    } catch {
+      setGenerationMessage("暂时无法读取已保存的日程，请稍后再查，避免重复生成。");
+    } finally {
+      setIsReadingSaved(false);
     }
   };
 
@@ -210,11 +232,13 @@ function NewTaskForm({
         {!validHours && <p role="alert">可用时长须在 1～24 小时之间。</p>}
         <Button type="button" variant="outline" disabled={isQuotaFetching}
           onClick={() => { void refreshQuota(); }}>刷新额度</Button>
+        <Button type="button" variant="outline" disabled={isReadingSaved || isPlanGenerating}
+          onClick={() => { void handleReadSaved(); }}>查看最近保存的日程</Button>
       </div>
 
       <Button
         type="button"
-        disabled={isPlanGenerating || !tasks?.length || !user || isQuotaError || hasNoCredits || !validHours}
+        disabled={isPlanGenerating || isReadingSaved || !tasks?.length || !user || isQuotaError || hasNoCredits || !validHours}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
