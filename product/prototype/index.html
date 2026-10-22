@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>任务规划实验室 · 额度体验原型</title>
+    <meta
+      name="description"
+      content="任务规划实验室的额度处理交互原型：成功扣 1、额度不足不调用、模型失败不扣、并发不透支。"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">TP</span>
+          <div class="brand-copy">
+            <strong>任务规划实验室</strong>
+            <span>额度处理 · 交互原型</span>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <span class="prototype-badge">PROTOTYPE</span>
+          <div class="credits-pill" id="credits-pill" aria-live="polite">
+            <span class="credits-label">剩余额度</span>
+            <strong id="credits-value">3</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="workspace card">
+          <div class="hero">
+            <div class="hero-copy">
+              <p class="eyebrow">AI 任务规划</p>
+              <h1>把今天排明白</h1>
+              <p class="hero-sub">
+                输入待办和可用时长，生成一份日程。本页面用于评审额度规则与文案，数据只保存在当前页面。
+              </p>
+            </div>
+            <div class="rule-chips" aria-label="额度规则">
+              <span>成功扣 1</span>
+              <span>不足不调用</span>
+              <span>失败不扣</span>
+              <span>并发不透支</span>
+            </div>
+          </div>
+
+          <section class="composer" aria-labelledby="composer-label">
+            <label class="field-label" id="composer-label" for="task-input">添加待办</label>
+            <div class="input-row">
+              <input
+                id="task-input"
+                type="text"
+                maxlength="60"
+                placeholder="例如：准备周会材料"
+                autocomplete="off"
+              />
+              <button id="add-task" class="btn btn-secondary" type="button">添加</button>
+              <button
+                id="add-fail-task"
+                class="btn btn-ghost"
+                type="button"
+                title="添加一条会触发模拟失败的任务"
+              >
+                + [fail]
+              </button>
+            </div>
+          </section>
+
+          <section class="task-section" aria-labelledby="task-heading">
+            <div class="section-heading">
+              <h2 id="task-heading">今天的任务</h2>
+              <span id="task-count" class="muted">暂无任务</span>
+            </div>
+            <div id="task-list" class="task-list"></div>
+          </section>
+
+          <section class="hours-section">
+            <div>
+              <label class="field-label" for="hours-input">今天可用的工作时长</label>
+              <p class="field-hint">1–24 小时，步长 0.5</p>
+            </div>
+            <div class="hours-input-wrap">
+              <input id="hours-input" type="number" min="1" max="24" step="0.5" value="8" />
+              <span>小时</span>
+            </div>
+          </section>
+
+          <section class="generate-section">
+            <button id="generate-button" class="btn btn-primary btn-generate" type="button">
+              生成日程
+            </button>
+            <p id="generate-hint" class="generate-hint"></p>
+          </section>
+
+          <section id="status-banner" class="status-banner" hidden aria-live="polite">
+            <div class="status-icon" id="status-icon" aria-hidden="true"></div>
+            <div class="status-copy">
+              <h2 id="status-title"></h2>
+              <p id="status-body"></p>
+              <p id="status-action" class="status-action"></p>
+            </div>
+          </section>
+
+          <section class="schedule-section" aria-labelledby="schedule-heading">
+            <div class="section-heading">
+              <h2 id="schedule-heading">本次日程</h2>
+              <span id="schedule-meta" class="muted"></span>
+            </div>
+            <div id="schedule-content" class="schedule-content"></div>
+          </section>
+        </section>
+
+        <aside class="side">
+          <section class="card panel">
+            <div class="panel-heading">
+              <h2>演示场景</h2>
+              <span class="muted">点击即可复现</span>
+            </div>
+            <div class="scenario-list">
+              <button class="scenario" data-scenario="success" type="button">
+                <strong>场景 1：成功生成</strong>
+                <span>3 → 2 额度，展示日程</span>
+              </button>
+              <button class="scenario" data-scenario="insufficient" type="button">
+                <strong>场景 2：额度不足</strong>
+                <span>0 额度，不调用模型、不扣费</span>
+              </button>
+              <button class="scenario" data-scenario="failure" type="button">
+                <strong>场景 3：模型失败</strong>
+                <span>余额不变，日志出现 failed + 退款</span>
+              </button>
+              <button class="scenario" data-scenario="concurrency1" type="button">
+                <strong>场景 4：并发 1 额度</strong>
+                <span>3 个请求：1 成功、2 不足</span>
+              </button>
+              <button class="scenario" data-scenario="concurrency3" type="button">
+                <strong>场景 5：并发 3 额度</strong>
+                <span>5 个请求：3 成功、2 不足</span>
+              </button>
+            </div>
+            <button id="reset-button" class="btn btn-secondary btn-block" type="button">
+              重置演示
+            </button>
+          </section>
+
+          <section class="card panel">
+            <div class="panel-heading">
+              <h2>并发结果</h2>
+              <span class="muted">只保留最近一次</span>
+            </div>
+            <div id="concurrency-results" class="concurrency-results">
+              <p class="muted">运行场景 4 或 5 查看。</p>
+            </div>
+          </section>
+
+          <section class="card panel">
+            <div class="panel-heading">
+              <h2>调用日志</h2>
+              <span class="muted">同一 callId 成对出现</span>
+            </div>
+            <div id="log-list" class="log-list">
+              <p class="muted">还没有请求。</p>
+            </div>
+          </section>
+
+          <section class="card panel note-panel">
+            <h2>原型说明</h2>
+            <p>
+              预扣是同步的，模拟数据库的
+              <code>WHERE credits &gt; 0</code> 条件更新。并发场景中，后到请求会看到
+              0 并直接收到额度不足，不会调用模型。
+            </p>
+            <p>这里验证规则和文案；真实数据库并发见验收案例 E-AC4 / E-AC5。</p>
+          </section>
+        </aside>
+      </main>
+
+      <footer class="footer">
+        任务规划实验室 · 额度处理产品原型 · 数据仅保存在当前页面
+      </footer>
+    </div>
+
+    <script src="quota-model.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
