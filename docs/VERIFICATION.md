@@ -10,6 +10,7 @@
 - 命令：`TEST_DATABASE_URL=... bash scripts/verify.sh`，具体可复制配置见 [RUNBOOK](RUNBOOK.md)。容器内实际执行 `bash scripts/verify.sh`，退出码 0。
 - [完整命令日志](evidence/verify.log) 保留 case 摘要、mock 的 callId、异常注入堆栈、编译/迁移结果与最终 12 passed；仅移除 ANSI 控制字符。
 - 12:00 复跑（同一容器、同一条命令、未改代码）：退出码 0，仍为 12 passed，耗时 6.8 秒。用于确认脚本可重复执行，而非只成功过一次。
+- 12:09 干净检出复现：用 `git archive feat/quota-handling` 导出**只含提交内容**的目录（无 `node_modules`、无 `.wasp`），在其中执行 `wasp install` 后运行同一条命令，退出码 0、12 passed。说明依赖声明、脚本和文档足以让新人从零复现。
 
 ## 自动验收
 
@@ -47,4 +48,5 @@ A9–A11 是异常注入，不声称真实断网；其余运行原有 `generateM
 ## 验证中修正及未完成项
 
 - 初次直接运行 Vitest 时，默认 NODE_ENV=test 被 Wasp 0.25 拒绝；在 [vitest.config.ts](../vitest.config.ts) 中限定 development 并将 DATABASE_URL 显式绑定 TEST_DATABASE_URL 后通过。该配置只用于测试。
+- 干净检出复现时发现：Windows 的 `core.autocrlf=true` 会把 `scripts/verify.sh` 检出为 CRLF，`bash` 直接报 `set: pipefail: invalid option name` 并退出，一项检查都跑不到。已用 [.gitattributes](../.gitattributes) 固定 `*.sh text eol=lf`，修复后同一路径复现通过。
 - 没有增加数据库迁移、升级业务依赖或修改原有 mock。服务崩溃补偿和不确定数据库写入的自动对账仍属范围外，参见 [故障交接](RUNBOOK.md#故障交接)。
