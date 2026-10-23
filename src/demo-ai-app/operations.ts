@@ -1,4 +1,3 @@
-import type { PrismaPromise } from "@prisma/client";
 import type { PlanResult, Task, User } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
@@ -7,6 +6,7 @@ import type {
   GeneratePlan,
   GetAllTasksByUser,
   GetPlanResults,
+  GetUserCredits,
   UpdateTask,
 } from "wasp/server/operations";
 import * as z from "zod";
@@ -45,38 +45,37 @@ export const generatePlan: GeneratePlan<
     },
   });
 
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
-    );
-  }
-
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
+  const reservation = await prisma.user.updateMany({
+    where: { id: context.user.id, credits: { gt: 0 } },
+    data: { credits: { decrement: 1 } },
   });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
+  if (reservation.count === 0) {
     throw new HttpError(402, "User is out of credits");
   }
 
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
+  try {
+    console.log("Calling mock AI provider");
+    const generatedSchedule = await generateMockSchedule(tasks, hours);
+    await context.entities.PlanResult.create({
+      data: {
+        user: { connect: { id: context.user.id } },
+        content: JSON.stringify(generatedSchedule),
+      },
+    });
 
-  return generatedSchedule;
+    return generatedSchedule;
+  } catch (error) {
+    await prisma.user.update({
+      where: { id: context.user.id },
+      data: { credits: { increment: 1 } },
+    });
+    console.error("Plan generation failed; reserved credit returned", error);
+
+    throw new HttpError(
+      502,
+      "Plan generation failed. Your credit was returned; fix the task and try again.",
+    );
+  }
 };
 
 const createTaskInputSchema = z.object({
@@ -191,6 +190,19 @@ export const getPlanResults: GetPlanResults<void, PlanResult[]> = async (
         id: context.user.id,
       },
     },
+  });
+};
+
+export const getUserCredits: GetUserCredits<void, Pick<User, "credits">> = async (
+  _args,
+  context,
+) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+  return prisma.user.findUniqueOrThrow({
+    where: { id: context.user.id },
+    select: { credits: true },
   });
 };
 

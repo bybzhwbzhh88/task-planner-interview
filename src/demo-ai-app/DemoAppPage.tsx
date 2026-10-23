@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getUserCredits,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -66,6 +67,8 @@ function NewTaskForm({
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+  const { data: creditBalance, refetch: refetchCredits } =
+    useQuery(getUserCredits);
 
   const handleSubmit = async () => {
     try {
@@ -86,6 +89,10 @@ function NewTaskForm({
       });
       if (response) {
         setResponse(response);
+        toast({
+          title: "日程已生成",
+          description: "已消耗 1 个额度。",
+        });
       }
     } catch (err) {
       const statusCode =
@@ -100,6 +107,12 @@ function NewTaskForm({
           },
           description: "当前账号没有剩余额度，请检查账号状态。",
         });
+      } else if (statusCode === 502) {
+        toast({
+          title: "生成失败",
+          description: "额度已退回。请修正任务后重试。",
+          variant: "destructive",
+        });
       } else {
         toast({
           title: "Error",
@@ -110,12 +123,16 @@ function NewTaskForm({
       }
     } finally {
       setIsPlanGenerating(false);
+      void refetchCredits();
     }
   };
 
   return (
     <div className="flex flex-col justify-center gap-10">
       <div className="flex flex-col gap-3">
+        <p className="text-muted-foreground text-sm" data-testid="credit-balance">
+          剩余额度：{creditBalance?.credits ?? "加载中…"}
+        </p>
         <div className="flex items-center justify-between gap-3">
           <Input
             type="text"
