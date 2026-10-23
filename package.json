@@ -1,6 +1,9 @@
 {
   "name": "task-planner-interview",
   "type": "module",
+  "scripts": {
+    "test": "vitest run tests/quota.test.ts --testTimeout=30000 --hookTimeout=30000"
+  },
   "workspaces": [
     ".wasp/out/*",
     ".wasp/out/sdk/wasp"
