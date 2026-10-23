@@ -48,3 +48,9 @@
 - `node --experimental-strip-types --test tests/creditQuota.test.mjs`：验证配额编排、Prisma 更新参数、错误与同进程模拟并发；**模拟并发不能替代数据库的原子性证明**。
 - 提供独立 PostgreSQL 并发验证脚本：连接测试库对同一行发起真实并发条件 UPDATE，核对成功数和最终余额。禁止指向生产库。
 - 项目完整检查：`wasp compile`、两项 `tsc --noEmit`、Wasp 本地操作及模拟日志。未在当前环境运行的项目级测试在验证记录中标记未运行，不得写成通过。
+
+## 6. 实现后核对（追加记录，不覆盖先行版）
+
+- 实际增加了只读查询 `getCreditBalance`，在 `src/demo-ai-app/DemoAppPage.tsx` 显示数据库快照，并用 400/402/500/502/503 区分操作结果。
+- 额度预占独立于日程保存，符合前述方案；先行规格中的错误映射已在 `operations.ts` 实现。
+- 验证扩展至仓库原有的本地模拟接口 `[fail]` 日志测试。已验证范围、无法运行的 PostgreSQL/Wasp 检查及证据见 [docs/VALIDATION.md](docs/VALIDATION.md)。
