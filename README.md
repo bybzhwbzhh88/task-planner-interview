@@ -4,7 +4,7 @@
 
 ## 任务
 
-请阅读 [TASK.md](TASK.md)。项目中的额度处理是待改进的初始版本。
+请阅读 [TASK.md](TASK.md)。额度处理的规则与设计见 [SPEC.md](SPEC.md)，验证记录见 [VERIFICATION.md](VERIFICATION.md)。
 
 ## 环境
 
@@ -56,11 +56,22 @@ wasp start
 | 路径 | 内容 |
 | --- | --- |
 | `main.wasp.ts` | 应用与路由配置 |
-| `schema.prisma` | 用户、任务和生成结果 |
-| `src/demo-ai-app/DemoAppPage.tsx` | 任务输入和日程展示 |
-| `src/demo-ai-app/operations.ts` | 服务端操作 |
+| `schema.prisma` | 用户、任务、生成结果与额度账本 |
+| `src/demo-ai-app/DemoAppPage.tsx` | 任务输入、余额展示和日程展示 |
+| `src/demo-ai-app/operations.ts` | 服务端操作（鉴权、402/502 映射） |
+| `src/demo-ai-app/quota.ts` | 额度预占 / 退回（不依赖 Wasp） |
+| `src/demo-ai-app/planFlow.ts` | 生成流程编排：预占 → 模型 → 落库 → 失败退回 |
 | `src/demo-ai-app/mockAi.ts` | 本地模拟接口 |
 | `src/auth/auth.wasp.ts` | 登录配置 |
+
+## 额度处理
+
+规则与设计见 [SPEC.md](SPEC.md)，验证记录见 [VERIFICATION.md](VERIFICATION.md)。一句话版本：生成前用单条条件更新预占 1 个额度，成功才扣、失败退回，并发不会透支。
+
+```sh
+npm test                                                  # 单元测试，不需要数据库
+TEST_DATABASE_URL='postgresql://…' npm run test:pg        # 真实库并发测试
+```
 
 ## 基础检查
 

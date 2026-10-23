@@ -1,19 +1,35 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
+import type { PlanResult, Task } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateTask,
   DeleteTask,
   GeneratePlan,
   GetAllTasksByUser,
+  GetCreditStatus,
   GetPlanResults,
   UpdateTask,
 } from "wasp/server/operations";
 import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
-import type { GeneratedSchedule } from "./schedule";
 import { generateMockSchedule } from "./mockAi";
+import {
+  generatePlanForUser,
+  PlanGenerationFailedError,
+  QuotaExhaustedError,
+  type PlanOutcome,
+  type PlanStore,
+} from "./planFlow";
+import type { QuotaStore, TxRunner } from "./quota";
 
+// Prisma 客户端 → 流程层窄接口的唯一接线点。Prisma 类型由 Wasp 生成，
+// 这里做一次结构对齐，领域代码（quota.ts / planFlow.ts）就不必依赖 Wasp。
+const planStore = prisma as unknown as PlanStore;
+const runTx: TxRunner = (work) =>
+  prisma.$transaction((tx) => work(tx as unknown as QuotaStore));
+
+const logEvent = (event: string, detail: Record<string, unknown>) => {
+  console.info(JSON.stringify({ event, ...detail }));
+};
 
 //#region Actions
 const generatePlanInputSchema = z.object({
@@ -22,10 +38,10 @@ const generatePlanInputSchema = z.object({
 
 type GeneratePlanInput = z.infer<typeof generatePlanInputSchema>;
 
-export const generatePlan: GeneratePlan<
-  GeneratePlanInput,
-  GeneratedSchedule
-> = async (rawArgs, context) => {
+export const generatePlan: GeneratePlan<GeneratePlanInput, PlanOutcome> = async (
+  rawArgs,
+  context,
+) => {
   if (!context.user) {
     throw new HttpError(
       401,
@@ -37,46 +53,31 @@ export const generatePlan: GeneratePlan<
     generatePlanInputSchema,
     rawArgs,
   );
-  const tasks = await context.entities.Task.findMany({
-    where: {
-      user: {
-        id: context.user.id,
+
+  try {
+    return await generatePlanForUser(
+      {
+        store: planStore,
+        runTx,
+        generateSchedule: (tasks, hours) => {
+          logEvent("plan.provider_calling", { userId: context.user!.id });
+          return generateMockSchedule(tasks, hours);
+        },
+        log: logEvent,
       },
-    },
-  });
-
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
+      { userId: context.user.id, hours },
     );
+  } catch (error) {
+    if (error instanceof QuotaExhaustedError) {
+      // 402：额度不足。此时尚未调用模型，也没有任何写入。
+      throw new HttpError(402, "额度不足，本次未发起生成");
+    }
+    if (error instanceof PlanGenerationFailedError) {
+      // 502：上游（模型）失败或落库失败，已退回预占的额度。
+      throw new HttpError(502, "生成失败，本次占用的额度已退回");
+    }
+    throw error;
   }
-
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
-  });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
-  }
-
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
-
-  return generatedSchedule;
 };
 
 const createTaskInputSchema = z.object({
@@ -178,6 +179,23 @@ export const deleteTask: DeleteTask<DeleteTaskInput, Task> = async (
 //#endregion
 
 //#region Queries
+export type CreditStatus = { credits: number };
+
+export const getCreditStatus: GetCreditStatus<void, CreditStatus> = async (
+  _args,
+  context,
+) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+  // 从数据库读，而不是用 context.user.credits（登录态快照，可能已过期）。
+  const { credits } = await prisma.user.findUniqueOrThrow({
+    where: { id: context.user.id },
+    select: { credits: true },
+  });
+  return { credits };
+};
+
 export const getPlanResults: GetPlanResults<void, PlanResult[]> = async (
   _args,
   context,

@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCreditStatus,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -63,9 +64,17 @@ function NewTaskForm({
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
+  // 服务端返回的余额是权威值；成功后用它覆盖，避免额外轮询。
+  const [creditsFromResponse, setCreditsFromResponse] = useState<number | null>(
+    null,
+  );
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+  const { data: creditStatus } = useQuery(getCreditStatus);
+
+  const creditsRemaining = creditsFromResponse ?? creditStatus?.credits ?? null;
+  const isOutOfCredits = creditsRemaining === 0;
 
   const handleSubmit = async () => {
     try {
@@ -81,11 +90,16 @@ function NewTaskForm({
   const handleGeneratePlan = async () => {
     try {
       setIsPlanGenerating(true);
-      const response = await generatePlan({
+      const result = await generatePlan({
         hours: todaysHours,
       });
-      if (response) {
-        setResponse(response);
+      if (result) {
+        setResponse(result.schedule);
+        setCreditsFromResponse(result.creditsRemaining);
+        toast({
+          title: "日程已生成",
+          description: `本次消耗 1 次额度，剩余 ${result.creditsRemaining} 次。`,
+        });
       }
     } catch (err) {
       const statusCode =
@@ -93,12 +107,23 @@ function NewTaskForm({
           ? err.statusCode
           : undefined;
       if (statusCode === 402) {
+        // 服务端未发起模型调用，余额不变。
+        setCreditsFromResponse(0);
         toast({
-          title: "额度不足",
+          title: "额度不足，本次未消耗额度",
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description:
+            "当前账号没有剩余额度，无法生成新日程；已生成的日程和任务不受影响。需要继续使用请联系管理员为账号增加额度。",
+        });
+      } else if (statusCode === 502) {
+        // 服务端已把本次占用的额度退回，余额不变。
+        toast({
+          title: "生成失败，额度已退回",
+          description:
+            "本次没有产生新日程，也没有消耗额度。可以检查任务内容后重新生成。",
+          variant: "destructive",
         });
       } else {
         toast({
@@ -185,9 +210,33 @@ function NewTaskForm({
         )}
       </div>
 
+      <div className="space-y-2" data-testid="credit-status">
+        <div className="text-muted-foreground flex items-center justify-between text-sm">
+          <span>剩余额度</span>
+          <span
+            className={cn("font-semibold", {
+              "text-destructive": isOutOfCredits,
+              "text-foreground": !isOutOfCredits,
+            })}
+            data-testid="credits-remaining"
+          >
+            {creditsRemaining === null ? "—" : `${creditsRemaining} 次`}
+          </span>
+        </div>
+        <p className="text-muted-foreground text-xs leading-5">
+          每成功生成一次日程消耗 1 次额度；生成失败或额度不足时不会扣减。
+          {isOutOfCredits && (
+            <span className="text-destructive">
+              {" "}
+              额度已用尽，需要继续使用请联系管理员为账号增加额度。
+            </span>
+          )}
+        </p>
+      </div>
+
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || isOutOfCredits || tasks?.length === 0}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -199,6 +248,8 @@ function NewTaskForm({
             <Loader2 className="mr-2 inline-block animate-spin" />
             生成中…
           </>
+        ) : isOutOfCredits ? (
+          "额度不足，无法生成"
         ) : (
           "生成日程"
         )}
