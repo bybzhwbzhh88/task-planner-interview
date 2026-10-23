@@ -5,12 +5,14 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCredits,
+  getPlanResults,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
 
 import { Loader2, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "../client/components/ui/button";
 import {
   Card,
@@ -63,6 +65,10 @@ function NewTaskForm({
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
+  const generatingRef = useRef(false);
+  const [feedback, setFeedback] = useState("");
+  const { data: credits, error: creditsError, refetch: refreshCredits } = useQuery(getCredits);
+  const { data: history, error: historyError, refetch: refreshHistory } = useQuery(getPlanResults);
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
@@ -79,6 +85,9 @@ function NewTaskForm({
   };
 
   const handleGeneratePlan = async () => {
+    if (generatingRef.current) return;
+    generatingRef.current = true;
+    setFeedback("");
     try {
       setIsPlanGenerating(true);
       const response = await generatePlan({
@@ -86,29 +95,23 @@ function NewTaskForm({
       });
       if (response) {
         setResponse(response);
+        setFeedback("日程已保存，本次消耗 1 个额度。");
       }
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
           : undefined;
-      if (statusCode === 402) {
-        toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
-          variant: "destructive",
-        });
-      }
+      const message = statusCode === 402
+        ? "暂无可用额度，可能已用尽或被其他生成请求占用。请刷新额度或查看历史日程。"
+        : [400, 500, 502, 503].includes(Number(statusCode)) && err instanceof Error
+          ? err.message
+          : "未能确认生成结果。请刷新并查看历史日程及额度后再决定是否重试。";
+      setFeedback(message);
+      toast({ title: "生成未完成", description: message, variant: "destructive" });
     } finally {
+      await Promise.allSettled([refreshCredits(), refreshHistory()]);
+      generatingRef.current = false;
       setIsPlanGenerating(false);
     }
   };
@@ -185,9 +188,20 @@ function NewTaskForm({
         )}
       </div>
 
+      <div className="space-y-2 text-sm" aria-live="polite">
+        <p>可用额度：{creditsError ? "读取失败" : (credits ?? "加载中…")}</p>
+        <p>每次成功生成消耗 1 个额度。生成期间暂占额度，明确失败后归还。</p>
+        {credits === 0 && <p>暂无可用额度。其他请求完成后可刷新，或查看下方历史日程。</p>}
+        <Button type="button" variant="outline" onClick={() => {
+          void refreshCredits();
+          void refreshHistory();
+        }}>刷新额度与历史</Button>
+        {feedback && <p role="status">{feedback}</p>}
+      </div>
+
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || !tasks?.length || credits === undefined || !!creditsError || credits <= 0 || !Number.isFinite(todaysHours) || todaysHours < 1 || todaysHours > 24}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -212,8 +226,29 @@ function NewTaskForm({
           <Schedule schedule={response} />
         </div>
       )}
+      <section className="space-y-3" aria-label="历史日程">
+        <h3 className="text-lg font-semibold">最近 10 次日程</h3>
+        {historyError && <p>历史读取失败，请点击上方刷新按钮重试。</p>}
+        {history?.length === 0 && <p className="text-muted-foreground">暂无已保存日程。</p>}
+        {history?.map((plan) => (
+          <details key={plan.id} className="rounded-md border p-3">
+            <summary className="cursor-pointer">{new Date(plan.createdAt).toLocaleString()}</summary>
+            <SavedSchedule content={plan.content} />
+          </details>
+        ))}
+      </section>
     </div>
   );
+}
+
+function SavedSchedule({ content }: { content: string }) {
+  try {
+    const schedule = JSON.parse(content) as GeneratedSchedule;
+    if (!Array.isArray(schedule.tasks) || !Array.isArray(schedule.taskItems)) throw new Error("Invalid schedule");
+    return <Schedule schedule={schedule} />;
+  } catch {
+    return <p>这条历史日程无法展示，请联系维护者检查记录。</p>;
+  }
 }
 
 type TodoProps = Pick<Task, "id" | "isDone" | "description" | "time">;
