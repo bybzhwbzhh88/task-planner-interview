@@ -1,6 +1,10 @@
 {
   "name": "task-planner-interview",
   "type": "module",
+  "scripts": {
+    "test:quota": "vitest run --config vitest.config.ts",
+    "typecheck": "tsc --project tsconfig.src.json --noEmit && tsc --project tsconfig.wasp.json --noEmit"
+  },
   "workspaces": [
     ".wasp/out/*",
     ".wasp/out/sdk/wasp"
