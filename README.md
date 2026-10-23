@@ -6,6 +6,10 @@
 
 请阅读 [TASK.md](TASK.md)。项目中的额度处理是待改进的初始版本。
 
+## 本轮改进（额度处理）
+
+技术方向交付从 [SUBMISSION.md](SUBMISSION.md) 进入：范围与验收案例在 [SPEC.md](SPEC.md)，运行与复现命令在 [docs/RUNBOOK.md](docs/RUNBOOK.md)，实际验证结果在 [docs/VERIFICATION.md](docs/VERIFICATION.md)。
+
 ## 环境
 
 - Node.js 24.14.1 或更新的兼容版本。
