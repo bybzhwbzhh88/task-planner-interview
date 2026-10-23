@@ -1,0 +1,374 @@
+
+? --- Compiling wasp project... --------------------------------------------------
+
+
+? --- Successfully completed npm install. ----------------------------------------
+
+
+? --- Setting up database... -----------------------------------------------------
+
+
+? --- Database successfully set up. ----------------------------------------------
+
+
+? --- Building SDK... ------------------------------------------------------------
+
+
+[  Wasp  ] > wasp@1.0.0 build
+[  Wasp  ] > tsc && node ./scripts/copy-assets.js
+[  Wasp  ] 
+[  Wasp  ] [copy-assets] 0 copied, 9 skipped
+? --- SDK built successfully. ----------------------------------------------------
+
+
+? --- Your wasp project has successfully compiled. -------------------------------
+
+Prisma schema loaded from .wasp/out/db/schema.prisma
+Datasource "db": PostgreSQL database "planner_test", schema "public" at "task-planner-db:5432"
+
+1 migration found in prisma/migrations
+
+
+No pending migrations to apply.
+
+> typecheck
+> tsc --project tsconfig.src.json --noEmit && tsc --project tsconfig.wasp.json --noEmit
+
+
+> test:quota
+> vitest run --config vitest.config.ts
+
+
+ RUN  v4.1.11 /work
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A1: saves one schedule and consumes one credit
+{"event":"mock-ai.started","callId":"25f2a957-691d-4af9-b869-31b745675f09"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A1: saves one schedule and consumes one credit
+{"event":"mock-ai.succeeded","callId":"25f2a957-691d-4af9-b869-31b745675f09"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A1: saves one schedule and consumes one credit
+{"case":"A1","credits":2,"results":1,"started":1}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A2: zero DB balance blocks the provider despite stale auth
+{"case":"A2","credits":0,"results":0,"started":0}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A3: explicit provider failure refunds, then a fresh retry succeeds
+{"event":"mock-ai.started","callId":"ee22e25d-1fe4-40ae-bb8c-636a7d1fcd87"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A3: explicit provider failure refunds, then a fresh retry succeeds
+{"event":"mock-ai.failed","callId":"ee22e25d-1fe4-40ae-bb8c-636a7d1fcd87"}
+
+stderr | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A3: explicit provider failure refunds, then a fresh retry succeeds
+plan.generation_failed {
+  userId: 'b073e648-f1d9-4c38-bbf8-3190ce87da81',
+  phase: 'model',
+  error: Error: Mock provider explicitly rejected the request
+      at generateMockSchedule (/work/src/demo-ai-app/mockAi.ts:15:11)
+      at generatePlan (/work/src/demo-ai-app/operations.ts:66:31)
+      at /work/tests/quota.integration.test.ts:71:5
+      at file:///work/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A3: explicit provider failure refunds, then a fresh retry succeeds
+{"case":"A3-failed","credits":1,"results":0,"started":1}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A3: explicit provider failure refunds, then a fresh retry succeeds
+{"event":"mock-ai.started","callId":"277bab73-789b-4042-9cc3-11e302107743"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A3: explicit provider failure refunds, then a fresh retry succeeds
+{"event":"mock-ai.succeeded","callId":"277bab73-789b-4042-9cc3-11e302107743"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A3: explicit provider failure refunds, then a fresh retry succeeds
+{"case":"A3-retry","credits":0,"results":1,"started":2}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A4: 10 simultaneous requests with 1 credits
+{"event":"mock-ai.started","callId":"b3e2851e-9891-466a-bf21-66ddc237e9a1"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A4: 10 simultaneous requests with 1 credits
+{"event":"mock-ai.succeeded","callId":"b3e2851e-9891-466a-bf21-66ddc237e9a1"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A4: 10 simultaneous requests with 1 credits
+{"case":"A4","credits":0,"results":1,"started":1}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A4: 10 simultaneous requests with 1 credits
+{"case":"A4","success":1,"rejected402":9}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A5: 10 simultaneous requests with 3 credits
+{"event":"mock-ai.started","callId":"71561609-92c4-426b-a434-1de7c0f92eb1"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A5: 10 simultaneous requests with 3 credits
+{"event":"mock-ai.started","callId":"b3fd4f5e-203f-4a74-b04c-23e35992a248"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A5: 10 simultaneous requests with 3 credits
+{"event":"mock-ai.started","callId":"ba5e6534-dc82-4cb2-afa8-9ab90dc994d4"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A5: 10 simultaneous requests with 3 credits
+{"event":"mock-ai.succeeded","callId":"71561609-92c4-426b-a434-1de7c0f92eb1"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A5: 10 simultaneous requests with 3 credits
+{"event":"mock-ai.succeeded","callId":"b3fd4f5e-203f-4a74-b04c-23e35992a248"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A5: 10 simultaneous requests with 3 credits
+{"event":"mock-ai.succeeded","callId":"ba5e6534-dc82-4cb2-afa8-9ab90dc994d4"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A5: 10 simultaneous requests with 3 credits
+{"case":"A5","credits":0,"results":3,"started":3}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A5: 10 simultaneous requests with 3 credits
+{"case":"A5","success":3,"rejected402":7}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A6: concurrent failures return only their own reservations
+{"event":"mock-ai.started","callId":"16e40e84-bd5f-442e-92c6-1c6212b2d3f5"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A6: concurrent failures return only their own reservations
+{"event":"mock-ai.failed","callId":"16e40e84-bd5f-442e-92c6-1c6212b2d3f5"}
+
+stderr | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A6: concurrent failures return only their own reservations
+plan.generation_failed {
+  userId: '703d698b-2839-4a98-9fa1-471caeceb5ff',
+  phase: 'model',
+  error: Error: Mock provider explicitly rejected the request
+      at generateMockSchedule (/work/src/demo-ai-app/mockAi.ts:15:11)
+      at generatePlan (/work/src/demo-ai-app/operations.ts:66:31)
+      at async Promise.allSettled (index 7)
+      at /work/tests/quota.integration.test.ts:92:22
+      at file:///work/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A6: concurrent failures return only their own reservations
+{"case":"A6-failed","credits":1,"results":0,"started":1}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A6: concurrent failures return only their own reservations
+{"event":"mock-ai.started","callId":"9ea37fe6-c827-4601-812c-09f775fd58e0"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A6: concurrent failures return only their own reservations
+{"event":"mock-ai.succeeded","callId":"9ea37fe6-c827-4601-812c-09f775fd58e0"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A6: concurrent failures return only their own reservations
+{"case":"A6-retry","credits":0,"results":1,"started":2}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A7: different accounts cannot consume each other's credits or results
+{"event":"mock-ai.started","callId":"9e3423d5-6624-477b-ae8a-2583bfbd89c9"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A7: different accounts cannot consume each other's credits or results
+{"event":"mock-ai.started","callId":"93a41588-cdef-4ddf-9ff2-b8c81efc63b8"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A7: different accounts cannot consume each other's credits or results
+{"event":"mock-ai.succeeded","callId":"9e3423d5-6624-477b-ae8a-2583bfbd89c9"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A7: different accounts cannot consume each other's credits or results
+{"event":"mock-ai.succeeded","callId":"93a41588-cdef-4ddf-9ff2-b8c81efc63b8"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A7: different accounts cannot consume each other's credits or results
+{"case":"A7-a","credits":0,"results":1,"started":2}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A7: different accounts cannot consume each other's credits or results
+{"case":"A7-b","credits":0,"results":1,"started":2}
+
+stderr | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A8: rejects unauthenticated, invalid and empty-task requests before calling AI
+Error: Operation arguments validation failed:
+✖ Too small: expected number to be >=1
+  → at hours
+    at ensureArgsSchemaOrThrowHttpError (/work/src/server/validation.ts:13:7)
+    at generatePlan (/work/src/demo-ai-app/operations.ts:37:21)
+    at /work/tests/quota.integration.test.ts:117:20
+    at file:///work/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20 {
+  [cause]: [ZodError: [
+    {
+      "origin": "number",
+      "code": "too_small",
+      "minimum": 1,
+      "inclusive": true,
+      "path": [
+        "hours"
+      ],
+      "message": "Too small: expected number to be >=1"
+    }
+  ]]
+}
+
+stderr | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A8: rejects unauthenticated, invalid and empty-task requests before calling AI
+Error: Operation arguments validation failed:
+✖ Too small: expected number to be >=1
+  → at hours
+    at ensureArgsSchemaOrThrowHttpError (/work/src/server/validation.ts:13:7)
+    at generatePlan (/work/src/demo-ai-app/operations.ts:37:21)
+    at /work/tests/quota.integration.test.ts:117:20
+    at file:///work/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20 {
+  [cause]: [ZodError: [
+    {
+      "origin": "number",
+      "code": "too_small",
+      "minimum": 1,
+      "inclusive": true,
+      "path": [
+        "hours"
+      ],
+      "message": "Too small: expected number to be >=1"
+    }
+  ]]
+}
+
+stderr | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A8: rejects unauthenticated, invalid and empty-task requests before calling AI
+Error: Operation arguments validation failed:
+✖ Too big: expected number to be <=24
+  → at hours
+    at ensureArgsSchemaOrThrowHttpError (/work/src/server/validation.ts:13:7)
+    at generatePlan (/work/src/demo-ai-app/operations.ts:37:21)
+    at /work/tests/quota.integration.test.ts:117:20
+    at file:///work/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20 {
+  [cause]: [ZodError: [
+    {
+      "origin": "number",
+      "code": "too_big",
+      "maximum": 24,
+      "inclusive": true,
+      "path": [
+        "hours"
+      ],
+      "message": "Too big: expected number to be <=24"
+    }
+  ]]
+}
+
+stderr | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A8: rejects unauthenticated, invalid and empty-task requests before calling AI
+Error: Operation arguments validation failed:
+✖ Invalid input: expected number, received NaN
+  → at hours
+    at ensureArgsSchemaOrThrowHttpError (/work/src/server/validation.ts:13:7)
+    at generatePlan (/work/src/demo-ai-app/operations.ts:37:21)
+    at /work/tests/quota.integration.test.ts:117:20
+    at file:///work/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20 {
+  [cause]: [ZodError: [
+    {
+      "expected": "number",
+      "code": "invalid_type",
+      "received": "NaN",
+      "path": [
+        "hours"
+      ],
+      "message": "Invalid input: expected number, received NaN"
+    }
+  ]]
+}
+
+stderr | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A8: rejects unauthenticated, invalid and empty-task requests before calling AI
+Error: Operation arguments validation failed:
+✖ Invalid input: expected number, received Infinity
+  → at hours
+    at ensureArgsSchemaOrThrowHttpError (/work/src/server/validation.ts:13:7)
+    at generatePlan (/work/src/demo-ai-app/operations.ts:37:21)
+    at /work/tests/quota.integration.test.ts:117:20
+    at file:///work/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20 {
+  [cause]: [ZodError: [
+    {
+      "expected": "number",
+      "code": "invalid_type",
+      "received": "Infinity",
+      "path": [
+        "hours"
+      ],
+      "message": "Invalid input: expected number, received Infinity"
+    }
+  ]]
+}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A8: rejects unauthenticated, invalid and empty-task requests before calling AI
+{"case":"A8","credits":3,"results":0,"started":0}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A9: a definite save rejection refunds exactly once
+{"event":"mock-ai.started","callId":"23c5715a-a3bd-4d7f-9fe1-70b19139ef2d"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A9: a definite save rejection refunds exactly once
+{"event":"mock-ai.succeeded","callId":"23c5715a-a3bd-4d7f-9fe1-70b19139ef2d"}
+
+stderr | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A9: a definite save rejection refunds exactly once
+plan.generation_failed {
+  userId: 'efd2d601-b885-48ba-b27b-1bdc78084ca9',
+  phase: 'save',
+  error: PrismaClientKnownRequestError: injected FK rejection
+      at /work/tests/quota.integration.test.ts:127:61
+      at file:///work/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20 {
+    code: 'P2003',
+    clientVersion: '5.19.1',
+    meta: undefined
+  }
+}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A9: a definite save rejection refunds exactly once
+{"case":"A9","credits":1,"results":0,"started":1}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A10: failed compensation is visible and never promises a refund
+{"event":"mock-ai.started","callId":"2c818055-8694-4c2b-b444-d9ea809240c7"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A10: failed compensation is visible and never promises a refund
+{"event":"mock-ai.failed","callId":"2c818055-8694-4c2b-b444-d9ea809240c7"}
+
+stderr | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A10: failed compensation is visible and never promises a refund
+quota.refund_failed {
+  userId: 'a93d4314-635d-4815-9fb1-6d6b55300dd3',
+  phase: 'model',
+  error: Error: Mock provider explicitly rejected the request
+      at generateMockSchedule (/work/src/demo-ai-app/mockAi.ts:15:11)
+      at generatePlan (/work/src/demo-ai-app/operations.ts:66:31)
+      at /work/tests/quota.integration.test.ts:136:5
+      at file:///work/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20,
+  refundError: Error: injected refund outage
+      at /work/tests/quota.integration.test.ts:135:55
+      at file:///work/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A10: failed compensation is visible and never promises a refund
+{"case":"A10","credits":0,"results":0,"started":1}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A11: ambiguous save failure retains reservation for reconciliation
+{"event":"mock-ai.started","callId":"6b9090bc-93b9-46f5-ad64-0136c6a74ce6"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A11: ambiguous save failure retains reservation for reconciliation
+{"event":"mock-ai.succeeded","callId":"6b9090bc-93b9-46f5-ad64-0136c6a74ce6"}
+
+stderr | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A11: ambiguous save failure retains reservation for reconciliation
+quota.save_uncertain {
+  userId: '5fa20c5e-4d3e-46a9-af2e-a8fcbc92711f',
+  error: Error: injected lost DB response
+      at /work/tests/quota.integration.test.ts:144:61
+      at file:///work/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A11: ambiguous save failure retains reservation for reconciliation
+{"case":"A11","credits":0,"results":0,"started":1}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A11-committed: a lost response after INSERT must not make a saved schedule free
+{"event":"mock-ai.started","callId":"015f09b6-20e9-47cb-b31d-2934ba3b8b51"}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A11-committed: a lost response after INSERT must not make a saved schedule free
+{"event":"mock-ai.succeeded","callId":"015f09b6-20e9-47cb-b31d-2934ba3b8b51"}
+
+stderr | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A11-committed: a lost response after INSERT must not make a saved schedule free
+quota.save_uncertain {
+  userId: '692e19d8-abbb-4492-b04e-faf50d81ccdb',
+  error: Error: injected response loss after committed INSERT
+      at Proxy.<anonymous> (/work/tests/quota.integration.test.ts:155:13)
+}
+
+stdout | tests/quota.integration.test.ts > quota: actual PostgreSQL + original 500 ms mock provider > A11-committed: a lost response after INSERT must not make a saved schedule free
+{"case":"A11-committed","credits":0,"results":1,"started":1}
+
+ ✓ tests/quota.integration.test.ts (12 tests) 6503ms
+     ✓ A1: saves one schedule and consumes one credit  541ms
+     ✓ A3: explicit provider failure refunds, then a fresh retry succeeds  1041ms
+     ✓ A4: 10 simultaneous requests with 1 credits  544ms
+     ✓ A5: 10 simultaneous requests with 3 credits  531ms
+     ✓ A6: concurrent failures return only their own reservations  1051ms
+     ✓ A7: different accounts cannot consume each other's credits or results  557ms
+     ✓ A9: a definite save rejection refunds exactly once  550ms
+     ✓ A10: failed compensation is visible and never promises a refund  538ms
+     ✓ A11: ambiguous save failure retains reservation for reconciliation  524ms
+     ✓ A11-committed: a lost response after INSERT must not make a saved schedule free  531ms
+
+ Test Files  1 passed (1)
+      Tests  12 passed (12)
+   Start at  03:37:08
+   Duration  6.93s (transform 102ms, setup 0ms, import 224ms, tests 6.50s, environment 0ms)
+
