@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="任务规划额度处理交互原型：成功、额度不足、模型失败和并发场景">
+  <title>额度处理 · 交互原型</title>
+  <style>
+    :root{color-scheme:light;--ink:#152a38;--muted:#687781;--line:#dfe5e8;--paper:#f3f5f5;--white:#fff;--navy:#12384b;--navy-2:#204f64;--amber:#a85a12;--amber-pale:#fff5e9;--green:#25694c;--green-pale:#edf7f1;--red:#a83b35;--red-pale:#fff0ee;--radius:14px;--shadow:0 12px 30px rgba(28,48,60,.07)}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,"Noto Sans SC","Microsoft YaHei UI","Microsoft YaHei",sans-serif;font-size:15px;line-height:1.55}button,input{font:inherit}button{cursor:pointer}.shell{max-width:1120px;margin:0 auto;padding:28px 24px 56px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:20px;padding-bottom:22px;border-bottom:1px solid var(--line)}.brand{display:flex;align-items:center;gap:12px;font-weight:700;letter-spacing:.01em}.brand-mark{width:34px;height:34px;display:grid;place-items:center;background:var(--navy);color:white;border-radius:9px;font-size:16px}.top-note{font-size:13px;color:var(--muted)}.intro{padding:34px 0 26px;display:flex;align-items:end;justify-content:space-between;gap:24px}.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:11px;font-weight:700;color:var(--amber)}h1{font-size:clamp(28px,4vw,40px);line-height:1.18;letter-spacing:-.035em;margin:8px 0 10px}.lede{margin:0;color:var(--muted);max-width:620px}.sandbox{display:flex;flex-wrap:wrap;gap:8px;max-width:430px;justify-content:flex-end}.sandbox-label{width:100%;text-align:right;font-size:11px;letter-spacing:.07em;color:var(--muted);text-transform:uppercase}.scenario{border:1px solid #cbd5da;color:var(--navy);background:#fff;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;transition:.15s}.scenario:hover,.scenario:focus-visible{border-color:var(--navy);outline:2px solid #c9dce4;outline-offset:1px}.layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(290px,.8fr);gap:20px;align-items:start}.panel{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.work{padding:24px}.panel-head{display:flex;justify-content:space-between;align-items:start;gap:15px;margin-bottom:22px}.panel-head h2{font-size:18px;line-height:1.3;margin:0}.panel-head p{margin:5px 0 0;font-size:13px;color:var(--muted)}.balance{display:flex;align-items:center;gap:10px;border:1px solid #e7d2ba;background:#fffaf4;border-radius:10px;padding:8px 12px;white-space:nowrap}.balance strong{font-size:20px;line-height:1;color:var(--amber)}.balance span{font-size:12px;color:#765a41}.label{display:block;font-size:13px;font-weight:650;margin:18px 0 8px}.task-input,.hours-input{border:1px solid #cbd5da;border-radius:8px;background:#fff;color:var(--ink);padding:11px 12px;width:100%;outline:none}.task-input:focus,.hours-input:focus{border-color:var(--navy-2);box-shadow:0 0 0 3px rgba(32,79,100,.13)}.helper{font-size:12px;color:var(--muted);margin:7px 0 0}.hours-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:20px}.hours-row .label{margin:0}.hours-input{width:110px;text-align:center}.cost-note{display:flex;align-items:center;gap:9px;color:#6e542f;background:#fcf7ef;border:1px solid #efe3ce;border-radius:8px;padding:10px 12px;margin:22px 0 12px;font-size:13px}.cost-dot{width:8px;height:8px;border-radius:50%;background:#bf7628;flex:none}.primary{width:100%;min-height:48px;border:0;border-radius:8px;background:var(--navy);color:white;font-weight:700;transition:background .15s,transform .15s}.primary:hover:not(:disabled){background:var(--navy-2);transform:translateY(-1px)}.primary:focus-visible{outline:3px solid #abc6d2;outline-offset:2px}.primary:disabled{cursor:not-allowed;background:#9baab0}.status{margin-top:16px;padding:14px 15px;border-radius:9px;border:1px solid var(--line);background:#f8fafb}.status[data-kind=success]{background:var(--green-pale);border-color:#cbe5d5}.status[data-kind=error]{background:var(--red-pale);border-color:#f0d0cc}.status[data-kind=warning]{background:var(--amber-pale);border-color:#ecd4b6}.status[data-kind=loading]{background:#f1f6f8;border-color:#d1e0e6}.status-title{font-weight:700;margin:0 0 3px;font-size:14px}.status-body{margin:0;font-size:13px;color:#52616a}.next{font-size:12px;font-weight:650;margin:9px 0 0;color:var(--navy)}.result{padding:22px;min-height:380px}.result-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:15px;border-bottom:1px solid var(--line)}.result-head h2{font-size:16px;margin:0}.tag{font-size:11px;color:var(--muted);border:1px solid var(--line);padding:4px 8px;border-radius:99px}.placeholder{min-height:280px;display:grid;align-content:center;justify-items:start;padding:12px 5px;color:var(--muted)}.placeholder-mark{font-size:27px;color:#a4b2b9;margin-bottom:8px}.placeholder strong{color:#43545e;font-size:14px}.placeholder p{font-size:13px;max-width:260px;margin:5px 0}.schedule{padding-top:18px}.schedule h3{font-size:16px;margin:0 0 6px}.schedule-meta{font-size:12px;color:var(--muted);margin:0 0 14px}.schedule-item{display:flex;align-items:flex-start;gap:12px;border-top:1px solid #edf0f1;padding:12px 0}.schedule-time{font-size:12px;font-weight:700;color:var(--amber);min-width:56px}.schedule-copy{font-size:13px}.schedule-copy small{display:block;color:var(--muted);font-size:11px;margin-top:3px}.trace{margin-top:20px;padding:15px 17px;background:#142a36;color:#e5edf0;border-radius:10px}.trace-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:9px}.trace h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin:0}.trace small{color:#a8bbc3;font-size:10px}.events{display:grid;gap:6px}.event{font:11px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;color:#bad0d8}.event strong{color:#e3ba7b;font-weight:600}.foot{font-size:11px;color:var(--muted);margin-top:15px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:760px){.shell{padding:17px 14px 36px}.topbar{align-items:flex-start}.top-note{max-width:150px;text-align:right}.intro{align-items:flex-start;flex-direction:column;padding:27px 0 20px}.sandbox{justify-content:flex-start}.sandbox-label{text-align:left}.layout{grid-template-columns:1fr}.result{min-height:300px}.placeholder{min-height:170px}.panel-head{flex-direction:column}.balance{align-self:flex-start}}@media(max-width:420px){.work,.result{padding:18px}.scenario{padding:8px 10px}.hours-row{align-items:flex-start;flex-direction:column}.hours-input{width:100%}.top-note{font-size:11px;max-width:120px}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">规</span><span>任务规划</span></div>
+      <div class="top-note">本地模拟 · 交互原型<br>不连接后端或真实账户</div>
+    </header>
+    <section class="intro" aria-labelledby="page-title">
+      <div><div class="eyebrow">Quota experience / Prototype</div><h1 id="page-title">先看清额度，再生成日程。</h1><p class="lede">成功生成才消耗额度。额度不足时不发起调用；模型明确失败时额度退回，并告诉你下一步。</p></div>
+      <nav class="sandbox" aria-label="原型场景快速预览">
+        <span class="sandbox-label">快速体验 · 模拟不同场景</span>
+        <button class="scenario" data-scenario="success">成功 · 余额 1</button>
+        <button class="scenario" data-scenario="insufficient">不足 · 余额 0</button>
+        <button class="scenario" data-scenario="failure">模型失败 · 余额 1</button>
+        <button class="scenario" data-scenario="concurrent">并发 · 余额 1</button>
+      </nav>
+    </section>
+
+    <section class="layout" aria-label="日程生成工作区">
+      <div>
+        <section class="panel work" aria-labelledby="workspace-title">
+          <div class="panel-head">
+            <div><h2 id="workspace-title">今天的计划</h2><p>整理待办，生成一份适合今天的日程。</p></div>
+            <div class="balance" aria-live="polite" aria-atomic="true"><strong id="credit-count">3</strong><span>剩余额度</span></div>
+          </div>
+          <label class="label" for="task">待办事项</label>
+          <input class="task-input" id="task" value="准备周会材料" autocomplete="off">
+          <p class="helper">模型失败演示：在任务描述中加入 <code>[fail]</code>，再点击生成。</p>
+          <div class="hours-row"><label class="label" for="hours">今天可用的工作时长</label><input class="hours-input" id="hours" type="number" min="1" max="24" step="0.5" value="8"></div>
+          <div class="cost-note"><span class="cost-dot" aria-hidden="true"></span><span>每次成功生成消耗 <strong>1 个额度</strong>。模型明确失败时额度会退回。</span></div>
+          <button class="primary" id="generate">生成日程 · 消耗 1 额度</button>
+          <div class="status" id="status" data-kind="neutral" role="status" aria-live="polite">
+            <p class="status-title" id="status-title">准备好了</p><p class="status-body" id="status-body">确认待办内容后即可生成。你可以使用上方场景按钮快速查看不同结果。</p><p class="next" id="status-next"></p>
+          </div>
+        </section>
+        <section class="trace" aria-label="模拟接口调用记录">
+          <div class="trace-top"><h2>模拟调用记录</h2><small>用于说明行为 · 不是服务器日志</small></div>
+          <div class="events" id="events" aria-live="polite"><div class="event">等待操作：尚未发起模型调用</div></div>
+        </section>
+      </div>
+      <section class="panel result" aria-labelledby="result-title">
+        <div class="result-head"><h2 id="result-title">本次日程</h2><span class="tag" id="result-tag">等待生成</span></div>
+        <div id="result-body" class="placeholder"><div class="placeholder-mark" aria-hidden="true">—</div><strong>生成后，日程会显示在这里</strong><p>额度不足或模型失败时不会展示新的日程。</p></div>
+      </section>
+    </section>
+    <p class="foot">原型用途：评审额度状态与反馈流程。真实扣额、退款、并发安全以及数据库结果需要后端实现和测试验证。</p>
+  </main>
+  <script>
+    (()=>{
+      let credits=3, busy=false, callNumber=0;
+      const $=id=>document.getElementById(id);
+      const creditCount=$('credit-count'), generate=$('generate'), status=$('status'), resultBody=$('result-body'), resultTag=$('result-tag'), events=$('events');
+      const setStatus=(kind,title,body,next='')=>{status.dataset.kind=kind;$('status-title').textContent=title;$('status-body').textContent=body;$('status-next').textContent=next;};
+      const setCredits=value=>{credits=Math.max(0,value);creditCount.textContent=String(credits);generate.disabled=busy||credits===0;generate.textContent=credits===0&&!busy?'额度不足 · 暂不可生成':'生成日程 · 消耗 1 额度';};
+      const log=(name,id,note='')=>{const row=document.createElement('div');row.className='event';const strong=document.createElement('strong');strong.textContent=name;row.append(strong,document.createTextNode(`  callId=${id}${note?` · ${note}`:''}`));events.appendChild(row);};
+      const clearEvents=()=>{events.replaceChildren();};
+      const clearResult=()=>{resultTag.textContent='等待生成';resultBody.className='placeholder';resultBody.replaceChildren();const mark=document.createElement('div');mark.className='placeholder-mark';mark.textContent='—';const title=document.createElement('strong');title.textContent='生成后，日程会显示在这里';const note=document.createElement('p');note.textContent='额度不足或模型失败时不会展示新的日程。';resultBody.append(mark,title,note);};
+      const showSchedule=(title='准备周会材料')=>{resultTag.textContent='生成成功';resultBody.className='schedule';resultBody.replaceChildren();const h=document.createElement('h3');h.textContent='今日安排';const meta=document.createElement('p');meta.className='schedule-meta';meta.textContent='模拟日程 · 本次生成成功';resultBody.append(h,meta);[['09:00','准备','整理材料与议程'],['10:30','执行',title],['14:00','复盘','检查遗漏并记录后续事项']].forEach(([time,label,copy])=>{const row=document.createElement('div');row.className='schedule-item';const t=document.createElement('span');t.className='schedule-time';t.textContent=time;const c=document.createElement('span');c.className='schedule-copy';c.append(document.createTextNode(copy));const small=document.createElement('small');small.textContent=label;c.append(small);row.append(t,c);resultBody.append(row);});};
+      const reset=(balance)=>{busy=false;setCredits(balance);clearEvents();clearResult();setStatus('neutral','准备好了','确认待办内容后即可生成。你可以使用上方场景按钮快速查看不同结果。');};
+      const run=async({concurrent=false}={})=>{
+        if(busy)return;
+        clearEvents();clearResult();
+        if(credits<1){setStatus('warning','当前没有剩余额度，暂时无法生成日程。','本次没有发起模型调用，也没有消耗额度。','你可以继续整理待办；额度恢复后再试。');resultTag.textContent='未发起调用';return;}
+        // 模拟数据库原子预留：先争取额度，只有预留成功的请求能开始模型调用。
+        credits-=1;busy=true;setCredits(credits);setStatus('loading','正在生成日程…','已预留 1 个额度，正在等待模拟接口返回。');resultTag.textContent='生成中';
+        const id=`demo-${++callNumber}`;log('mock-ai.started',id,'额度预留成功');
+        if(concurrent){log('请求 2 被拒绝',`demo-${callNumber+1}`,'剩余额度不足；未调用模型');}
+        await new Promise(resolve=>setTimeout(resolve,550));
+        const task=$('task').value.trim()||'整理今天的待办';
+        if(task.includes('[fail]')){log('mock-ai.failed',id,'模拟接口明确失败');credits+=1;busy=false;setCredits(credits);setStatus('error','本次没有生成日程，额度未被消耗。','模拟接口明确返回失败，已退回本次预留额度。','请修改或删除包含 [fail] 的任务，然后重试。');resultTag.textContent='生成失败';return;}
+        log('mock-ai.succeeded',id,'模拟日程生成完成');busy=false;setCredits(credits);showSchedule(task);setStatus('success','日程已生成，本次使用 1 个额度。',`剩余 ${credits} 个额度。日程已显示在右侧。`);resultTag.textContent='生成成功';
+      };
+      generate.addEventListener('click',()=>run());
+      document.querySelectorAll('[data-scenario]').forEach(button=>button.addEventListener('click',async()=>{
+        const scenario=button.dataset.scenario;
+        if(scenario==='success'){reset(1);await run();}
+        if(scenario==='insufficient'){reset(0);await run();}
+        if(scenario==='failure'){reset(1);$('task').value='整理周会材料 [fail]';await run();}
+        if(scenario==='concurrent'){reset(1);$('task').value='准备周会材料';await run({concurrent:true});}
+      }));
+    })();
+  </script>
+</body>
+</html>
