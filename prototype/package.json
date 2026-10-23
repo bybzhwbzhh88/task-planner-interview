@@ -1,0 +1,13 @@
+{
+  "name": "task-planner-quota-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node serve.mjs",
+    "check": "node --check dist/app.js && node --check serve.mjs && node --check verify.mjs && node --check verify-theme.mjs",
+    "verify": "node verify.mjs",
+    "verify:theme": "node verify-theme.mjs"
+  },
+  "engines": { "node": ">=24.0.0" },
+  "devDependencies": { "playwright": "1.64.1" }
+}

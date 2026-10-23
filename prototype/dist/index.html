@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173b5b">
+  <title>额度体验改版 · 任务规划实验室</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23173b5b'/%3E%3Cpath d='M9 12h14M11 7v5m10-5v5M9 10v15h14V10M12 18l3 3 5-6' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+  <script>
+    // Restore the saved theme before the stylesheet can paint a light frame.
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('task-planner-quota-prototype-v1') || 'null');
+      if (saved?.version === 1 && saved.theme === 'dark') {
+        document.documentElement.dataset.theme = 'dark';
+        document.querySelector('meta[name="theme-color"]').content = '#101923';
+      }
+    } catch {}
+  </script>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./app.js" defer></script>
+</head>
+<body>
+  <svg class="icon-definitions" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="3"/><path d="M7.5 3v4m9-4v4M3.5 10h17M8 15l2.5 2.5L16 13"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5m4-5v5"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l4.5 4.5L19 7"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.2"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M10.3 4.8 2.7 18a2 2 0 0 0 1.7 3h15.2a2 2 0 0 0 1.7-3L13.7 4.8a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 4v.2"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 6.1A8 8 0 0 1 20 12M4 12a8 8 0 0 0 13.9 5.9"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m8 10 4 4 4-4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.8 13A9 9 0 0 1 11 3.2 9 9 0 1 0 20.8 13Z"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+  </svg>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="./" aria-label="任务规划实验室首页">
+        <span class="brand-mark"><svg class="icon" aria-hidden="true"><use href="#i-calendar"/></svg></span>
+        <span>任务规划实验室</span>
+      </a>
+      <div class="header-actions">
+        <span class="credit-pill" aria-live="polite">剩余额度 <strong data-testid="credit-balance" id="credit-balance">3</strong><span id="credit-unit">次</span></span>
+        <button class="icon-button theme-toggle" id="theme-toggle" type="button" aria-label="切换深色模式" title="切换深色模式">
+          <svg class="icon theme-moon" aria-hidden="true"><use href="#i-moon"/></svg>
+          <svg class="icon theme-sun" aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
+        </button>
+        <a class="original-link" href="http://localhost:3000" target="_blank" rel="noopener">查看原版<svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <div class="prototype-note"><span class="prototype-tag">交互原型</span><span>使用演示数据，不影响原账号额度。</span></div>
+    <div class="page-heading">
+      <div><h1>AI 任务规划</h1><p>整理待办，给今天安排一份清楚的日程。</p></div>
+      <span class="today" id="today"></span>
+    </div>
+
+    <details class="demo-tools" open>
+      <summary><svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg><span>演示场景</span><span class="demo-summary">切换状态，体验不同的操作结果</span></summary>
+      <div class="demo-content">
+        <div class="scenario-buttons" aria-label="选择演示场景">
+          <button type="button" data-scene="normal" data-testid="scenario-normal" aria-pressed="true">正常生成</button>
+          <button type="button" data-scene="fail" data-testid="scenario-fail" aria-pressed="false">明确失败</button>
+          <button type="button" data-scene="last" data-testid="scenario-last" aria-pressed="false">最后 1 次</button>
+          <button type="button" data-scene="zero" data-testid="scenario-zero" aria-pressed="false">额度用完</button>
+          <button type="button" data-scene="unknown" data-testid="scenario-unknown" aria-pressed="false">结果待确认</button>
+          <button type="button" class="reset-button" id="reset-demo" data-testid="reset-demo"><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg><span>重置演示</span></button>
+        </div>
+        <p id="scenario-description">从 3 次额度开始，添加或调整任务，再点击“生成日程”。</p>
+      </div>
+    </details>
+
+    <div class="planner-layout">
+      <section class="task-panel panel" aria-labelledby="tasks-heading">
+        <div class="panel-heading"><h2 id="tasks-heading">今天的待办</h2><span class="count-label" id="task-count">2 项待安排</span></div>
+        <form class="task-form" id="task-form" novalidate>
+          <label class="sr-only" for="task-input">待办事项</label>
+          <input id="task-input" data-testid="task-input" name="task" placeholder="添加一件今天要做的事" maxlength="100" autocomplete="off">
+          <button class="button button-primary add-button" type="submit" data-testid="task-submit" id="task-submit" disabled><svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg><span>添加</span></button>
+        </form>
+        <div class="task-list" data-testid="tasks-list" id="tasks-list"></div>
+        <div class="tasks-empty" id="tasks-empty" hidden><p>先添加一件今天要做的事。</p><span>想好任务后，就可以开始安排日程。</span></div>
+        <div class="workload"><svg class="icon" aria-hidden="true"><use href="#i-clock"/></svg><span id="workload">待办预计用时 2.5 小时</span></div>
+
+        <div class="hours-setting">
+          <div><label for="available-hours">今天可用的工作时长</label><p>日程将按这段时间安排。</p></div>
+          <div class="hours-input"><input id="available-hours" type="number" min="1" max="24" step="0.5" value="4" inputmode="decimal" aria-describedby="hours-error"><span>小时</span></div>
+        </div>
+        <p class="field-error" id="hours-error" hidden>请输入 1–24 小时，以 0.5 小时递增。</p>
+
+        <div class="generate-area">
+          <div class="quota-rule"><span>本次生成</span><strong>1 次额度</strong></div>
+          <p class="quota-explanation">成功保存日程后消耗，明确失败不消耗。</p>
+          <div class="feedback" id="feedback" role="status" aria-live="polite" aria-atomic="true" hidden>
+            <svg class="icon feedback-icon" aria-hidden="true"><use id="feedback-symbol" href="#i-info"/></svg>
+            <div class="feedback-content"><p class="feedback-title" id="feedback-title" data-testid="feedback-title"></p><p class="feedback-body" id="feedback-body" data-testid="feedback-body"></p><button type="button" class="button check-button" id="check-result-button" data-testid="check-result-button" hidden><svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg><span>核对结果</span></button></div>
+          </div>
+          <button class="button button-primary generate-button" id="generate-button" type="button" data-testid="generate-button"><span class="spinner" id="generate-spinner" aria-hidden="true" hidden></span><svg class="icon generate-icon" id="generate-icon" aria-hidden="true"><use href="#i-calendar"/></svg><span id="generate-label">生成日程</span></button>
+          <p class="generate-hint" id="generate-hint">当前可用 3 次，生成成功后还可用 2 次。</p>
+        </div>
+      </section>
+
+      <section class="result-panel panel" aria-labelledby="result-heading">
+        <div class="panel-heading result-heading"><div><h2 id="result-heading">本次日程</h2><p id="result-description">你的任务会在这里变成一份日程。</p></div><span class="result-badge" id="result-badge">尚未生成</span></div>
+        <div class="schedule-empty" id="schedule-empty" data-testid="schedule-empty">
+          <div class="empty-calendar" aria-hidden="true"><svg class="icon"><use href="#i-calendar"/></svg></div>
+          <h3>把待办交给日程</h3>
+          <p>添加任务、选择可用时长，<br>再点击“生成日程”。</p>
+          <div class="empty-rule"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>只有成功生成，才消耗额度</span></div>
+        </div>
+        <div class="schedule-result" id="schedule-result" data-testid="schedule-result" hidden>
+          <div class="schedule-summary"><span id="schedule-range"></span><span id="schedule-total"></span></div>
+          <div class="schedule-list" id="schedule-list"></div>
+          <p class="saved-note"><svg class="icon" aria-hidden="true"><use href="#i-check"/></svg><span>日程已保留，刷新页面后也能继续查看。</span></p>
+        </div>
+        <div class="result-pending" id="result-pending" hidden><span class="spinner" aria-hidden="true"></span><span>新日程正在生成，当前日程会为你保留。</span></div>
+      </section>
+    </div>
+
+    <footer class="page-footer"><svg class="icon" aria-hidden="true"><use href="#i-info"/></svg><p>本页仅模拟交互与额度状态。真实扣费、数据库和并发安全仍需服务端实现与验证。</p></footer>
+  </main>
+
+  <template id="task-row-template">
+    <div class="task-row">
+      <input class="task-checkbox" type="checkbox">
+      <span class="task-name"></span>
+      <label class="task-duration"><span class="sr-only"></span><input type="number" min="0.5" max="24" step="0.5" inputmode="decimal"><span aria-hidden="true">小时</span></label>
+      <button class="icon-button delete-task" type="button"><svg class="icon" aria-hidden="true"><use href="#i-trash"/></svg></button>
+    </div>
+  </template>
+</body>
+</html>
