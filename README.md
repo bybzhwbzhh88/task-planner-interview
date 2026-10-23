@@ -57,10 +57,22 @@ wasp start
 | --- | --- |
 | `main.wasp.ts` | 应用与路由配置 |
 | `schema.prisma` | 用户、任务和生成结果 |
-| `src/demo-ai-app/DemoAppPage.tsx` | 任务输入和日程展示 |
-| `src/demo-ai-app/operations.ts` | 服务端操作 |
+| `src/demo-ai-app/DemoAppPage.tsx` | 任务输入、额度展示和日程展示 |
+| `src/demo-ai-app/operations.ts` | 服务端操作（鉴权、校验、错误映射） |
+| `src/demo-ai-app/planGeneration.ts` | 生成核心流程：额度预留-退还、调用模拟接口、落库 |
 | `src/demo-ai-app/mockAi.ts` | 本地模拟接口 |
 | `src/auth/auth.wasp.ts` | 登录配置 |
+
+## 测试与验证
+
+额度处理的验收案例见 [SPEC.md](SPEC.md)，逐项执行记录见 [VERIFICATION.md](VERIFICATION.md)。
+
+```sh
+npm test                                    # 核心流程测试：自动重建一次性测试库后运行 vitest
+node scripts/verify-http.mjs http://localhost:3001   # HTTP 端到端（含并发；需 wasp start 运行中）
+```
+
+`npm test` 需 Docker 开发库容器运行中（`wasp start db`）；它会在同一实例内重建独立的测试库 `taskplanner_test`，不影响开发数据。HTTP 脚本每次运行创建随机新账号，可重复执行；API 端口非默认 3001 时作为第一参数传入。
 
 ## 基础检查
 

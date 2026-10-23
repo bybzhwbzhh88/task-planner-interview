@@ -1,10 +1,12 @@
-import { type Task } from "wasp/entities";
+import { type PlanResult, type Task } from "wasp/entities";
 
 import {
   createTask,
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getPlanResults,
+  getUserCredits,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -63,9 +65,21 @@ function NewTaskForm({
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
+  const [viewingHistoryAt, setViewingHistoryAt] = useState<Date | null>(null);
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+
+  const {
+    data: creditsData,
+    isLoading: isCreditsLoading,
+    refetch: refetchCredits,
+  } = useQuery(getUserCredits);
+
+  const { data: planResults, refetch: refetchPlanResults } =
+    useQuery(getPlanResults);
+
+  const credits = creditsData?.credits;
 
   const handleSubmit = async () => {
     try {
@@ -86,6 +100,11 @@ function NewTaskForm({
       });
       if (response) {
         setResponse(response);
+        setViewingHistoryAt(null);
+        toast({
+          title: "日程已生成",
+          description: "本次消耗 1 个额度。",
+        });
       }
     } catch (err) {
       const statusCode =
@@ -98,11 +117,14 @@ function NewTaskForm({
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description:
+            "当前账号额度已用完，无法生成新日程。可在下方查看历史日程；如需继续使用，请联系管理员重置额度。",
         });
       } else {
+        // Non-402 messages come from the server and are already user-facing,
+        // e.g. the provider-failure message states that no credit was spent.
         toast({
-          title: "Error",
+          title: "生成失败",
           description:
             err instanceof Error ? err.message : "Something went wrong",
           variant: "destructive",
@@ -110,6 +132,23 @@ function NewTaskForm({
       }
     } finally {
       setIsPlanGenerating(false);
+      // Refresh the live balance and the history in every outcome, including
+      // failures where a reserved credit may have been refunded.
+      void refetchCredits();
+      void refetchPlanResults();
+    }
+  };
+
+  const handleViewHistory = (result: PlanResult) => {
+    try {
+      setResponse(JSON.parse(result.content) as GeneratedSchedule);
+      setViewingHistoryAt(result.createdAt);
+    } catch {
+      toast({
+        title: "历史日程",
+        description: "该条记录内容无法解析。",
+        variant: "destructive",
+      });
     }
   };
 
@@ -169,7 +208,7 @@ function NewTaskForm({
                   type="number"
                   id="time"
                   step={0.5}
-                  min={1}
+                  min={0.5}
                   max={24}
                   className="min-w-28 text-center"
                   value={todaysHours}
@@ -182,6 +221,27 @@ function NewTaskForm({
           <div className="text-muted-foreground text-center">
             请先添加待办事项
           </div>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between">
+        <span
+          className="text-muted-foreground text-sm"
+          data-testid="credits-display"
+        >
+          剩余额度：
+          <span
+            className={cn("font-semibold", {
+              "text-destructive": credits === 0,
+            })}
+          >
+            {isCreditsLoading ? "…" : `${credits ?? "-"} 个`}
+          </span>
+        </span>
+        {credits === 0 && (
+          <span className="text-muted-foreground text-xs">
+            额度已用完，无法生成新日程
+          </span>
         )}
       </div>
 
@@ -207,13 +267,51 @@ function NewTaskForm({
       {!!response && (
         <div className="flex flex-col">
           <h3 className="text-foreground mb-4 text-lg font-semibold">
-            本次日程
+            {viewingHistoryAt
+              ? `历史日程（生成于 ${formatDateTime(viewingHistoryAt)}）`
+              : "本次日程"}
           </h3>
           <Schedule schedule={response} />
         </div>
       )}
+
+      <div className="flex flex-col gap-3">
+        <h3 className="text-foreground text-lg font-semibold">历史日程</h3>
+        {planResults && planResults.length > 0 ? (
+          <ul className="space-y-2">
+            {planResults.map((result: PlanResult) => (
+              <li
+                key={result.id}
+                className="flex items-center justify-between rounded-md border px-4 py-3"
+              >
+                <span className="text-muted-foreground text-sm">
+                  {formatDateTime(result.createdAt)}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleViewHistory(result)}
+                >
+                  查看
+                </Button>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground text-sm" data-testid="history-empty">
+            暂无生成记录。生成日程后会在这里留档。
+          </p>
+        )}
+      </div>
     </div>
   );
+}
+
+function formatDateTime(date: Date | string): string {
+  return new Date(date).toLocaleString("zh-CN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 }
 
 type TodoProps = Pick<Task, "id" | "isDone" | "description" | "time">;

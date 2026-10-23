@@ -35,6 +35,10 @@
     "vitest": "^4.1.9"
   },
   "private": true,
+  "scripts": {
+    "test:setup": "bash scripts/test-db-setup.sh",
+    "test": "npm run test:setup && vitest run"
+  },
   "engines": {
     "node": ">=24.14.1"
   }
