@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCurrentCredits,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -66,6 +67,7 @@ function NewTaskForm({
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+  const { data: credits } = useQuery(getCurrentCredits);
 
   const handleSubmit = async () => {
     try {
@@ -86,6 +88,10 @@ function NewTaskForm({
       });
       if (response) {
         setResponse(response);
+        toast({
+          title: "日程已生成",
+          description: "本次生成已消耗 1 个额度。",
+        });
       }
     } catch (err) {
       const statusCode =
@@ -98,7 +104,13 @@ function NewTaskForm({
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description: "本次未调用生成服务，请检查账号额度。",
+        });
+      } else if (statusCode === 502) {
+        toast({
+          title: "生成失败",
+          description: "本次额度已返还，请稍后重试。",
+          variant: "destructive",
         });
       } else {
         toast({
@@ -187,7 +199,7 @@ function NewTaskForm({
 
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || tasks?.length === 0 || credits === 0}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -203,6 +215,12 @@ function NewTaskForm({
           "生成日程"
         )}
       </Button>
+
+      {credits === 0 && (
+        <p className="text-muted-foreground text-center text-sm" role="status">
+          额度已用完，本次不会发起生成。请检查账号状态。
+        </p>
+      )}
 
       {!!response && (
         <div className="flex flex-col">

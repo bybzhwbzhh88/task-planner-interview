@@ -72,6 +72,28 @@ npx tsc --project tsconfig.wasp.json --noEmit
 
 运行检查前需要完成依赖安装。首次启动前需要执行数据库迁移。
 
+## 额度验证
+
+核心流程测试不连接数据库，覆盖成功、额度不足、生成失败、保存失败、返还异常和五路并发：
+
+```sh
+npm run test:quota
+```
+
+配置已完成迁移的 PostgreSQL 测试数据库后，运行真实 Prisma 条件更新并发测试。用例只创建和删除自己的临时用户：
+
+```sh
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/task_planner npm run test:quota:db
+```
+
+运行全部额度测试时，未配置 `DATABASE_URL` 会明确跳过数据库用例：
+
+```sh
+npm test
+```
+
+验收案例、实现取舍和实际验证记录见 [SPEC.md](SPEC.md)。
+
 ## 开源许可
 
 第三方代码的版权声明与使用条件见 [LICENSE](LICENSE) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

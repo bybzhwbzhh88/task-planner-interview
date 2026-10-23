@@ -5,6 +5,11 @@
     ".wasp/out/*",
     ".wasp/out/sdk/wasp"
   ],
+  "scripts": {
+    "test": "vitest --config vitest.quota.config.mjs run",
+    "test:quota": "vitest --config vitest.quota.config.mjs run src/demo-ai-app/creditReservation.test.ts",
+    "test:quota:db": "vitest --config vitest.quota.config.mjs run src/demo-ai-app/creditReservation.integration.test.ts"
+  },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.2",
     "@radix-ui/react-label": "^2.1.7",
