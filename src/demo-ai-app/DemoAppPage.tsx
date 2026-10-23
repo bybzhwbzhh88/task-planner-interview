@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCredits,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -64,6 +65,9 @@ function NewTaskForm({
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
 
+  const { data: credits, error: creditsError, refetch: refetchCredits } = useQuery(getCredits);
+  const [message, setMessage] = useState("");
+
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
 
@@ -81,34 +85,27 @@ function NewTaskForm({
   const handleGeneratePlan = async () => {
     try {
       setIsPlanGenerating(true);
+      setResponse(null);
+      setMessage("");
       const response = await generatePlan({
         hours: todaysHours,
       });
       if (response) {
         setResponse(response);
+        setMessage("日程已生成并保存，本次消耗 1 个额度。");
       }
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
           : undefined;
-      if (statusCode === 402) {
-        toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
-          variant: "destructive",
-        });
-      }
+      const description = statusCode === 402
+        ? "额度不足，未调用模型。若其他页面正在生成，请稍后刷新额度。"
+        : statusCode && err instanceof Error ? err.message : "结果暂无法确认，请刷新额度后核查，勿立即重复生成。";
+      setMessage(description);
+      toast({ title: "生成未完成", description, variant: "destructive" });
     } finally {
+      await refetchCredits();
       setIsPlanGenerating(false);
     }
   };
@@ -187,7 +184,7 @@ function NewTaskForm({
 
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || isTasksLoading || !tasks?.length || !!creditsError || credits === undefined || credits <= 0}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -203,6 +200,10 @@ function NewTaskForm({
           "生成日程"
         )}
       </Button>
+
+      <p role="status">{message}</p>
+      {creditsError && <p>额度读取失败，请刷新页面重试。</p>}
+      {!creditsError && credits === 0 && <p>暂无可用额度。若其他页面正在生成，请等待结束后刷新页面。</p>}
 
       {!!response && (
         <div className="flex flex-col">

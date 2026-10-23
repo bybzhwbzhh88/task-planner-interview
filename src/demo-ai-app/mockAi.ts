@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Task } from "wasp/entities";
 import type { GeneratedSchedule, TaskPriority } from "./schedule";
+import { ProviderRejectedError } from "./quota";
 
 /** Local provider fixture. Each invocation represents one billable provider call. */
 export async function generateMockSchedule(
@@ -12,7 +13,7 @@ export async function generateMockSchedule(
   await new Promise((resolve) => setTimeout(resolve, 500));
   if (tasks.some((task) => task.description.includes("[fail]"))) {
     console.info(JSON.stringify({ event: "mock-ai.failed", callId }));
-    throw new Error("Mock provider explicitly rejected the request");
+    throw new ProviderRejectedError("Mock provider explicitly rejected the request");
   }
   const result = {
     tasks: tasks.map((task) => ({
