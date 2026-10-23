@@ -1,5 +1,4 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
+import type { PlanResult, Task } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateTask,
@@ -7,17 +6,19 @@ import type {
   GeneratePlan,
   GetAllTasksByUser,
   GetPlanResults,
+  GetCredits,
   UpdateTask,
 } from "wasp/server/operations";
 import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
 import type { GeneratedSchedule } from "./schedule";
 import { generateMockSchedule } from "./mockAi";
+import { generateWithQuota, QuotaError } from "./quota";
 
 
 //#region Actions
 const generatePlanInputSchema = z.object({
-  hours: z.number(),
+  hours: z.number().finite().min(1).max(24),
 });
 
 type GeneratePlanInput = z.infer<typeof generatePlanInputSchema>;
@@ -45,38 +46,25 @@ export const generatePlan: GeneratePlan<
     },
   });
 
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
+  if (tasks.length === 0) throw new HttpError(400, "请先添加待办事项。");
+  try {
+    return await generateWithQuota(prisma, context.user.id, () =>
+      generateMockSchedule(tasks, hours),
     );
+  } catch (error) {
+    if (error instanceof QuotaError) {
+      throw new HttpError(error.statusCode, error.message);
+    }
+    throw error;
   }
+};
 
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
+export const getCredits: GetCredits<void, number> = async (_args, context) => {
+  if (!context.user) throw new HttpError(401);
+  const user = await context.entities.User.findUniqueOrThrow({
+    where: { id: context.user.id },
   });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
-  }
-
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
-
-  return generatedSchedule;
+  return user.credits;
 };
 
 const createTaskInputSchema = z.object({

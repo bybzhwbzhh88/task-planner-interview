@@ -1,0 +1,5 @@
+FROM node:24.14.1-bookworm
+RUN npm install -g @wasp.sh/wasp-cli@0.25.0
+WORKDIR /workspace
+EXPOSE 3000 3001
+CMD ["bash", "scripts/start-linux.sh"]

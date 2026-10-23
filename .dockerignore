@@ -1,0 +1,6 @@
+.git
+.wasp
+node_modules
+.env*
+test-results
+coverage

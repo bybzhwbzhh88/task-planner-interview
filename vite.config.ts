@@ -5,6 +5,7 @@ import { wasp } from "wasp/client/vite";
 export default defineConfig({
   plugins: [wasp(), tailwindcss()],
   server: {
-    open: true,
+    host: "0.0.0.0",
+    open: false,
   },
 });

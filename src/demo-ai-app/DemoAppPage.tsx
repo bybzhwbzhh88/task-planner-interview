@@ -4,13 +4,15 @@ import {
   createTask,
   deleteTask,
   generatePlan,
+  getCredits,
+  getPlanResults,
   getAllTasksByUser,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
 
 import { Loader2, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "../client/components/ui/button";
 import {
   Card,
@@ -67,6 +69,11 @@ function NewTaskForm({
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
 
+  const generating = useRef(false);
+  const { data: credits, error: creditsError, refetch: refreshCredits } = useQuery(getCredits);
+  const { data: history, refetch: refreshHistory } = useQuery(getPlanResults);
+  const [notice, setNotice] = useState("");
+
   const handleSubmit = async () => {
     try {
       await handleCreateTask({ description });
@@ -79,6 +86,10 @@ function NewTaskForm({
   };
 
   const handleGeneratePlan = async () => {
+    if (generating.current) return;
+    generating.current = true;
+    setNotice("");
+    setResponse(null);
     try {
       setIsPlanGenerating(true);
       const response = await generatePlan({
@@ -86,29 +97,36 @@ function NewTaskForm({
       });
       if (response) {
         setResponse(response);
+        setNotice("生成成功，已消耗 1 个额度。");
       }
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
           : undefined;
+      const message =
+        [400, 401, 402, 502, 503].includes(Number(statusCode)) && err instanceof Error
+          ? err.message
+          : "请求结果未确认，请刷新查看额度和历史日程后再决定是否重试。";
+      setNotice(message);
       if (statusCode === 402) {
         toast({
           title: "额度不足",
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description: "请刷新查看余额，或等待正在处理的请求结束。",
         });
       } else {
         toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
+          title: "生成未完成",
+          description: message,
           variant: "destructive",
         });
       }
     } finally {
+      await Promise.allSettled([refreshCredits(), refreshHistory()]);
+      generating.current = false;
       setIsPlanGenerating(false);
     }
   };
@@ -185,9 +203,17 @@ function NewTaskForm({
         )}
       </div>
 
+      <div role="status" aria-live="polite" className="space-y-2 text-sm">
+        <p>可用额度：{credits ?? "加载中"}。每次成功生成消耗 1 个额度，明确失败时返还。</p>
+        {creditsError && <p>额度读取失败，请点击下方按钮重新加载。</p>}
+        {isPlanGenerating && <p>正在生成，额度暂时预留，请勿重复提交。</p>}
+        {notice && <p>{notice}</p>}
+        {credits === 0 && <p>额度不足；可刷新查看余额或等待其他请求结束。</p>}
+        <Button variant="outline" onClick={() => { void refreshCredits(); void refreshHistory(); }}>刷新额度与历史</Button>
+      </div>
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || !tasks?.length || credits === undefined || credits <= 0 || !Number.isFinite(todaysHours) || todaysHours < 1 || todaysHours > 24}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -204,6 +230,17 @@ function NewTaskForm({
         )}
       </Button>
 
+      {!!history?.length && (
+        <details>
+          <summary>历史日程（{history.length}）</summary>
+          {history.map((plan) => (
+            <details key={plan.id}>
+              <summary>{new Date(plan.createdAt).toLocaleString()}</summary>
+              <Schedule schedule={JSON.parse(plan.content) as GeneratedSchedule} />
+            </details>
+          ))}
+        </details>
+      )}
       {!!response && (
         <div className="flex flex-col">
           <h3 className="text-foreground mb-4 text-lg font-semibold">

@@ -34,6 +34,9 @@
     "vite": "^8.1.0",
     "vitest": "^4.1.9"
   },
+  "scripts": {
+    "test:quota": "node scripts/test-quota.mjs"
+  },
   "private": true,
   "engines": {
     "node": ">=24.14.1"

@@ -5,6 +5,7 @@
 ## 任务
 
 请阅读 [TASK.md](TASK.md)。项目中的额度处理是待改进的初始版本。
+本次额度改进的方案见 [SPEC.md](SPEC.md)，运行与测试见 [RUNNING.md](RUNNING.md)，实际验收记录见 [SUBMISSION.md](SUBMISSION.md)。
 
 ## 环境
 
