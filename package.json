@@ -1,6 +1,9 @@
 {
   "name": "task-planner-interview",
   "type": "module",
+  "scripts": {
+    "test:credits": "vitest run --config tests/vitest.config.ts"
+  },
   "workspaces": [
     ".wasp/out/*",
     ".wasp/out/sdk/wasp"

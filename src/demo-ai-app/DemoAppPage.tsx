@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCredits,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -66,6 +67,8 @@ function NewTaskForm({
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+  const { data: credits, error: creditsError, refetch: refetchCredits } =
+    useQuery(getCredits);
 
   const handleSubmit = async () => {
     try {
@@ -84,9 +87,11 @@ function NewTaskForm({
       const response = await generatePlan({
         hours: todaysHours,
       });
-      if (response) {
-        setResponse(response);
-      }
+      setResponse(response);
+      toast({
+        title: "日程已生成",
+        description: "本次消耗 1 个额度，可在下方查看日程。",
+      });
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
@@ -95,21 +100,24 @@ function NewTaskForm({
       if (statusCode === 402) {
         toast({
           title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description: "当前账号没有可用额度，未调用生成接口。可查看本页已有日程，或刷新额度后再试。",
+        });
+      } else if (statusCode === 503) {
+        toast({
+          title: "模拟接口生成失败",
+          description: "本次未扣除额度。请删除含 [fail] 的任务后重试。",
+          variant: "destructive",
         });
       } else {
         toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
+          title: "生成结果未确认",
+          description: "请刷新额度，确认剩余数量后再决定是否重试。",
           variant: "destructive",
         });
       }
     } finally {
       setIsPlanGenerating(false);
+      await refetchCredits();
     }
   };
 
@@ -185,9 +193,32 @@ function NewTaskForm({
         )}
       </div>
 
+      <div className="space-y-2" aria-live="polite">
+        <p>
+          {creditsError ? "额度读取失败，请刷新重试。" :
+            credits === undefined ? "正在读取额度…" : `剩余额度：${credits}`}
+        </p>
+        <p className="text-muted-foreground text-sm">
+          每成功生成一次日程消耗 1 个额度；模拟接口明确失败不扣除。
+          {credits === 0 && "当前额度已用完，可查看本页已有日程，或刷新额度后再试。"}
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isPlanGenerating}
+          onClick={() => refetchCredits()}
+        >
+          刷新额度
+        </Button>
+      </div>
+
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={
+          isPlanGenerating || !tasks?.length || creditsError !== null ||
+          credits === undefined || credits === 0
+        }
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"

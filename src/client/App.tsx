@@ -12,7 +12,6 @@ export function App() {
       <header className="border-border flex items-center justify-between border-b px-6 py-4">
         <Link to={routes.HomeRoute.to} className="font-semibold">任务规划实验室</Link>
         <div className="flex items-center gap-4 text-sm">
-          {user && <span>剩余额度： {user.credits}</span>}
           <DarkModeSwitcher />
           {user && <button type="button" onClick={() => logout()}>退出登录</button>}
         </div>
