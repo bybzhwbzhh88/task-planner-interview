@@ -1,16 +1,20 @@
 import { type Task } from "wasp/entities";
+import { quotaFeedback } from "./quotaFeedback";
+import { refreshQuotaResults } from "./quotaRefresh";
 
 import {
   createTask,
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getQuota,
+  getPlanResults,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
 
 import { Loader2, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { Button } from "../client/components/ui/button";
 import {
   Card,
@@ -64,7 +68,39 @@ function NewTaskForm({
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
 
-  const { data: tasks, isLoading: isTasksLoading } =
+  const [message, setMessage] = useState("");
+  const [isPrevious, setIsPrevious] = useState(false);
+  const generating = useRef(false);
+  const refreshing = useRef(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const quota = useQuery(getQuota, undefined, {
+    refetchInterval: 5000,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: "always",
+    retry: false,
+  });
+  const results = useQuery(getPlanResults, undefined, { enabled: false, retry: false });
+  const refresh = async () => {
+    if (generating.current || refreshing.current) return;
+    refreshing.current = true;
+    setIsRefreshing(true);
+    try {
+      await refreshQuotaResults({
+        loadQuota: () => quota.refetch(),
+        loadResults: () => results.refetch(),
+        onResult: (saved) => {
+          setResponse(saved);
+          setIsPrevious(true);
+        },
+        onMessage: setMessage,
+      });
+    } finally {
+      refreshing.current = false;
+      setIsRefreshing(false);
+    }
+  };
+
+  const { data: tasks, isLoading: isTasksLoading, isError: isTasksError } =
     useQuery(getAllTasksByUser);
 
   const handleSubmit = async () => {
@@ -79,42 +115,38 @@ function NewTaskForm({
   };
 
   const handleGeneratePlan = async () => {
+    if (generating.current || refreshing.current) return;
+    generating.current = true;
+    setIsPlanGenerating(true);
+    setIsPrevious(true);
+    setMessage("生成中，额度将暂时占用…");
     try {
-      setIsPlanGenerating(true);
-      const response = await generatePlan({
-        hours: todaysHours,
-      });
-      if (response) {
-        setResponse(response);
-      }
+      const generated = await generatePlan({ hours: todaysHours });
+      setResponse(generated);
+      setIsPrevious(false);
+      setMessage("生成成功，消耗 1 次额度。");
     } catch (err) {
-      const statusCode =
-        err && typeof err === "object" && "statusCode" in err
-          ? err.statusCode
-          : undefined;
-      if (statusCode === 402) {
-        toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
-          variant: "destructive",
-        });
-      }
+      const feedback = quotaFeedback(err);
+      setMessage(feedback.message + (feedback.requestId ? ` 请求编号：${feedback.requestId}` : ""));
+      toast({ title: feedback.code === "QUOTA_EXHAUSTED" ? "额度不足" : "生成未完成", description: feedback.message });
     } finally {
+      await quota.refetch();
+      generating.current = false;
       setIsPlanGenerating(false);
     }
   };
 
   return (
     <div className="flex flex-col justify-center gap-10">
+      <div className="space-y-2" aria-label="额度信息">
+        <p>可用额度：{quota.data ? `${quota.data.availableCredits} 次` : "读取中…"}</p>
+        <p className="text-sm text-muted-foreground">成功生成消耗 1 次；失败不消耗。</p>
+        {!!quota.data?.processingCount && <p>处理中 {quota.data.processingCount} 次，相关额度暂时占用。</p>}
+        {quota.data?.availableCredits === 0 && <p>当前无可用额度；如有处理中请求，请等待完成后刷新。</p>}
+        {quota.isError && <p role="alert">额度读取失败，请刷新额度。</p>}
+        <Button type="button" variant="outline" onClick={() => void refresh()} disabled={isPlanGenerating || isRefreshing || quota.isFetching}>刷新额度与最近结果</Button>
+        {message && <p role="status">{message}</p>}
+      </div>
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <Input
@@ -187,7 +219,7 @@ function NewTaskForm({
 
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || isRefreshing || isTasksLoading || isTasksError || !tasks?.length || quota.isLoading || quota.isError || !quota.data || quota.data.availableCredits <= 0 || !Number.isFinite(todaysHours) || todaysHours < 1 || todaysHours > 24 || todaysHours * 2 % 1 !== 0}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -207,7 +239,7 @@ function NewTaskForm({
       {!!response && (
         <div className="flex flex-col">
           <h3 className="text-foreground mb-4 text-lg font-semibold">
-            本次日程
+            {isPrevious ? "上次成功生成" : "本次日程"}
           </h3>
           <Schedule schedule={response} />
         </div>
