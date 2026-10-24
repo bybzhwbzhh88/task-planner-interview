@@ -75,3 +75,9 @@ npx tsc --project tsconfig.wasp.json --noEmit
 ## 开源许可
 
 第三方代码的版权声明与使用条件见 [LICENSE](LICENSE) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+## 额度处理验证
+
+完成上述迁移和编译后，执行 `npm run test:quota` 运行独立 PostgreSQL 测试库中的并发与失败验收。应用启动后，在另一终端执行 `npm run test:quota:http` 验证真实认证和生成接口。两个入口均会清理自己创建的测试数据。
+
+隔离要求、案例对应和实际结果见 [VERIFICATION.md](VERIFICATION.md)，设计见 [SPEC.md](SPEC.md)。

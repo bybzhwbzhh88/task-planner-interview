@@ -12,6 +12,7 @@ model User {
   createdAt    DateTime      @default(now())
   credits      Int           @default(3)
   planResults PlanResult[]
+  generationRequests GenerationRequest[]
   tasks        Task[]
 }
 
@@ -22,6 +23,8 @@ model PlanResult {
   user      User     @relation(fields: [userId], references: [id])
   userId    String
   content   String
+  generationRequestId String? @unique
+  generationRequest GenerationRequest? @relation(fields: [generationRequestId], references: [id])
 }
 
 model Task {
@@ -32,4 +35,22 @@ model Task {
   description String
   time        String   @default("1")
   isDone      Boolean  @default(false)
+}
+
+enum GenerationStatus {
+  PROCESSING
+  SUCCEEDED
+  FAILED
+}
+
+model GenerationRequest {
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId], references: [id])
+  status GenerationStatus @default(PROCESSING)
+  failureCode String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  result PlanResult?
+  @@index([userId, status])
 }
