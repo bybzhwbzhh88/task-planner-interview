@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>额度处理原型</title>
+<style>
+  :root {
+    --background: hsl(0 0% 100%);
+    --foreground: hsl(0 0% 3.9%);
+    --primary: hsl(210 100% 13%);
+    --primary-foreground: hsl(0 0% 98%);
+    --muted: hsl(0 0% 96.1%);
+    --muted-foreground: hsl(0 0% 45.1%);
+    --border: hsl(0 0% 89.8%);
+    --destructive: hsl(0 84.2% 60.2%);
+    --destructive-foreground: hsl(0 0% 98%);
+    --warning: hsl(36 100% 50%);
+    --info-bg: hsl(31 57% 96%);
+    --radius: 0.5rem;
+    --font: "Noto Sans CJK SC", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font); background: hsl(220 14% 96%); color: var(--foreground); }
+
+  /* 原型切换栏（不属于产品界面） */
+  .proto-bar { position: sticky; top: 0; z-index: 10; background: #1f2937; color: #f9fafb; padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; }
+  .proto-bar strong { margin-right: 8px; }
+  .proto-bar button { font: inherit; border: 1px solid #4b5563; background: #374151; color: #f9fafb; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  .proto-bar button[aria-pressed="true"] { background: #f9fafb; color: #111827; }
+  .proto-note { width: 100%; color: #9ca3af; font-size: 12px; }
+  body.shot .proto-bar { display: none; }
+
+  /* 产品界面 */
+  #app { position: relative; width: 960px; max-width: 100%; margin: 24px auto; background: var(--background); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; min-height: 760px; }
+  body.shot #app { margin: 0; border-radius: 0; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border); }
+  header .brand { font-weight: 600; }
+  header .right { display: flex; align-items: center; gap: 16px; font-size: 14px; }
+  .credits-badge { font-variant-numeric: tabular-nums; }
+  .credits-badge.zero { color: var(--destructive); font-weight: 600; }
+  .icon-btn { display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center; border-radius: 999px; border: 1px solid var(--border); }
+  main { padding: 32px 24px 48px; }
+  h2 { text-align: center; font-size: 40px; margin: 8px 0 0; letter-spacing: -0.02em; }
+  h2 .ai { color: var(--primary); }
+  .lead { text-align: center; color: var(--muted-foreground); font-size: 17px; line-height: 1.7; margin: 18px auto 0; max-width: 640px; }
+  .card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--background); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .outer { margin-top: 28px; background: hsl(0 0% 99%); }
+  .inner { width: 560px; max-width: 100%; margin: 0 auto; padding: 36px 0; display: flex; flex-direction: column; gap: 28px; }
+  .row { display: flex; align-items: center; gap: 12px; }
+  .input { height: 36px; border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px); padding: 0 12px; font: inherit; font-size: 14px; background: var(--background); color: var(--foreground); }
+  .input.grow { flex: 1; }
+  .input.invalid { border-color: var(--destructive); box-shadow: 0 0 0 1px var(--destructive); }
+  .btn { height: 36px; border: none; border-radius: calc(var(--radius) - 2px); padding: 0 16px; font: inherit; font-size: 14px; font-weight: 500; background: var(--primary); color: var(--primary-foreground); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn[disabled] { opacity: .5; cursor: not-allowed; }
+  .btn.full { width: 100%; }
+  .btn.ghost { background: transparent; color: var(--foreground); border: 1px solid var(--border); height: 30px; font-size: 13px; padding: 0 10px; }
+  .task { padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  .task .left { display: flex; align-items: center; gap: 12px; font-size: 15px; }
+  .checkbox { width: 16px; height: 16px; border: 1px solid var(--primary); border-radius: 4px; }
+  .task .time { display: flex; align-items: center; gap: 8px; color: var(--muted-foreground); font-size: 12px; font-style: italic; }
+  .task .time .input { width: 64px; height: 30px; text-align: center; font-style: normal; font-size: 12px; }
+  .trash { color: var(--destructive); }
+  .label { font-size: 14px; font-weight: 600; color: var(--muted-foreground); white-space: nowrap; }
+  .field-error { color: var(--destructive); font-size: 13px; margin-top: -8px; text-align: left; padding: 2px 0; }
+  .hint { color: var(--muted-foreground); font-size: 13px; margin-top: -18px; text-align: center; }
+  .hint b { color: var(--foreground); font-weight: 600; }
+  .new { outline: 2px dashed hsl(210 90% 55%); outline-offset: 4px; border-radius: 6px; position: relative; }
+  .new::after { content: attr(data-new); position: absolute; top: -12px; right: 6px; background: hsl(210 90% 55%); color: #fff; font-size: 11px; padding: 1px 6px; border-radius: 4px; }
+  .new.badge-left::after { top: 50%; right: auto; left: -44px; transform: translateY(-50%); }
+  body.shot.clean .new { outline: none; }
+  body.shot.clean .new::after { display: none; }
+  .notice { background: var(--info-bg); border: 1px solid hsl(31 40% 85%); border-radius: var(--radius); padding: 14px 16px; font-size: 14px; line-height: 1.7; }
+  .notice .title { font-weight: 600; margin-bottom: 4px; }
+  .notice .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .notice.warning { position: relative; background: hsl(40 100% 97%); border: 2px solid var(--warning); padding-right: 36px; }
+  .notice.warning .title { color: hsl(30 90% 35%); }
+  .notice .close { position: absolute; right: 12px; top: 8px; opacity: .6; }
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  h3 { margin: 0 0 4px; font-size: 18px; }
+  .sched { display: flex; flex-direction: column; gap: 14px; }
+  .sched-card { border: 2px solid hsl(36 100% 50% / .25); background: hsl(36 100% 50% / .08); border-radius: var(--radius); padding: 14px 16px; }
+  .sched-card .head { display: flex; justify-content: space-between; font-weight: 600; color: hsl(36 100% 40%); font-size: 15px; }
+  .sched-card .head span:last-child { font-size: 12px; font-style: italic; font-weight: 500; }
+  .sched-card ul { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 6px; }
+  .sched-card li { display: flex; justify-content: space-between; font-size: 14px; color: var(--foreground); }
+  .sched-card li span:last-child { color: var(--muted-foreground); }
+  .history .item { border-top: 1px solid var(--border); padding: 10px 2px; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .history .item:first-of-type { border-top: none; }
+  .history .meta { color: var(--muted-foreground); font-size: 13px; }
+  .history .detail { padding: 6px 0 12px; }
+  .history .msg { padding: 10px 2px; font-size: 14px; color: var(--muted-foreground); display: flex; justify-content: space-between; align-items: center; }
+  .history .msg.error { color: var(--destructive); }
+  /* 交互时提示固定在窗口右下角，与真实应用一致；截图时放在页面右下角 */
+  .toast { position: fixed; right: 24px; bottom: 24px; z-index: 20; width: 380px; border-radius: var(--radius); padding: 16px 40px 16px 18px; box-shadow: 0 10px 24px rgba(0,0,0,.14); font-size: 14px; }
+  body.shot .toast { position: absolute; }
+  body.shot.has-toast main { padding-bottom: 200px; }
+  .toast.default { background: var(--background); border: 1px solid var(--border); color: var(--foreground); }
+  .toast.destructive { background: var(--destructive); border: 1px solid var(--destructive); color: var(--destructive-foreground); }
+  .toast.warning { background: var(--background); border: 2px solid var(--warning); color: var(--foreground); }
+  .toast.warning .t { color: hsl(30 90% 35%); }
+  .toast .t { font-weight: 600; font-size: 14px; }
+  .toast .d { opacity: .92; margin-top: 4px; line-height: 1.6; }
+  .toast .x { position: absolute; right: 12px; top: 10px; opacity: .6; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="proto-bar" role="toolbar" aria-label="切换状态">
+  <strong>额度处理原型</strong>
+  <span id="tabs"></span>
+  <span class="proto-note">静态原型，只示意界面状态与文案；文案以 ../01-solution.md 的"界面状态与文案"为准。虚线框是本次新增或改动的部分。联系管理员的入口要等渠道确定后才加入（见 01 的"待确认"）。</span>
+</div>
+
+<div id="app">
+  <header>
+    <span class="brand">任务规划实验室</span>
+    <span class="right">
+      <span class="new badge-left" data-new="改名" style="padding:0 4px">可用额度： <span class="credits-badge" id="credits">3</span></span>
+      <span class="icon-btn" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </span>
+      <span>退出登录</span>
+    </span>
+  </header>
+
+  <main>
+    <h2><span class="ai">AI</span> 任务规划</h2>
+    <p class="lead">输入待办事项和可用时长，生成一份模拟日程。本页面使用本地接口，无需 API Key。</p>
+
+    <div class="card outer">
+      <div class="inner">
+        <div class="row">
+          <input class="input grow" placeholder="输入待办事项" aria-label="输入待办事项">
+          <button class="btn" disabled>添加任务</button>
+        </div>
+
+        <div id="tasks" style="display:flex;flex-direction:column;gap:14px"></div>
+
+        <div class="row" style="justify-content:space-between">
+          <span class="label">今天可用的工作时长</span>
+          <input class="input" id="hours" style="width:112px;text-align:center" value="8" aria-label="今天可用的工作时长">
+        </div>
+        <div class="field-error new hidden" id="hoursError" data-new="新增 S8">可用时长需在 1–24 小时之间</div>
+
+        <button class="btn full" id="generate">生成日程</button>
+        <div class="hint new" id="hint" data-new="新增 S1"></div>
+
+        <div class="notice warning new hidden" id="unconfirmed" data-new="新增 S10">
+          <span class="close" aria-hidden="true">×</span>
+          <div class="title">暂时无法确认本次结果</div>
+          额度可能已扣除。请稍后刷新页面，查看历史日程和可用额度：历史里有这份日程，就是已生成成功。重新生成会算作一次新的请求。
+        </div>
+
+        <div class="notice new hidden" id="noCredits" data-new="新增 S4">
+          <div class="title">当前没有可用额度</div>
+          暂时不能生成新日程，当前版本不支持充值。如果其他页面正在生成，结束后额度可能恢复。<span id="historyLine">已生成的日程可以在下方查看。</span>
+          <div class="actions">
+            <button class="btn ghost">刷新额度</button>
+            <button class="btn ghost" id="viewHistoryBtn">查看历史日程</button>
+          </div>
+        </div>
+
+        <div id="schedule" class="hidden">
+          <h3>本次日程</h3>
+          <div class="sched" id="schedCards"></div>
+        </div>
+
+        <div class="history new" id="history" data-new="新增 S9">
+          <h3 id="historyTitle">历史日程</h3>
+          <div id="historyList"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="toast new hidden" id="toast" data-new="">
+    <span class="x" aria-hidden="true">×</span>
+    <div class="t" id="toastTitle"></div>
+    <div class="d" id="toastDesc"></div>
+  </div>
+</div>
+
+<script>
+  var TASKS = [
+    { name: "整理周报", time: "1" },
+    { name: "准备组会汇报", time: "2" }
+  ];
+  var HISTORY = [
+    { at: "10月23日 20:41", tasks: 2, hours: 8 },
+    { at: "10月23日 09:15", tasks: 3, hours: 6 },
+    { at: "10月22日 18:02", tasks: 1, hours: 4 }
+  ];
+
+  // 每个状态只描述与基础界面的差异；文案与 01 的"界面状态与文案"一致
+  var STATES = {
+    S1: { label: "S1 可生成", credits: 3, history: 1 },
+    S2: { label: "S2 生成中", credits: 3, history: 1, loading: true },
+    S3: { label: "S3 成功", credits: 2, history: 2, schedule: true, toast: ["default", "日程已生成", "本次消耗 1 个额度，日程已存入历史。", "新增 S3"] },
+    S4: { label: "S4 没有可用额度", credits: 0, history: 3 },
+    S4b: { label: "S4 无历史", credits: 0, history: 0 },
+    S5: { label: "S5 被拒", credits: 0, history: 3, toast: ["default", "当前没有可用额度", "本次未生成，也未扣除额度。", "改动 S5"] },
+    S6: { label: "S6 生成失败", credits: 3, history: 1, toast: ["destructive", "生成失败", "本次未扣除额度，可以直接重试；如果多次失败，请检查待办事项内容。", "改动 S6"] },
+    S7: { label: "S7 保存失败", credits: 3, history: 1, toast: ["destructive", "日程未能保存", "本次未扣除额度，请重试。", "改动 S7"] },
+    S8: { label: "S8 输入不合法", credits: 3, history: 1, invalidHours: true },
+    S9: { label: "S9 历史日程", credits: 2, history: 2, expandHistory: true },
+    S9b: { label: "S9 加载失败", credits: 3, history: 1, historyError: true },
+    S10: { label: "S10 结果未确认", credits: 2, history: 2, unconfirmed: true }
+  };
+
+  function el(id) { return document.getElementById(id); }
+
+  function scheduleCards(hours, tasks) {
+    var per = hours / tasks.length / 3;
+    var h = Math.floor(per), m = Math.round((per - h) * 60);
+    var t = (h ? h + "小时" : "") + (h && m ? " " : "") + (m ? m + "分钟" : "");
+    return tasks.map(function (task) {
+      return '<div class="sched-card"><div class="head"><span>' + task.name + '</span><span>中优先级</span></div><ul>' +
+        ["准备", "执行", "复盘"].map(function (step) {
+          return '<li><span>' + step + ': ' + task.name + '</span><span>' + t + '</span></li>';
+        }).join("") + '</ul></div>';
+    }).join("");
+  }
+
+  function renderHistory(s) {
+    if (s.historyError) {
+      el("historyTitle").textContent = "历史日程";
+      el("historyList").innerHTML = '<div class="msg error"><span>历史日程加载失败</span><button class="btn ghost">重试</button></div>';
+      return;
+    }
+    if (s.history === 0) {
+      el("historyTitle").textContent = "历史日程";
+      el("historyList").innerHTML = '<div class="msg">还没有生成过日程</div>';
+      return;
+    }
+    var items = HISTORY.slice(0, s.history);
+    el("historyTitle").textContent = "历史日程（共 " + items.length + " 份）";
+    el("historyList").innerHTML = items.map(function (it, i) {
+      var open = s.expandHistory && i === 0;
+      return '<div class="item"><span>' + it.at + ' <span class="meta">· ' + it.tasks + ' 个任务</span></span>' +
+        '<button class="btn ghost">' + (open ? "收起" : "查看") + '</button></div>' +
+        (open ? '<div class="detail"><div class="sched">' + scheduleCards(it.hours, TASKS) + '</div></div>' : "");
+    }).join("");
+  }
+
+  function render(key) {
+    var s = STATES[key];
+    var zero = s.credits === 0;
+    var hasHistory = s.history > 0 && !s.historyError;
+    el("credits").textContent = s.credits;
+    el("credits").className = "credits-badge" + (zero ? " zero" : "");
+
+    el("tasks").innerHTML = TASKS.map(function (t) {
+      return '<div class="card task"><span class="left"><span class="checkbox"></span>' + t.name +
+        '</span><span class="time"><input class="input" value="' + t.time + '">小时' +
+        '<svg class="trash" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg></span></div>';
+    }).join("");
+
+    el("hours").value = s.invalidHours ? "25" : "8";
+    el("hours").classList.toggle("invalid", !!s.invalidHours);
+    el("hoursError").classList.toggle("hidden", !s.invalidHours);
+
+    var btn = el("generate");
+    btn.disabled = !!(s.loading || zero || s.invalidHours);
+    btn.innerHTML = s.loading ? '<span class="spinner"></span>生成中…' : "生成日程";
+
+    var hint = el("hint");
+    hint.classList.toggle("hidden", zero || !!s.invalidHours);
+    hint.innerHTML = "本次将消耗 1 个额度，生成失败不扣除。当前可用 <b>" + s.credits + "</b> 个。";
+
+    el("noCredits").classList.toggle("hidden", !zero);
+    el("unconfirmed").classList.toggle("hidden", !s.unconfirmed);
+    document.body.classList.toggle("has-toast", !!s.toast);
+    el("historyLine").classList.toggle("hidden", !hasHistory);
+    el("viewHistoryBtn").classList.toggle("hidden", !hasHistory);
+
+    el("schedule").classList.toggle("hidden", !s.schedule);
+    el("schedCards").innerHTML = s.schedule ? scheduleCards(8, TASKS) : "";
+
+    renderHistory(s);
+
+    var toast = el("toast");
+    if (s.toast) {
+      toast.className = "toast new " + s.toast[0];
+      toast.setAttribute("data-new", s.toast[3]);
+      el("toastTitle").textContent = s.toast[1];
+      el("toastDesc").textContent = s.toast[2];
+    } else {
+      toast.className = "toast hidden";
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll("#tabs button"), function (b) {
+      b.setAttribute("aria-pressed", b.dataset.key === key ? "true" : "false");
+    });
+  }
+
+  var tabs = el("tabs");
+  Object.keys(STATES).forEach(function (key) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.dataset.key = key;
+    b.textContent = STATES[key].label;
+    b.addEventListener("click", function () { history.replaceState(null, "", "#" + key); render(key); });
+    tabs.appendChild(b);
+  });
+
+  var params = new URLSearchParams(location.search);
+  if (params.get("shot")) document.body.classList.add("shot");
+  if (params.get("clean")) document.body.classList.add("clean");
+  var start = params.get("state") || location.hash.slice(1);
+  render(STATES[start] ? start : "S1");
+</script>
+</body>
+</html>
