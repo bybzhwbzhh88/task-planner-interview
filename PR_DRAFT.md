@@ -9,7 +9,8 @@
 - 先提交 [SPEC.md](SPEC.md) 初稿，再实现；Git 历史保留设计与实现顺序。
 - 真实 PostgreSQL 上的 15 项集成测试通过，包括 10 请求并发、失败返还和混合成败；命令为 `npm run test:quota`。另有 9 项前端组件交互检查通过。
 - Linux 环境的 `wasp compile`、`tsc --project tsconfig.src.json --noEmit`、`tsc --project tsconfig.wasp.json --noEmit` 全部通过。
-- 设计、实际验证记录、运行说明与已知限制见 [SUBMISSION.md](SUBMISSION.md)。前端组件检查替代了 Wasp auth/transport，完整应用的真实浏览器手动验收尚未执行。
+- 实现后复审和真实浏览器走查通过：注册/登录、成功扣减、失败返还、额度耗尽拦截、退出重登与页面刷新均正常，见 [复审记录](verification/REVIEW.md)。
+- 设计、实际验证记录、运行说明与已知限制见 [SUBMISSION.md](SUBMISSION.md)。
 
 ## 创建前
 

@@ -1,0 +1,78 @@
+
+> @wasp.sh/generated-server@0.0.0 bundle-and-start
+> npm run bundle && npm run start
+
+
+> @wasp.sh/generated-server@0.0.0 bundle
+> tsc --build && rollup --config --silent
+
+
+> @wasp.sh/generated-server@0.0.0 start
+> node --enable-source-maps -r dotenv/config bundle/server.js
+
+🚀 "Username and password" auth initialized
+Server listening on port 3001
+GET /auth/me 200 7.531 ms - 13
+GET /auth/me 304 0.600 ms - -
+GET /auth/me 304 0.565 ms - -
+POST /auth/username/signup 200 98.683 ms - 16
+POST /auth/username/login 200 43.148 ms - 56
+GET /auth/me 200 7.451 ms - 203
+GET /auth/me 304 6.555 ms - -
+POST /operations/get-all-tasks-by-user 200 18.225 ms - 11
+GET /auth/me 304 53.558 ms - -
+POST /operations/create-task 200 14.021 ms - 243
+POST /operations/get-all-tasks-by-user 200 6.627 ms - 247
+{"event":"mock-ai.started","callId":"8a4a0793-e916-4088-bf91-499a93276475"}
+{"event":"mock-ai.succeeded","callId":"8a4a0793-e916-4088-bf91-499a93276475"}
+POST /operations/generate-plan 200 561.139 ms - 309
+GET /auth/me 200 10.938 ms - 203
+POST /operations/get-all-tasks-by-user 200 14.416 ms - 247
+GET /auth/me 304 5.681 ms - -
+POST /operations/create-task 200 9.084 ms - 250
+POST /operations/get-all-tasks-by-user 200 4.547 ms - 465
+{"event":"mock-ai.started","callId":"7f2e663b-8b64-461e-87ad-3b21749f18c1"}
+{"event":"mock-ai.failed","callId":"7f2e663b-8b64-461e-87ad-3b21749f18c1"}
+plan-generation.failed {
+  userId: '9bf50d58-c6b2-467a-95d4-4b75e716d20b',
+  error: Error: Mock provider explicitly rejected the request
+      at generateMockSchedule (/app/src/demo-ai-app/mockAi.ts:15:11)
+      at async generatePlan$2 (/app/src/demo-ai-app/operations.ts:67:31)
+      at async <anonymous> (/app/.wasp/out/server/src/middleware/operations.ts:11:24)
+}
+POST /operations/generate-plan 502 532.246 ms - 142
+GET /auth/me 304 5.127 ms - -
+POST /operations/get-all-tasks-by-user 200 7.555 ms - 465
+GET /auth/me 304 3.226 ms - -
+POST /operations/delete-task 200 9.463 ms - 250
+POST /operations/get-all-tasks-by-user 200 3.854 ms - 247
+{"event":"mock-ai.started","callId":"336dc5a9-9d8d-4402-92db-9368c8e5535c"}
+{"event":"mock-ai.succeeded","callId":"336dc5a9-9d8d-4402-92db-9368c8e5535c"}
+POST /operations/generate-plan 200 522.817 ms - 309
+GET /auth/me 200 4.295 ms - 203
+POST /operations/get-all-tasks-by-user 200 6.878 ms - 247
+GET /auth/me 304 2.780 ms - -
+{"event":"mock-ai.started","callId":"a37229a5-f9fe-4cb0-96aa-d9e9cb6b182e"}
+{"event":"mock-ai.succeeded","callId":"a37229a5-f9fe-4cb0-96aa-d9e9cb6b182e"}
+POST /operations/generate-plan 200 530.082 ms - 309
+GET /auth/me 200 4.328 ms - 203
+POST /operations/get-all-tasks-by-user 200 6.255 ms - 247
+GET /auth/me 304 2.771 ms - -
+POST /operations/generate-plan 402 5.864 ms - 148
+GET /auth/me 304 3.366 ms - -
+POST /operations/get-all-tasks-by-user 200 5.392 ms - 247
+GET /auth/me 304 3.508 ms - -
+POST /auth/logout 200 5.066 ms - 16
+GET /auth/me 200 0.231 ms - 13
+POST /operations/get-all-tasks-by-user 401 0.822 ms - 14
+GET /auth/me 304 0.242 ms - -
+GET /auth/me 304 0.273 ms - -
+POST /auth/username/login 200 31.853 ms - 56
+GET /auth/me 200 5.658 ms - 203
+GET /auth/me 304 5.338 ms - -
+GET /auth/me 304 4.669 ms - -
+POST /operations/get-all-tasks-by-user 200 7.488 ms - 247
+GET /auth/me 304 4.540 ms - -
+GET /auth/me 304 4.557 ms - -
+POST /operations/get-all-tasks-by-user 200 7.315 ms - 247
+GET /auth/me 304 3.008 ms - -
