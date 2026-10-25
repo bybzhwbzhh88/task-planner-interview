@@ -1,0 +1,24 @@
+
+🐝 --- Compiling wasp project... --------------------------------------------------
+
+
+✅ --- Successfully completed npm install. ----------------------------------------
+
+
+🐝 --- Setting up database... -----------------------------------------------------
+
+
+✅ --- Database successfully set up. ----------------------------------------------
+
+
+🐝 --- Building SDK... ------------------------------------------------------------
+
+
+[  Wasp  ] > wasp@1.0.0 build
+[  Wasp  ] > tsc && node ./scripts/copy-assets.js
+[  Wasp  ]
+[  Wasp  ] [copy-assets] 0 copied, 9 skipped
+✅ --- SDK built successfully. ----------------------------------------------------
+
+
+✅ --- Your wasp project has successfully compiled. -------------------------------

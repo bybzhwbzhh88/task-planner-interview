@@ -6,12 +6,13 @@ import type { GeneratedSchedule, TaskPriority } from "./schedule";
 export async function generateMockSchedule(
   tasks: Pick<Task, "description" | "time">[],
   hours: number,
+  requestId?: string,
 ): Promise<GeneratedSchedule> {
   const callId = randomUUID();
-  console.info(JSON.stringify({ event: "mock-ai.started", callId }));
+  console.info(JSON.stringify({ event: "mock-ai.started", callId, requestId }));
   await new Promise((resolve) => setTimeout(resolve, 500));
   if (tasks.some((task) => task.description.includes("[fail]"))) {
-    console.info(JSON.stringify({ event: "mock-ai.failed", callId }));
+    console.info(JSON.stringify({ event: "mock-ai.failed", callId, requestId }));
     throw new Error("Mock provider explicitly rejected the request");
   }
   const result = {
@@ -27,6 +28,6 @@ export async function generateMockSchedule(
       })),
     ),
   };
-  console.info(JSON.stringify({ event: "mock-ai.succeeded", callId }));
+  console.info(JSON.stringify({ event: "mock-ai.succeeded", callId, requestId }));
   return result;
 }

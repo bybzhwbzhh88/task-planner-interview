@@ -1,4 +1,5 @@
 import { Outlet } from "react-router";
+import { getCredits, useQuery } from "wasp/client/operations";
 import { logout, useAuth } from "wasp/client/auth";
 import { Link, routes } from "wasp/client/router";
 import { DarkModeSwitcher } from "./components/DarkModeSwitcher";
@@ -12,7 +13,7 @@ export function App() {
       <header className="border-border flex items-center justify-between border-b px-6 py-4">
         <Link to={routes.HomeRoute.to} className="font-semibold">任务规划实验室</Link>
         <div className="flex items-center gap-4 text-sm">
-          {user && <span>剩余额度： {user.credits}</span>}
+          {user && <CurrentCredits key={user.id} viewerId={user.id} />}
           <DarkModeSwitcher />
           {user && <button type="button" onClick={() => logout()}>退出登录</button>}
         </div>
@@ -21,4 +22,10 @@ export function App() {
       <Toaster position="bottom-right" />
     </div>
   );
+}
+
+
+function CurrentCredits({ viewerId }: { viewerId: string }) {
+  const credits = useQuery(getCredits, { viewerId });
+  return <span>可用额度：{credits.isLoading ? "读取中…" : credits.error || !credits.data ? "暂不可用" : credits.data.availableCredits}</span>;
 }

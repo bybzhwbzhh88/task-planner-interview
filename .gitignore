@@ -7,3 +7,7 @@ node_modules/
 *.tsbuildinfo
 coverage/
 test-results/
+
+# 浏览器端到端脚本的本地依赖与产物（README「浏览器端到端」）
+.e2e-tools/
+.e2e-artifacts/

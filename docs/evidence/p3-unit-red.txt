@@ -1,0 +1,7 @@
+Command: npm run test:unit
+Base: e9b657a plus new P3 tests; production logging not yet changed.
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  22 failed | 51 passed (73)
+   Start at  23:46:31
+   Duration  247ms (transform 207ms, setup 0ms, import 430ms, tests 33ms, environment 0ms)

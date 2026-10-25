@@ -1,0 +1,18 @@
+Command: node scripts/browser-check.mjs
+Before the page fix: cached 0, database 1, credit query 503.
+Expected no current-credit exhaustion hint; actual count was 1.
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+1 !== 0
+
+    at file://<repo>/scripts/browser-check.mjs:115:10 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.22.1

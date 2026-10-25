@@ -1,0 +1,12 @@
+
+> test:unit
+> vitest run --project unit
+
+
+ RUN  v4.1.11 <repo>
+
+
+ Test Files  6 passed (6)
+      Tests  81 passed (81)
+   Start at  12:08:33
+   Duration  557ms (transform 241ms, setup 0ms, import 497ms, tests 412ms, environment 0ms)

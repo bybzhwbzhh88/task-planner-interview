@@ -1,6 +1,13 @@
 {
   "name": "task-planner-interview",
   "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:unit": "vitest run --project unit",
+    "test:db:prepare": "node scripts/test-db.mjs",
+    "test:integration": "vitest run --project integration --exclude tests/integration/concurrency.test.ts",
+    "test:concurrency": "vitest run --project integration tests/integration/concurrency.test.ts"
+  },
   "workspaces": [
     ".wasp/out/*",
     ".wasp/out/sdk/wasp"

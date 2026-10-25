@@ -4,7 +4,7 @@
 
 ## 任务
 
-请阅读 [TASK.md](TASK.md)。项目中的额度处理是待改进的初始版本。
+需求见 [TASK.md](TASK.md)。本分支已实现数据库原子额度预占、明确失败返还和页面反馈；设计与边界见 [SPEC.md](SPEC.md)，实际结果见 [验证记录](docs/verification.md)。
 
 ## 环境
 
@@ -71,6 +71,27 @@ npx tsc --project tsconfig.wasp.json --noEmit
 ```
 
 运行检查前需要完成依赖安装。首次启动前需要执行数据库迁移。
+
+## 额度测试
+
+先运行 `wasp compile`，生成 Prisma client 和操作类型。单元测试为 `npm run test:unit`，不需要数据库。真实数据库测试必须显式使用独立的本地测试库。脚本同时比较环境变量和项目根 `.env.server` 中的 `DATABASE_URL`，拒绝误用任一应用地址及非测试库名；只读取应用配置做隔离校验，不把它作为测试目标或导出其他变量。
+
+```sh
+docker run --rm -d --name task-planner-quota-test \
+  -e POSTGRES_USER=quota -e POSTGRES_PASSWORD=quota_local_only \
+  -e POSTGRES_DB=generation_quota_test -p 127.0.0.1:55439:5432 postgres:16
+export QUOTA_TEST_DATABASE_URL='postgresql://quota:quota_local_only@127.0.0.1:55439/generation_quota_test'
+# 等待容器就绪：docker exec task-planner-quota-test pg_isready -U quota
+npm run test:db:prepare
+npm run test:integration
+npm run test:concurrency
+npm test
+# 完成后只清理本测试容器：docker rm -f -v task-planner-quota-test
+```
+
+并发脚本让 10 个独立连接同时进入实际生成流程，覆盖初始额度1、初始额度3（重复三轮）、在途失败返还及主动重试，输出成功数、拒绝数、模型调用数、结果数和余额。测试按本轮账号清理数据，不重置数据库。浏览器脚本和逐项命令见 [验证记录](docs/verification.md)。
+
+生成期间额度被预占；只有结果确认保存才消费。模型或保存明确失败会返还，数据库写入结果未知时会提供请求编号并要求先刷新核对，详见 SPEC 的异常流程。不提供支付或自动补偿。
 
 ## 开源许可
 
