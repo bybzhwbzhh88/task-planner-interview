@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>额度处理交互原型</title>
+  <style>
+    :root { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; color: #172033; background: #f4f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 32px; }
+    .shell { max-width: 920px; margin: auto; }
+    .intro { margin-bottom: 20px; }
+    h1 { margin: 0 0 8px; font-size: 26px; }
+    p { color: #667085; line-height: 1.6; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .tabs button { border: 1px solid #d8dfeb; background: #fff; color: #344054; padding: 8px 12px; border-radius: 999px; cursor: pointer; }
+    .tabs button.active { color: #fff; background: #2563eb; border-color: #2563eb; }
+    .card { background: #fff; border: 1px solid #dce3ee; border-radius: 16px; box-shadow: 0 12px 34px rgba(35, 53, 84, .08); padding: 24px; }
+    .task { display: flex; align-items: center; justify-content: space-between; gap: 16px; border: 1px solid #e5eaf2; border-radius: 10px; padding: 13px 14px; margin-bottom: 10px; }
+    .task span:last-child { color: #667085; font-size: 13px; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 20px; }
+    .hours { border: 1px solid #d0d8e5; border-radius: 8px; padding: 8px 10px; width: 80px; text-align: center; }
+    .quota { margin-top: 26px; padding-top: 20px; border-top: 1px solid #edf0f5; }
+    .quota-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .quota strong { font-size: 17px; }
+    .quota small, #hint { color: #667085; }
+    #generate { margin-top: 12px; width: 100%; border: 0; border-radius: 10px; padding: 13px 16px; background: #2563eb; color: #fff; font-size: 15px; font-weight: 650; cursor: pointer; }
+    #generate:disabled { background: #aeb8c8; cursor: not-allowed; }
+    #hint { margin: 10px 0 0; font-size: 13px; }
+    .notice { margin-top: 16px; border-radius: 10px; padding: 12px 14px; display: none; }
+    .notice.show { display: block; }
+    .notice.success { background: #ecfdf3; color: #166534; }
+    .notice.warning { background: #fff7ed; color: #9a3412; }
+    .notice.error { background: #fef2f2; color: #991b1b; }
+    .schedule { margin-top: 18px; display: none; }
+    .schedule.show { display: block; }
+    .schedule ol { margin-bottom: 0; color: #344054; line-height: 1.8; }
+    .meta { margin-top: 18px; font-size: 12px; color: #7b8494; }
+    @media (max-width: 600px) { body { padding: 16px; } .row, .quota-head { align-items: flex-start; flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="intro">
+      <h1>AI 任务规划 · 额度反馈原型</h1>
+      <p>切换场景查看不同状态。原型只演示信息与反馈，不连接真实接口。</p>
+    </div>
+    <nav class="tabs" aria-label="原型场景">
+      <button data-scene="normal" class="active">正常生成</button>
+      <button data-scene="failure">模型失败</button>
+      <button data-scene="empty">额度不足</button>
+      <button data-scene="concurrent">并发占用</button>
+    </nav>
+    <section class="card">
+      <div class="task"><span>准备产品面试案例</span><span>2 小时</span></div>
+      <div class="task"><span>整理用户反馈</span><span>1 小时</span></div>
+      <div class="row">
+        <strong>今天可用的工作时长</strong>
+        <div><input class="hours" value="8" aria-label="今天可用的工作时长" /> 小时</div>
+      </div>
+      <div class="quota">
+        <div class="quota-head">
+          <strong id="credits">剩余 3 次</strong>
+          <small>成功生成后扣 1 次</small>
+        </div>
+        <button id="generate">生成日程 · 消耗 1 次</button>
+        <p id="hint">生成失败会自动返还额度。</p>
+      </div>
+      <div id="notice" class="notice" role="status" aria-live="polite"></div>
+      <div id="schedule" class="schedule">
+        <strong>本次日程</strong>
+        <ol><li>09:00–10:00 整理用户反馈</li><li>10:15–12:15 准备产品面试案例</li><li>16:30–17:00 复盘与调整</li></ol>
+      </div>
+    </section>
+    <p class="meta">说明：页面禁用按钮只减少重复点击；并发安全由服务端原子预占额度保证。</p>
+  </main>
+  <script>
+    const state = { scene: "normal", credits: 3, running: false };
+    const credits = document.querySelector("#credits");
+    const button = document.querySelector("#generate");
+    const hint = document.querySelector("#hint");
+    const notice = document.querySelector("#notice");
+    const schedule = document.querySelector("#schedule");
+    const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    function render() {
+      document.querySelectorAll("[data-scene]").forEach(el => el.classList.toggle("active", el.dataset.scene === state.scene));
+      notice.className = "notice";
+      notice.textContent = "";
+      schedule.classList.remove("show");
+      state.running = false;
+      if (state.scene === "empty") {
+        state.credits = 0;
+        credits.textContent = "剩余 0 次";
+        button.textContent = "额度不足，暂时无法生成";
+        button.disabled = true;
+        hint.textContent = "你仍可编辑任务；如需继续，请联系管理员补充额度。";
+      } else if (state.scene === "concurrent") {
+        state.credits = 1;
+        credits.textContent = "剩余 1 次";
+        button.textContent = "模拟两个并发请求";
+        button.disabled = false;
+        hint.textContent = "只有一个请求能够预占成功，另一个不会调用模型。";
+      } else {
+        state.credits = 3;
+        credits.textContent = "剩余 3 次";
+        button.textContent = "生成日程 · 消耗 1 次";
+        button.disabled = false;
+        hint.textContent = "生成失败会自动返还额度。";
+      }
+    }
+
+    async function generate() {
+      if (state.running || state.credits === 0) return;
+      state.running = true;
+      button.disabled = true;
+      button.textContent = "◌ 正在生成，请勿关闭页面";
+      state.credits -= 1;
+      credits.textContent = `剩余 ${state.credits} 次`;
+      hint.textContent = "本次额度暂时占用；生成失败会自动返还。";
+      await wait(850);
+
+      if (state.scene === "failure") {
+        state.credits += 1;
+        credits.textContent = `剩余 ${state.credits} 次`;
+        notice.className = "notice error show";
+        notice.textContent = "生成失败，本次未扣额度。请检查任务内容后重试。";
+        button.textContent = "重新生成 · 消耗 1 次";
+        hint.textContent = "任务和时长已保留。";
+      } else if (state.scene === "concurrent") {
+        notice.className = "notice warning show";
+        notice.textContent = "1 个请求生成成功；另 1 个因额度不足被拒绝，且没有调用模型。";
+        schedule.classList.add("show");
+        button.textContent = "额度不足，暂时无法生成";
+        hint.textContent = "最终余额为 0，没有发生透支。";
+      } else {
+        notice.className = "notice success show";
+        notice.textContent = `日程已生成，本次消耗 1 次，剩余 ${state.credits} 次。`;
+        schedule.classList.add("show");
+        button.textContent = "再次生成 · 消耗 1 次";
+        hint.textContent = "生成失败会自动返还额度。";
+      }
+      state.running = false;
+      button.disabled = state.credits === 0;
+    }
+
+    document.querySelectorAll("[data-scene]").forEach(el => el.addEventListener("click", () => { state.scene = el.dataset.scene; render(); }));
+    button.addEventListener("click", generate);
+    render();
+  </script>
+</body>
+</html>
