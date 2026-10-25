@@ -1,0 +1,190 @@
+import { createRequire } from 'node:module';
+import { randomBytes } from 'node:crypto';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+// Runs against the unchanged local baseline. New accounts only; no quota resets.
+// Evidence intentionally excludes passwords, cookies, Authorization and auth rows.
+const root = process.cwd();
+const require = createRequire(import.meta.url);
+let chromium;
+try { ({chromium} = require('playwright-core')); }
+catch { ({chromium} = require(path.join(root,'.runtime/browser/node_modules/playwright-core'))); }
+const run = new Date().toISOString().replace(/[:.]/g, '-');
+const out = path.join(root, 'task-planner-interview/docs/product/evidence', run);
+await mkdir(out, { recursive: true });
+const logFile = path.join(root, 'logs/app.log');
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+const esc = x => String(x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const report = {
+  run, baseCommit: '114aeb28f6368e96c08a25627ac094b8d102fd1b',
+  startedAt: new Date().toISOString(), timezone: 'UTC (Asia/Shanghai = UTC+8)',
+  environment: { frontend:'http://localhost:3000', backend:'http://localhost:3001', studio:'http://localhost:5555', provider:'local mock; 500 ms delay', browser:'Chrome / Playwright 1.56.0', headed:true },
+  method: 'All generation requests are real UI clicks. New users start with default 3 credits. Database is queried read-only. Log slices are global; attribution is by isolated sequential time windows, not a userId join. No source edits or artificial latency.',
+  accounts: [], cases: [], screenshots: [], pageErrors: [], status:'running'
+};
+let browser;
+let live;
+let step = 0;
+async function flush() {
+  await writeFile(path.join(out,'results.json'), JSON.stringify(report,null,2));
+  await writeFile(path.join(root,'logs/product-validation-latest.json'), JSON.stringify({ directory:out, run, status:report.status },null,2));
+}
+async function announce(message) {
+  console.log(`[${new Date().toISOString()}] ${message}`);
+  await flush();
+  await writeFile(path.join(out,'live.html'), `<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta http-equiv="refresh" content="2"><title>额度验证 · 实时进度</title><style>body{font:20px/1.7 "Microsoft YaHei",sans-serif;max-width:1050px;margin:50px auto;background:#f4f7fb;color:#15243b}article{padding:28px;background:white;border-radius:16px}small{color:#53637a}table{width:100%;border-collapse:collapse;font-size:16px}td,th{padding:10px;border-bottom:1px solid #dde4ed;text-align:left}</style><h1>额度验证 · 实时进度</h1><article><h2>${esc(message)}</h2><p>以下结果来自原始项目。浏览器会切换到真实应用演示操作。测试完成后打开 index.html 回看全部步骤。</p><small>运行 ${esc(run)} · 新测试账号 · 未修改业务代码</small><table><tr><th>案例</th><th>余额</th><th>模型调用</th><th>新增结果</th><th>判定</th></tr>${report.cases.map(c=>`<tr><td>${esc(c.id+' '+c.name)}</td><td>${c.before.user.credits} → ${c.after.user.credits}</td><td>${c.counts.started}</td><td>${c.deltaPlans}</td><td>${esc(c.verdict)}</td></tr>`).join('')}</table></article></html>`);
+  if (live) { await live.reload().catch(()=>{}); }
+}
+async function shot(page, key, caption) {
+  const file = `${String(++step).padStart(2,'0')}-${key}.png`;
+  await page.screenshot({path:path.join(out,file),fullPage:true});
+  const item = { file, caption, takenAt:new Date().toISOString(), url:page.url() };
+  report.screenshots.push(item);
+  await flush();
+  return file;
+}
+function snapshot(username) {
+  if (!/^pmtest_[a-z0-9_]+$/.test(username)) throw new Error('Unsafe test username');
+  const sql = `WITH target AS (SELECT u.* FROM "User" u JOIN "Auth" a ON a."userId"=u.id JOIN "AuthIdentity" i ON i."authId"=a.id WHERE i."providerName"='username' AND i."providerUserId"='${username}') SELECT json_build_object('user',(SELECT row_to_json(t) FROM target t),'tasks',COALESCE((SELECT json_agg(t ORDER BY t."createdAt") FROM "Task" t WHERE t."userId"=(SELECT id FROM target)),'[]'::json),'plans',COALESCE((SELECT json_agg(p ORDER BY p."createdAt") FROM "PlanResult" p WHERE p."userId"=(SELECT id FROM target)),'[]'::json));`;
+  const raw = execFileSync('wsl.exe',['-d','TaskPlanner','-u','postgres','--exec','psql','-d','taskplanner','-At','-c',sql],{encoding:'utf8',env:{...process.env,WSL_UTF8:'1'},windowsHide:true,stdio:['ignore','pipe','pipe']});
+  const result = JSON.parse(raw.trim());
+  if (!result.user) throw new Error('New test account not found');
+  return {capturedAt:new Date().toISOString(),username,...result};
+}
+async function credit(page,n) { await page.getByText(new RegExp(`剩余额度：\\s*${n}$`)).waitFor({timeout:12000}); }
+async function add(page,text) {
+  await page.getByPlaceholder('输入待办事项').fill(text);
+  await page.getByRole('button',{name:'添加任务',exact:true}).click();
+  await page.getByText(text,{exact:true}).first().waitFor();
+}
+async function remove(page,text) {
+  await page.getByText(text,{exact:true}).first().locator('xpath=../../../..').getByTitle('删除任务').click();
+  await page.getByText(text,{exact:true}).waitFor({state:'detached'});
+}
+async function register(tag) {
+  const username = `pmtest_${Date.now()}_${tag}`;
+  const password = `Local!${randomBytes(18).toString('hex')}`;
+  const context = await browser.newContext({viewport:{width:1440,height:1000},locale:'zh-CN'});
+  const page = await context.newPage();
+  page.on('pageerror',e=>report.pageErrors.push({username,message:e.message}));
+  await page.bringToFront();
+  await page.goto('http://localhost:3000/signup');
+  await page.locator('input[name="username"]').fill(username);
+  await page.locator('input[name="password"]').fill(password);
+  await page.getByRole('button',{name:'Sign up',exact:true}).click();
+  try { await page.waitForURL('**/demo-app',{timeout:10000}); }
+  catch {
+    await page.goto('http://localhost:3000/login');
+    await page.locator('input[name="username"]').fill(username);
+    await page.locator('input[name="password"]').fill(password);
+    await page.getByRole('button',{name:'Log in',exact:true}).click();
+    await page.waitForURL('**/demo-app');
+  }
+  await credit(page,3);
+  const initial = snapshot(username);
+  report.accounts.push({username,userId:initial.user.id,tag,initial});
+  return {context,page,username};
+}
+function generationClick(page,label) {
+  const timing = {label};
+  const req = page.waitForRequest(r=>r.url().endsWith('/operations/generate-plan')&&r.method()==='POST').then(r=>{timing.requestAt=new Date().toISOString();timing.requestBody=r.postDataJSON();});
+  const response = page.waitForResponse(r=>r.url().endsWith('/operations/generate-plan')&&r.request().method()==='POST').then(async r=>{
+    timing.responseAt = new Date().toISOString(); timing.status=r.status();
+    try { timing.responseBody=await r.json(); } catch { timing.responseBody=await r.text(); }
+    timing.durationMs=Date.parse(timing.responseAt)-Date.parse(timing.requestAt);
+    return timing;
+  });
+  const clicked=page.getByTestId('generate-schedule-button').click();
+  return {clicked, completed:Promise.all([clicked,req,response]).then(x=>x[2])};
+}
+async function executeCase({id,name,account,pages,expected,screenshot=true}) {
+  await announce(`${id}：${name}`);
+  await pages[0].bringToFront();
+  await delay(1500);
+  const before=snapshot(account.username);
+  if (screenshot) await shot(pages[0],`${id}-before`,`${id} 操作前：${name}；余额 ${before.user.credits}`);
+  const offset=(await readFile(logFile)).length;
+  const startedAt=new Date().toISOString();
+  const pending=pages.map((p,i)=>generationClick(p,`${id}-tab-${i+1}`));
+  await Promise.all(pending.map(p=>p.clicked));
+  if (screenshot) await shot(pages[0],`${id}-pending`,`${id} 点击生成后即时截图（状态以图中实际显示为准）`);
+  const requests=await Promise.all(pending.map(p=>p.completed));
+  await delay(800);
+  const after=snapshot(account.username);
+  const raw=(await readFile(logFile)).subarray(offset).toString('utf8');
+  const events=raw.split(/\r?\n/).flatMap(line=>{ const m=line.match(/\{"event":"mock-ai\.(?:started|succeeded|failed)"[^\r\n]*\}/); if(!m)return[];try{return[JSON.parse(m[0])];}catch{return[];} });
+  const counts={started:events.filter(e=>e.event==='mock-ai.started').length,succeeded:events.filter(e=>e.event==='mock-ai.succeeded').length,failed:events.filter(e=>e.event==='mock-ai.failed').length};
+  const deltaPlans=after.plans.length-before.plans.length;
+  const deltaCredits=after.user.credits-before.user.credits;
+  const overlap= requests.length>1 ? Math.max(0,Math.min(...requests.map(r=>Date.parse(r.responseAt)))-Math.max(...requests.map(r=>Date.parse(r.requestAt)))) : null;
+  const verdict=expected({before,after,requests,counts,deltaPlans,deltaCredits})?'PASS':'FAIL';
+  const record={id,name,username:account.username,startedAt,endedAt:new Date().toISOString(),before,after,requests,counts,deltaPlans,deltaCredits,overlapMs:overlap,verdict,logByteRange:[offset,offset+Buffer.byteLength(raw)],logAttribution:'Global event log; isolated time window. callId joins started to succeeded/failed, not userId.',events,ui:await Promise.all(pages.map(p=>p.locator('body').innerText()))};
+  await writeFile(path.join(out,`${id}.json`),JSON.stringify(record,null,2));
+  await writeFile(path.join(out,`${id}-events.jsonl`),events.map(e=>JSON.stringify(e)).join('\n')+'\n');
+  report.cases.push(record);
+  for(let i=0;i<pages.length;i++) {
+    if(screenshot){await pages[i].bringToFront(); await shot(pages[i],`${id}-after-tab${i+1}`,`${id} 请求后页面 ${i+1}；数据库余额 ${after.user.credits}；HTTP ${requests[i].status}`);}
+  }
+  await flush();
+  console.log(`${id}: ${before.user.credits}->${after.user.credits}; HTTP=${requests.map(r=>r.status)}; mock.started=${counts.started}; PlanResult+=${deltaPlans}; overlap=${overlap}; ${verdict}`);
+  await delay(1500);
+  return record;
+}
+const good=({deltaCredits,deltaPlans,counts,requests})=>deltaCredits===-1&&deltaPlans===1&&counts.started===1&&counts.succeeded===1&&requests[0].status===200;
+try {
+  await announce('准备开始：新建独立账号，验证注册、成功、失败、最后额度、零额度、并发');
+  browser=await chromium.launch({channel:'chrome',headless:false,slowMo:35,args:['--window-size=1500,1080']});
+  live=await browser.newPage({viewport:{width:1440,height:1000}});
+  await live.goto(pathToFileURL(path.join(out,'live.html')).href);
+  await delay(2500);
+  const basic=await register('basic');
+  const emptyDisabled=await basic.page.getByTestId('generate-schedule-button').isDisabled();
+  report.initialCheck={credits:snapshot(basic.username).user.credits,emptyGenerateDisabled:emptyDisabled,verdict:emptyDisabled?'PASS':'FAIL'};
+  await shot(basic.page,'AC01-new-account','AC01 注册成功：初始 3 额度；空任务时生成按钮不可用');
+  await delay(1800);
+  await add(basic.page,'验证任务：制定本周产品访谈计划');
+  await shot(basic.page,'AC01-task-added','添加待办：默认任务时长 1 小时；总可用时长 8 小时；添加不扣额度');
+  await executeCase({id:'AC02',name:'正常生成',account:basic,pages:[basic.page],expected:good});
+  await add(basic.page,'[fail] 验证明确定义的模型失败');
+  await executeCase({id:'AC03',name:'模拟模型明确失败',account:basic,pages:[basic.page],expected:({deltaCredits,deltaPlans,counts,requests})=>deltaCredits===0&&deltaPlans===0&&counts.started===1&&counts.failed===1&&requests[0].status===500});
+  await remove(basic.page,'[fail] 验证明确定义的模型失败');
+  await executeCase({id:'AC04',name:'移除失败任务后重试',account:basic,pages:[basic.page],expected:good});
+  await executeCase({id:'AC05',name:'仅剩最后 1 额度时生成',account:basic,pages:[basic.page],expected:good});
+  await executeCase({id:'AC06',name:'余额为 0 时再次点击生成',account:basic,pages:[basic.page],expected:({deltaCredits,deltaPlans,counts,requests})=>deltaCredits===0&&deltaPlans===0&&counts.started===0&&requests[0].status===402});
+  await announce('AC07：刷新页面，对照数据库中已保存的日程');
+  const persistBefore=snapshot(basic.username);
+  await basic.page.reload(); await credit(basic.page,0);
+  report.persistenceCheck={id:'AC07',before:persistBefore,after:snapshot(basic.username),scheduleVisible:await basic.page.getByTestId('schedule').isVisible(),note:'Observation only; not an extra mandatory quota rule.'};
+  await shot(basic.page,'AC07-after-reload','AC07 刷新后：余额仍为 0，历史日程没有自动恢复；数据库仍保存 3 条结果');
+  await add(basic.page,'[fail] 零额度错误优先级验证');
+  await executeCase({id:'AC08',name:'零额度且含失败任务',account:basic,pages:[basic.page],expected:({deltaCredits,deltaPlans,counts,requests})=>deltaCredits===0&&deltaPlans===0&&counts.started===0&&requests[0].status===402});
+  for(let round=1;round<=3;round++) {
+    await announce(`并发第 ${round}/3 轮：新账号通过两次真实成功生成，将余额从 3 自然消耗到 1`);
+    const account=await register(`race${round}`);
+    await add(account.page,`并发验证 ${round}：同一账号两个标签页`);
+    for(let n=1;n<=2;n++) await executeCase({id:`PRE${round}-${n}`,name:`并发前置：第 ${n} 次正常消耗`,account,pages:[account.page],expected:good,screenshot:round===1});
+    await credit(account.page,1);
+    const tab2=await account.context.newPage();
+    await tab2.goto('http://localhost:3000/demo-app'); await credit(tab2,1);
+    await shot(tab2,`CC0${round}-second-tab-before`,`CC0${round} 同一账号第二标签页操作前：余额 1`);
+    const record=await executeCase({id:`CC0${round}`,name:`余额 1，同账号双标签并发（第 ${round}/3 轮）`,account,pages:[account.page,tab2],expected:({after,deltaPlans,counts,requests})=>after.user.credits>=0&&deltaPlans<=1&&counts.started<=1&&requests.filter(r=>r.status===200).length<=1});
+    await account.page.reload(); await credit(account.page,record.after.user.credits);
+    await shot(account.page,`CC0${round}-reload`, `CC0${round} 刷新后余额仍为 ${record.after.user.credits}，排除仅前端显示异常`);
+  }
+  report.status='completed';
+  report.completedAt=new Date().toISOString();
+} catch(error) {
+  report.status='interrupted';report.error=error.stack;console.error(error);
+} finally {
+  await flush();
+  const rows=report.cases.map(c=>`<tr><td>${esc(c.id+' '+c.name)}</td><td>${c.before.user.credits} → ${c.after.user.credits}</td><td>${c.requests.map(r=>r.status).join(' / ')}</td><td>${c.counts.started}/${c.counts.succeeded}/${c.counts.failed}</td><td>${c.deltaPlans}</td><td class="${c.verdict}">${c.verdict}</td><td><a href="${c.id}.json">数据</a> · <a href="${c.id}-events.jsonl">日志</a></td></tr>`).join('');
+  const slides=report.screenshots.map((s,i)=>`<section id="s${i+1}"><h2>${i+1}. ${esc(s.caption)}</h2><p>${esc(s.takenAt)} · 原始浏览器截图，无后期修改</p><a href="${s.file}" target="_blank"><img loading="lazy" src="${s.file}" alt="${esc(s.caption)}"></a></section>`).join('');
+  await writeFile(path.join(out,'index.html'),`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>额度验证 · 完整证据回放</title><style>body{font:16px/1.7 "Microsoft YaHei",sans-serif;background:#f3f6fb;color:#17263a;max-width:1360px;margin:30px auto;padding:0 20px}section,article{background:white;padding:24px;margin:24px 0;border-radius:14px}img{width:100%;border:1px solid #dce4ef}table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:10px;text-align:left;border-bottom:1px solid #ddd}.FAIL{color:#c12b32;font-weight:bold}.PASS{color:#08764c}nav{position:sticky;top:0;background:#17263a;color:white;padding:12px;display:flex;gap:16px;align-items:center}button{padding:8px 14px;cursor:pointer}a{color:#1767b4}</style><h1>额度验证 · 完整证据回放</h1><p>这是自动化测试过程的逐步原始截图记录，不是连续录像，也不是已修复后的产品。</p><p>基线：${report.baseCommit} · ${esc(run)} · 状态 ${esc(report.status)}</p><article><h2>实测数据</h2><p>started / succeeded / failed 是模拟模型日志数量；成功提交以 HTTP、结果落库和余额共同判定。并发使用同账号双页面真实按钮点击。</p><table><tr><th>场景</th><th>余额</th><th>HTTP</th><th>模型日志 S/OK/F</th><th>新增结果</th><th>符合目标</th><th>证据</th></tr>${rows}</table><p><a href="results.json">完整机器可读记录（不含凭据）</a></p></article><nav><button onclick="move(-1)">上一步</button><button onclick="move(1)">下一步</button><button onclick="toggle()" id="play">自动回放</button><span id="counter">共 ${report.screenshots.length} 步</span></nav>${slides}<script>let n=0,timer;const max=${report.screenshots.length};function move(d){n=Math.max(1,Math.min(max,n+d));document.querySelector('#s'+n)?.scrollIntoView({behavior:'smooth',block:'start'});document.querySelector('#counter').textContent=n+' / '+max;}function toggle(){if(timer){clearInterval(timer);timer=null;document.querySelector('#play').textContent='自动回放';}else{move(1);timer=setInterval(()=>{if(n===max){toggle();return;}move(1);},5500);document.querySelector('#play').textContent='暂停';}}</script></html>`);
+  await announce(report.status==='completed'?'测试完成：打开 index.html 回看全部操作和证据':'测试中断：已保留完成部分，请查看 results.json');
+  if(browser){await browser.close();}
+  console.log(`EVIDENCE_DIRECTORY=${out}`);
+  if(report.status!=='completed') process.exitCode=1;
+}

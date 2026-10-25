@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="730" viewBox="0 0 1000 730" role="img" aria-labelledby="title desc">
+<title id="title">目标生成流程：先准入，再调用，成功后结算</title>
+<desc id="desc">身份与输入校验后取得账号处理资格；忙则拒绝。读取最新余额，零额度拒绝。调用模型，明确失败不扣额。成功后在同一事务中条件扣额与保存；明确回滚不扣不保存。提交成功后返回结果及余额。客户端超时显示待确认，后台继续处理。</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#555"/></marker></defs>
+<rect width="1000" height="730" fill="#fff"/>
+<g fill="#f8f8f8" stroke="#777" stroke-width="1.5">
+<rect x="350" y="20" width="300" height="58" rx="5"/>
+<rect x="350" y="110" width="300" height="66" rx="5"/>
+<rect x="350" y="210" width="300" height="66" rx="5"/>
+<rect x="350" y="310" width="300" height="66" rx="5"/>
+<rect x="350" y="420" width="300" height="70" rx="5"/>
+<rect x="350" y="530" width="300" height="66" rx="5"/>
+<rect x="20" y="110" width="250" height="66" rx="5"/>
+<rect x="730" y="210" width="250" height="66" rx="5"/>
+<rect x="20" y="310" width="250" height="66" rx="5"/>
+<rect x="730" y="420" width="250" height="70" rx="5"/>
+</g>
+<g stroke="#555" stroke-width="1.5" fill="none" marker-end="url(#arrow)">
+<path d="M500 78V108"/><path d="M500 176V208"/><path d="M500 276V308"/><path d="M500 376V418"/><path d="M500 490V528"/>
+<path d="M350 143H272"/><path d="M650 243H728"/><path d="M350 343H272"/><path d="M650 455H728"/>
+</g>
+<g font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" fill="#222" text-anchor="middle" font-size="20">
+<text x="500" y="56">身份与输入校验</text>
+<text x="500" y="137">取得账号处理资格</text><text x="500" y="162" font-size="17">同账号仅一条在途请求</text>
+<text x="500" y="237">读取数据库最新余额</text><text x="500" y="262" font-size="17">余额大于0才进入模型</text>
+<text x="500" y="337">调用本地模拟接口</text><text x="500" y="362" font-size="17">每次 started 记一次调用</text>
+<text x="500" y="448">事务内条件扣1</text><text x="500" y="474">同时保存 PlanResult</text>
+<text x="500" y="557">提交成功</text><text x="500" y="582" font-size="17">返回日程、结果ID及余额</text>
+<text x="145" y="137">账号忙</text><text x="145" y="162" font-size="17">不调用、不扣额、不排队</text>
+<text x="855" y="237">额度不足</text><text x="855" y="262" font-size="17">不调用、不扣额</text>
+<text x="145" y="337">模型明确失败</text><text x="145" y="362" font-size="17">不扣额、不保存新结果</text>
+<text x="855" y="448">事务明确回滚</text><text x="855" y="475" font-size="17">不扣额、不保存新结果</text>
+</g>
+<rect x="20" y="635" width="960" height="74" fill="#fff" stroke="#bbb"/>
+<g font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="18" fill="#444">
+<text x="36" y="663">客户端超时：显示“结果待确认”；后台继续处理，恢复连接后只读核对。</text>
+<text x="36" y="690">已取得的处理资格在服务端明确终态释放；客户端断开不会提前释放。</text>
+</g></svg>

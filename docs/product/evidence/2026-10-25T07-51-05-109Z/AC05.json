@@ -1,0 +1,148 @@
+{
+  "id": "AC05",
+  "name": "仅剩最后 1 额度时生成",
+  "username": "pmtest_1792914668458_basic",
+  "startedAt": "2026-10-25T07:51:30.941Z",
+  "endedAt": "2026-10-25T07:51:32.597Z",
+  "before": {
+    "capturedAt": "2026-10-25T07:51:30.827Z",
+    "username": "pmtest_1792914668458_basic",
+    "user": {
+      "id": "c41e2184-073b-4a5f-b50d-1491c7667e0f",
+      "createdAt": "2026-10-25T07:51:11.68",
+      "credits": 1
+    },
+    "tasks": [
+      {
+        "id": "67d5ad78-9d48-47c8-8315-82fc552369f3",
+        "createdAt": "2026-10-25T07:51:14.302",
+        "userId": "c41e2184-073b-4a5f-b50d-1491c7667e0f",
+        "description": "验证任务：制定本周产品访谈计划",
+        "time": "1",
+        "isDone": false
+      }
+    ],
+    "plans": [
+      {
+        "id": "370a486e-d3f0-4d2b-98c0-4715319b1cb7",
+        "createdAt": "2026-10-25T07:51:16.859",
+        "updatedAt": "2026-10-25T07:51:16.859",
+        "userId": "c41e2184-073b-4a5f-b50d-1491c7667e0f",
+        "content": "{\"tasks\":[{\"name\":\"验证任务：制定本周产品访谈计划\",\"priority\":\"medium\"}],\"taskItems\":[{\"description\":\"准备: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67},{\"description\":\"执行: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67},{\"description\":\"复盘: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67}]}"
+      },
+      {
+        "id": "009e5b57-e92a-4f9c-9826-0232de285815",
+        "createdAt": "2026-10-25T07:51:26.694",
+        "updatedAt": "2026-10-25T07:51:26.694",
+        "userId": "c41e2184-073b-4a5f-b50d-1491c7667e0f",
+        "content": "{\"tasks\":[{\"name\":\"验证任务：制定本周产品访谈计划\",\"priority\":\"medium\"}],\"taskItems\":[{\"description\":\"准备: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67},{\"description\":\"执行: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67},{\"description\":\"复盘: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67}]}"
+      }
+    ]
+  },
+  "after": {
+    "capturedAt": "2026-10-25T07:51:32.595Z",
+    "username": "pmtest_1792914668458_basic",
+    "user": {
+      "id": "c41e2184-073b-4a5f-b50d-1491c7667e0f",
+      "createdAt": "2026-10-25T07:51:11.68",
+      "credits": 0
+    },
+    "tasks": [
+      {
+        "id": "67d5ad78-9d48-47c8-8315-82fc552369f3",
+        "createdAt": "2026-10-25T07:51:14.302",
+        "userId": "c41e2184-073b-4a5f-b50d-1491c7667e0f",
+        "description": "验证任务：制定本周产品访谈计划",
+        "time": "1",
+        "isDone": false
+      }
+    ],
+    "plans": [
+      {
+        "id": "370a486e-d3f0-4d2b-98c0-4715319b1cb7",
+        "createdAt": "2026-10-25T07:51:16.859",
+        "updatedAt": "2026-10-25T07:51:16.859",
+        "userId": "c41e2184-073b-4a5f-b50d-1491c7667e0f",
+        "content": "{\"tasks\":[{\"name\":\"验证任务：制定本周产品访谈计划\",\"priority\":\"medium\"}],\"taskItems\":[{\"description\":\"准备: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67},{\"description\":\"执行: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67},{\"description\":\"复盘: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67}]}"
+      },
+      {
+        "id": "009e5b57-e92a-4f9c-9826-0232de285815",
+        "createdAt": "2026-10-25T07:51:26.694",
+        "updatedAt": "2026-10-25T07:51:26.694",
+        "userId": "c41e2184-073b-4a5f-b50d-1491c7667e0f",
+        "content": "{\"tasks\":[{\"name\":\"验证任务：制定本周产品访谈计划\",\"priority\":\"medium\"}],\"taskItems\":[{\"description\":\"准备: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67},{\"description\":\"执行: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67},{\"description\":\"复盘: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67}]}"
+      },
+      {
+        "id": "7b2e5c86-07a3-4220-b6ee-dbab3b866463",
+        "createdAt": "2026-10-25T07:51:31.436",
+        "updatedAt": "2026-10-25T07:51:31.436",
+        "userId": "c41e2184-073b-4a5f-b50d-1491c7667e0f",
+        "content": "{\"tasks\":[{\"name\":\"验证任务：制定本周产品访谈计划\",\"priority\":\"medium\"}],\"taskItems\":[{\"description\":\"准备: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67},{\"description\":\"执行: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67},{\"description\":\"复盘: 验证任务：制定本周产品访谈计划\",\"taskName\":\"验证任务：制定本周产品访谈计划\",\"time\":2.67}]}"
+      }
+    ]
+  },
+  "requests": [
+    {
+      "label": "AC05-tab-1",
+      "requestAt": "2026-10-25T07:51:31.000Z",
+      "requestBody": null,
+      "responseAt": "2026-10-25T07:51:31.614Z",
+      "status": 200,
+      "responseBody": {
+        "json": {
+          "tasks": [
+            {
+              "name": "验证任务：制定本周产品访谈计划",
+              "priority": "medium"
+            }
+          ],
+          "taskItems": [
+            {
+              "description": "准备: 验证任务：制定本周产品访谈计划",
+              "taskName": "验证任务：制定本周产品访谈计划",
+              "time": 2.67
+            },
+            {
+              "description": "执行: 验证任务：制定本周产品访谈计划",
+              "taskName": "验证任务：制定本周产品访谈计划",
+              "time": 2.67
+            },
+            {
+              "description": "复盘: 验证任务：制定本周产品访谈计划",
+              "taskName": "验证任务：制定本周产品访谈计划",
+              "time": 2.67
+            }
+          ]
+        }
+      },
+      "durationMs": 614
+    }
+  ],
+  "counts": {
+    "started": 1,
+    "succeeded": 1,
+    "failed": 0
+  },
+  "deltaPlans": 1,
+  "deltaCredits": -1,
+  "overlapMs": null,
+  "verdict": "PASS",
+  "logByteRange": [
+    7243,
+    7923
+  ],
+  "logAttribution": "Global event log; isolated time window. callId joins started to succeeded/failed, not userId.",
+  "events": [
+    {
+      "event": "mock-ai.started",
+      "callId": "63561491-9098-4256-a9b8-1a13a51b46bf"
+    },
+    {
+      "event": "mock-ai.succeeded",
+      "callId": "63561491-9098-4256-a9b8-1a13a51b46bf"
+    }
+  ],
+  "ui": [
+    "任务规划实验室\n剩余额度： 0\n退出登录\nAI 任务规划\n\n输入待办事项和可用时长，生成一份模拟日程。本页面使用本地接口，无需 API Key。\n\n添加任务\n验证任务：制定本周产品访谈计划\n小时\n今天可用的工作时长\n生成日程\n本次日程\n验证任务：制定本周产品访谈计划\n中优先级\n准备: 验证任务：制定本周产品访谈计划\n2小时 40分钟\n执行: 验证任务：制定本周产品访谈计划\n2小时 40分钟\n复盘: 验证任务：制定本周产品访谈计划\n2小时 40分钟"
+  ]
+}

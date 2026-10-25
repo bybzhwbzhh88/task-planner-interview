@@ -1,0 +1,119 @@
+{
+  "id": "PRE3-1",
+  "name": "并发前置：第 1 次正常消耗",
+  "username": "pmtest_1792914746241_race3",
+  "startedAt": "2026-10-25T07:52:29.740Z",
+  "endedAt": "2026-10-25T07:52:31.349Z",
+  "before": {
+    "capturedAt": "2026-10-25T07:52:29.739Z",
+    "username": "pmtest_1792914746241_race3",
+    "user": {
+      "id": "92117c39-eb94-4feb-aa7c-1b825eb2f53c",
+      "createdAt": "2026-10-25T07:52:28.159",
+      "credits": 3
+    },
+    "tasks": [
+      {
+        "id": "e507fa42-e181-4cb3-bc9d-de08a9cd3a67",
+        "createdAt": "2026-10-25T07:52:28.667",
+        "userId": "92117c39-eb94-4feb-aa7c-1b825eb2f53c",
+        "description": "并发验证 3：同一账号两个标签页",
+        "time": "1",
+        "isDone": false
+      }
+    ],
+    "plans": []
+  },
+  "after": {
+    "capturedAt": "2026-10-25T07:52:31.348Z",
+    "username": "pmtest_1792914746241_race3",
+    "user": {
+      "id": "92117c39-eb94-4feb-aa7c-1b825eb2f53c",
+      "createdAt": "2026-10-25T07:52:28.159",
+      "credits": 2
+    },
+    "tasks": [
+      {
+        "id": "e507fa42-e181-4cb3-bc9d-de08a9cd3a67",
+        "createdAt": "2026-10-25T07:52:28.667",
+        "userId": "92117c39-eb94-4feb-aa7c-1b825eb2f53c",
+        "description": "并发验证 3：同一账号两个标签页",
+        "time": "1",
+        "isDone": false
+      }
+    ],
+    "plans": [
+      {
+        "id": "d76a86ce-fae6-4714-9ff4-8b84143576f4",
+        "createdAt": "2026-10-25T07:52:30.949",
+        "updatedAt": "2026-10-25T07:52:30.949",
+        "userId": "92117c39-eb94-4feb-aa7c-1b825eb2f53c",
+        "content": "{\"tasks\":[{\"name\":\"并发验证 3：同一账号两个标签页\",\"priority\":\"medium\"}],\"taskItems\":[{\"description\":\"准备: 并发验证 3：同一账号两个标签页\",\"taskName\":\"并发验证 3：同一账号两个标签页\",\"time\":2.67},{\"description\":\"执行: 并发验证 3：同一账号两个标签页\",\"taskName\":\"并发验证 3：同一账号两个标签页\",\"time\":2.67},{\"description\":\"复盘: 并发验证 3：同一账号两个标签页\",\"taskName\":\"并发验证 3：同一账号两个标签页\",\"time\":2.67}]}"
+      }
+    ]
+  },
+  "requests": [
+    {
+      "label": "PRE3-1-tab-1",
+      "requestAt": "2026-10-25T07:52:29.772Z",
+      "requestBody": null,
+      "responseAt": "2026-10-25T07:52:30.384Z",
+      "status": 200,
+      "responseBody": {
+        "json": {
+          "tasks": [
+            {
+              "name": "并发验证 3：同一账号两个标签页",
+              "priority": "medium"
+            }
+          ],
+          "taskItems": [
+            {
+              "description": "准备: 并发验证 3：同一账号两个标签页",
+              "taskName": "并发验证 3：同一账号两个标签页",
+              "time": 2.67
+            },
+            {
+              "description": "执行: 并发验证 3：同一账号两个标签页",
+              "taskName": "并发验证 3：同一账号两个标签页",
+              "time": 2.67
+            },
+            {
+              "description": "复盘: 并发验证 3：同一账号两个标签页",
+              "taskName": "并发验证 3：同一账号两个标签页",
+              "time": 2.67
+            }
+          ]
+        }
+      },
+      "durationMs": 612
+    }
+  ],
+  "counts": {
+    "started": 1,
+    "succeeded": 1,
+    "failed": 0
+  },
+  "deltaPlans": 1,
+  "deltaCredits": -1,
+  "overlapMs": null,
+  "verdict": "PASS",
+  "logByteRange": [
+    18391,
+    19071
+  ],
+  "logAttribution": "Global event log; isolated time window. callId joins started to succeeded/failed, not userId.",
+  "events": [
+    {
+      "event": "mock-ai.started",
+      "callId": "c8574443-4c8f-4581-adcb-645312cf1ccc"
+    },
+    {
+      "event": "mock-ai.succeeded",
+      "callId": "c8574443-4c8f-4581-adcb-645312cf1ccc"
+    }
+  ],
+  "ui": [
+    "任务规划实验室\n剩余额度： 2\n退出登录\nAI 任务规划\n\n输入待办事项和可用时长，生成一份模拟日程。本页面使用本地接口，无需 API Key。\n\n添加任务\n并发验证 3：同一账号两个标签页\n小时\n今天可用的工作时长\n生成日程\n本次日程\n并发验证 3：同一账号两个标签页\n中优先级\n准备: 并发验证 3：同一账号两个标签页\n2小时 40分钟\n执行: 并发验证 3：同一账号两个标签页\n2小时 40分钟\n复盘: 并发验证 3：同一账号两个标签页\n2小时 40分钟"
+  ]
+}
