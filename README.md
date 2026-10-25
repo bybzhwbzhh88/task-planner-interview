@@ -72,6 +72,24 @@ npx tsc --project tsconfig.wasp.json --noEmit
 
 运行检查前需要完成依赖安装。首次启动前需要执行数据库迁移。
 
+## 额度验证
+
+设计与验收条件见 [SPEC.md](SPEC.md)，实际验证记录见 [SUBMISSION.md](SUBMISSION.md)。
+
+完成上述 Wasp 依赖安装与编译后，创建一个独立的空 PostgreSQL 测试数据库。在 Bash / WSL 中运行（连接信息替换为自己的本地配置）：
+
+```sh
+export TEST_DATABASE_URL='postgresql://user:password@localhost:5432/quota_test'
+DATABASE_URL="$TEST_DATABASE_URL" npx prisma migrate deploy --schema schema.prisma
+npm run test:quota
+```
+
+PowerShell 设置变量的写法是 `$env:TEST_DATABASE_URL='连接地址'`，迁移前设置 `$env:DATABASE_URL=$env:TEST_DATABASE_URL`。
+
+测试直接执行服务端 `generatePlan`，数据库和约 500 毫秒的模拟模型都保持真实；只替代 Wasp 的模块装配与错误类型，保存失败/返还失败通过一次性故障注入验证。测试覆盖旧余额、明确失败、10 请求并发、混合成败、非法输入等场景，不等同于浏览器与 HTTP 登录链路的端到端测试。
+
+每轮仅创建并清理本轮的随机测试用户，不清空数据库。未设置 `TEST_DATABASE_URL` 会立即失败，不会自动使用应用数据库；建表迁移仅对准备好的空测试库运行。
+
 ## 开源许可
 
 第三方代码的版权声明与使用条件见 [LICENSE](LICENSE) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。

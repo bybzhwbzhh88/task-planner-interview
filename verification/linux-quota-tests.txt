@@ -1,0 +1,59 @@
+Prisma schema loaded from .wasp/out/db/schema.prisma
+
+✔ Generated Prisma Client (v5.19.1) to ./node_modules/@prisma/client in 93ms
+
+Start by importing your Prisma Client (See: http://pris.ly/d/importing-client)
+
+Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+
+Prisma schema loaded from schema.prisma
+Datasource "db": PostgreSQL database "quota_test", schema "public" at "codex-quota-db-20261025:5432"
+
+1 migration found in prisma/migrations
+
+Applying migration `20261015081629_init`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20261015081629_init/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+┌─────────────────────────────────────────────────────────┐
+│  Update available 5.19.1 -> 8.0.0-rc.27                 │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+
+> test:quota
+> vitest run --config vitest.quota.config.ts --reporter=verbose
+
+
+ RUN  v4.1.11 /app
+
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A1: 成功只扣一次并保存结果，不采用旧的零余额快照 575ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A2: 数据库余额为零时不调用模型，即使请求快照还有额度 12ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A3: 模型明确失败返还额度，移除失败任务后可以重试 1069ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A4/A5: 1 次额度下同时请求 10 次，只调用有额度的次数 536ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A4/A5: 3 次额度下同时请求 10 次，只调用有额度的次数 551ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A6: 保存失败时返还预占额度，不留下结果 539ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A7: 返还失败时报告状态待确认，不谎报已返还 523ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A10: 同账号并发一成一败，返还不能覆盖另一次成功的扣减 534ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 未登录不调用模型 3ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 空待办不占额度、不调用模型 7ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 非法时长 0 不占额度、不调用模型 9ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 非法时长 -1 不占额度、不调用模型 8ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 非法时长 25 不占额度、不调用模型 8ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 非法时长 NaN 不占额度、不调用模型 7ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 非法时长 Infinity 不占额度、不调用模型 7ms
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  08:16:41
+   Duration  4.84s (transform 83ms, setup 0ms, import 212ms, tests 4.43s, environment 0ms)

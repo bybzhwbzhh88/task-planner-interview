@@ -1,0 +1,43 @@
+Browser tab: 1, Title: "任务规划实验室", URL: "http://localhost:43100/demo-app".
+0 AXWebArea 任务规划实验室, URL: localhost:43100/demo-app
+	1 container root
+		2 container
+			3 link Description: 任务规划实验室, Value: localhost:43100/
+			18 text 剩余额度：  0
+			4 checkbox (settable, integer) Description: Toggle dark mode, Value: 0
+			19 button 退出登录
+		5 container
+			20 heading AI 任务规划, Value: 2
+				21 text AI  任务规划
+			22 text 输入待办事项和可用时长，生成一份模拟日程。本页面使用本地接口，无需 API Key。
+			23 text field (settable) description
+			24 button (disabled) 添加任务
+			29 checkbox 0
+			30 text 整理笔记
+			31 stepper (settable, integer) 今天可用的工作时长, Value: 1, ID: time
+			32 text 小时
+			33 button 删除任务
+			34 text 今天可用的工作时长
+			35 stepper (settable, integer) Value: 8, ID: time
+			26 button 生成日程
+			27 text 每成功生成一份日程消耗 1 次额度。生成期间暂占额度，明确失败后返还。
+			28 button 刷新额度
+			36 text 暂无可用额度，可能已用完或被其他生成请求占用。本次未调用模型，请稍后刷新额度。
+			37 heading 上次成功生成的日程, Value: 3
+				38 text 上次成功生成的日程
+			39 heading 整理笔记 中优先级, Value: 3
+				40 text 整理笔记 中优先级
+			41 content list
+				42 container
+					43 checkbox 0
+					44 text 准备: 整理笔记 2小时 40分钟
+				45 container
+					46 checkbox 0
+					47 text 执行: 整理笔记 2小时 40分钟
+				48 container
+					49 checkbox 0
+					50 text 复盘: 整理笔记 2小时 40分钟
+		16 container Notifications (F8)
+			17 content list
+
+The focused UI element is 0 AXWebArea 任务规划实验室, URL: localhost:43100/demo-app
