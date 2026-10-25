@@ -1,4 +1,5 @@
 import { type Task } from "wasp/entities";
+import { useAuth } from "wasp/client/auth";
 
 import {
   createTask,
@@ -21,7 +22,6 @@ import {
 import { Checkbox } from "../client/components/ui/checkbox";
 import { Input } from "../client/components/ui/input";
 import { Label } from "../client/components/ui/label";
-import { toast } from "../client/hooks/use-toast";
 import { cn } from "../client/utils";
 import type {
   GeneratedSchedule,
@@ -63,6 +63,9 @@ function NewTaskForm({
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
+  const [generationStatus, setGenerationStatus] = useState("");
+  const [isCreditRefreshFailed, setIsCreditRefreshFailed] = useState(false);
+  const { refetch: refetchUser, isFetching: isRefreshingCredits } = useAuth();
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
@@ -81,11 +84,13 @@ function NewTaskForm({
   const handleGeneratePlan = async () => {
     try {
       setIsPlanGenerating(true);
+      setGenerationStatus("正在生成日程，请稍候。");
       const response = await generatePlan({
         hours: todaysHours,
       });
       if (response) {
         setResponse(response);
+        setGenerationStatus("日程已生成，本次消耗 1 次额度。");
       }
     } catch (err) {
       const statusCode =
@@ -93,24 +98,37 @@ function NewTaskForm({
           ? err.statusCode
           : undefined;
       if (statusCode === 402) {
-        toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
-        });
+        setGenerationStatus(
+          "暂无可用额度，可能已用完或被其他生成请求占用。本次未调用模型，请稍后刷新额度。",
+        );
+      } else if (statusCode === 502) {
+        setGenerationStatus(
+          "本次生成未完成，额度已退回。请检查待办事项；若包含 [fail]，删除该标记后重试。",
+        );
+      } else if (statusCode === 503) {
+        setGenerationStatus(
+          "额度状态暂无法确认。请刷新额度并联系管理员核查，暂时不要重复生成。",
+        );
+      } else if (statusCode === 400) {
+        setGenerationStatus(
+          "请先添加待办事项，并将工作时长设置为 1–24 小时。本次未消耗额度。",
+        );
+      } else if (statusCode === 401) {
+        setGenerationStatus("登录状态已失效，请重新登录后再试。");
       } else {
-        toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
-          variant: "destructive",
-        });
+        setGenerationStatus(
+          "未能确认本次生成结果。请先刷新额度，必要时联系管理员核查，避免重复生成。",
+        );
       }
     } finally {
+      await refreshCredits();
       setIsPlanGenerating(false);
     }
+  };
+
+  const refreshCredits = async () => {
+    const result = await refetchUser();
+    setIsCreditRefreshFailed(result.isError);
   };
 
   return (
@@ -187,7 +205,13 @@ function NewTaskForm({
 
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={
+          isPlanGenerating ||
+          !tasks?.length ||
+          !Number.isFinite(todaysHours) ||
+          todaysHours < 1 ||
+          todaysHours > 24
+        }
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -204,10 +228,31 @@ function NewTaskForm({
         )}
       </Button>
 
+      <div className="space-y-3 text-sm">
+        <p className="text-muted-foreground">
+          每成功生成一份日程消耗 1 次额度。生成期间暂占额度，明确失败后返还。
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={isRefreshingCredits || isPlanGenerating}
+          onClick={() => refreshCredits()}
+        >
+          {isRefreshingCredits ? "刷新中…" : "刷新额度"}
+        </Button>
+        <div role="status" aria-live="polite" aria-atomic="true">
+          {generationStatus && <p>{generationStatus}</p>}
+          {isCreditRefreshFailed && (
+            <p>额度刷新失败，页头数字可能不是最新值。请稍后再次刷新。</p>
+          )}
+        </div>
+      </div>
+
       {!!response && (
         <div className="flex flex-col">
           <h3 className="text-foreground mb-4 text-lg font-semibold">
-            本次日程
+            上次成功生成的日程
           </h3>
           <Schedule schedule={response} />
         </div>

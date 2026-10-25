@@ -1,6 +1,9 @@
 {
   "name": "task-planner-interview",
   "type": "module",
+  "scripts": {
+    "test:quota": "vitest run --config vitest.quota.config.ts"
+  },
   "workspaces": [
     ".wasp/out/*",
     ".wasp/out/sdk/wasp"

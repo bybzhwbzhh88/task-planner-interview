@@ -1,5 +1,4 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
+import type { PlanResult, Task } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateTask,
@@ -17,7 +16,7 @@ import { generateMockSchedule } from "./mockAi";
 
 //#region Actions
 const generatePlanInputSchema = z.object({
-  hours: z.number(),
+  hours: z.number().min(1).max(24),
 });
 
 type GeneratePlanInput = z.infer<typeof generatePlanInputSchema>;
@@ -45,38 +44,53 @@ export const generatePlan: GeneratePlan<
     },
   });
 
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
+  if (tasks.length === 0) {
+    throw new HttpError(400, "请先添加待办事项，再生成日程。");
+  }
+
+  const userId = context.user.id;
+  // Check and reserve in one database statement, never against the auth snapshot.
+  const reservation = await prisma.user.updateMany({
+    where: { id: userId, credits: { gt: 0 } },
+    data: { credits: { decrement: 1 } },
+  });
+  if (reservation.count === 0) {
     throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
+      402,
+      "暂无可用额度，额度可能已用完或正在被其他生成占用。请稍后刷新额度；如仍为 0，请联系管理员。",
     );
   }
 
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
-  });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
+  // ponytail: process crashes can strand a reservation; use a durable ledger if
+  // crash recovery becomes required (explicitly outside this exercise's scope).
+  try {
+    const generatedSchedule = await generateMockSchedule(tasks, hours);
+    await prisma.planResult.create({
+      data: {
+        userId,
+        content: JSON.stringify(generatedSchedule),
+      },
+    });
+    return generatedSchedule;
+  } catch (error) {
+    console.error("plan-generation.failed", { userId, error });
+    try {
+      await prisma.user.update({
+        where: { id: userId },
+        data: { credits: { increment: 1 } },
+      });
+    } catch (refundError) {
+      console.error("plan-generation.refund-failed", { userId, refundError });
+      throw new HttpError(
+        503,
+        "生成未完成，额度状态暂无法确认。请刷新额度并联系管理员，暂勿重复提交。",
+      );
+    }
+    throw new HttpError(
+      502,
+      "日程生成或保存失败，本次额度已退回。请检查待办事项（包含 [fail] 会触发模拟失败）后重试。",
+    );
   }
-
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
-
-  return generatedSchedule;
 };
 
 const createTaskInputSchema = z.object({
