@@ -1,0 +1,1218 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>额度处理 · 低保真交互原型</title>
+<style>
+  :root {
+    --ink: #111;
+    --ink-2: #333;
+    --muted: #666;
+    --line: #aaa;
+    --line-2: #7a7a7a;
+    --paper: #fff;
+    --canvas: #f1f1ed;
+    --soft: #e7e7e2;
+    --soft-2: #f7f7f4;
+    --mono: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", "PingFang SC", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background: radial-gradient(#d6d6d1 .7px, transparent .7px) 0 0 / 18px 18px, var(--canvas);
+    font-family: var(--sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  button, input { font: inherit; }
+  .doc-header, .doc-main, .doc-footer { width: min(1560px, calc(100% - 48px)); margin-inline: auto; }
+  .doc-header { padding: 44px 0 20px; }
+  .kicker { margin: 0 0 11px; font-family: var(--mono); font-size: 11px; letter-spacing: .13em; text-transform: uppercase; }
+  h1 { max-width: 1000px; margin: 0; font-size: clamp(30px, 4vw, 54px); line-height: 1.1; letter-spacing: -.04em; }
+  .lede { max-width: 920px; margin: 18px 0 0; color: var(--ink-2); font-size: 17px; }
+  .meta-line { display: flex; flex-wrap: wrap; gap: 7px 18px; margin-top: 18px; color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .scope-note { margin-top: 24px; padding: 15px 17px; border: 1px dashed var(--ink); background: rgba(255,255,255,.78); }
+  .scope-note strong { font-family: var(--mono); font-size: 11px; letter-spacing: .05em; }
+  .scope-note p { margin: 5px 0 0; color: var(--ink-2); font-size: 13px; }
+  .toc { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 22px; padding-top: 15px; border-top: 1px solid var(--ink); }
+  .toc a { padding: 6px 9px; border: 1px solid var(--line); background: var(--paper); font-family: var(--mono); font-size: 10px; text-decoration: none; }
+  .toc a:hover { border-color: var(--ink); background: var(--soft); }
+  .doc-main { padding: 18px 0 54px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 9px 18px; padding: 13px 0; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); font-size: 11px; }
+  .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 17px; height: 17px; border: 1px solid var(--line); background: var(--paper); }
+  .swatch.black { border-color: var(--ink); background: var(--ink); }
+  .swatch.dashed { border-style: dashed; background: var(--soft); }
+  .swatch.hatch, .hatch { background: repeating-linear-gradient(135deg, #efefec 0 4px, #d9d9d4 4px 5px); }
+  .legend-mark, .mark {
+    display: inline-grid; place-items: center; flex: 0 0 auto;
+    width: 17px; height: 17px; border-radius: 50%; background: var(--ink); color: #fff;
+    font-family: var(--mono); font-size: 8px; line-height: 1;
+  }
+  .flow-map { margin-top: 24px; padding: 17px; border: 1px solid var(--ink); background: var(--paper); }
+  .flow-map h2 { margin: 0 0 11px; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+  .flow-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .flow-row + .flow-row { margin-top: 8px; }
+  .flow-label { min-width: 78px; color: var(--muted); font-family: var(--mono); font-size: 9px; }
+  .flow-node { display: inline-block; padding: 5px 8px; border: 1px solid var(--ink); background: var(--paper); font-size: 10px; text-decoration: none; white-space: nowrap; }
+  .flow-node:hover { background: var(--soft); }
+  .flow-node.primary { background: var(--ink); color: #fff; }
+  .flow-node.warn { border-style: dashed; background: var(--soft); }
+  .flow-arrow { color: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .group { margin-top: 44px; scroll-margin-top: 16px; }
+  .group-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-bottom: 9px; border-bottom: 2px solid var(--ink); }
+  .group-head h2 { margin: 0; font-size: clamp(20px, 2vw, 28px); letter-spacing: -.02em; }
+  .group-head p { margin: 0; color: var(--muted); font-family: var(--mono); font-size: 10px; text-align: right; }
+  .screen-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 17px; }
+  .screen { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--ink); background: var(--paper); scroll-margin-top: 16px; }
+  .screen-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 11px; align-items: center; padding: 13px 15px; border-bottom: 1px solid var(--ink); }
+  .screen-num { display: grid; place-items: center; width: 35px; height: 35px; background: var(--ink); color: #fff; font-family: var(--mono); font-size: 12px; }
+  .screen-head h3 { margin: 0; font-size: 16px; line-height: 1.22; }
+  .screen-pos { margin: 3px 0 0; color: var(--muted); font-size: 10px; }
+  .tag { padding: 4px 6px; border: 1px solid var(--ink); background: var(--paper); font-family: var(--mono); font-size: 8px; letter-spacing: .03em; white-space: nowrap; }
+  .tag.dark { background: var(--ink); color: #fff; }
+  .tag.dashed { border-style: dashed; background: var(--soft); }
+  .wire { margin: 15px; border: 1px solid var(--line); background: var(--soft-2); overflow: hidden; }
+  .chrome { display: flex; align-items: center; gap: 5px; min-height: 24px; padding: 0 8px; border-bottom: 1px solid var(--line); background: #dfdfda; }
+  .chrome-dot { width: 6px; height: 6px; border: 1px solid #777; border-radius: 50%; }
+  .chrome-url { flex: 1; margin-left: 6px; overflow: hidden; color: #666; font-family: var(--mono); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+  .appbar { display: flex; align-items: center; gap: 8px; padding: 7px 11px; border-bottom: 1px solid var(--line); background: var(--paper); }
+  .brand { flex: 1; font-size: 11px; font-weight: 750; letter-spacing: .02em; }
+  .ph { display: inline-grid; place-items: center; flex: 0 0 auto; border: 1px solid #777; background: repeating-linear-gradient(135deg, #ededE9 0 4px, #d9d9d4 4px 5px); color: #555; font-family: var(--mono); font-size: 7px; line-height: 1; }
+  .ph.logo { width: 38px; height: 19px; }
+  .ph.avatar { width: 20px; height: 20px; border-radius: 50%; }
+  .app-main { padding: 13px; }
+  .page-title { text-align: center; font-size: 18px; font-weight: 780; letter-spacing: -.02em; }
+  .page-sub { margin: 3px 0 11px; color: var(--muted); font-size: 10px; text-align: center; }
+  .panel { padding: 10px; border: 1px solid var(--line); background: var(--paper); }
+  .panel + .panel { margin-top: 8px; }
+  .blank-note { padding: 20px 10px; border: 1px dashed var(--line); background: var(--soft-2); color: var(--muted); font-size: 10px; text-align: center; }
+  .field-row, .task, .hours-row, .quota-line, .result-head, .tabs-row, .summary-row, .refresh-row { display: flex; align-items: center; gap: 7px; }
+  .field, .input {
+    flex: 1; min-width: 0; padding: 7px 8px; border: 1px solid var(--line);
+    background: var(--paper); color: var(--ink-2); font-size: 10px;
+  }
+  .input.muted, .input:disabled { background: var(--soft-2); color: #8a8a86; }
+  .input.invalid { border: 1px dashed var(--ink); background: var(--soft); }
+  .input.tiny { flex: 0 0 48px; text-align: center; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 6px 9px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); font-size: 9px; font-weight: 650; white-space: nowrap; }
+  .btn.primary { background: var(--ink); color: #fff; }
+  .btn.full { width: 100%; margin-top: 8px; padding: 9px; font-size: 10px; }
+  .btn.disabled, .btn:disabled { border-style: dashed; border-color: var(--line); background: var(--soft); color: #777; }
+  .btn.small { padding: 4px 6px; font-size: 8px; }
+  .task-list { display: flex; flex-direction: column; gap: 5px; margin-top: 9px; }
+  .task { padding: 6px 7px; border: 1px solid var(--line); background: var(--paper); font-size: 9px; }
+  .checkbox { display: inline-grid; place-items: center; flex: 0 0 auto; width: 12px; height: 12px; border: 1px solid var(--ink); font-family: var(--mono); font-size: 7px; }
+  .checkbox.done { background: var(--ink); color: #fff; }
+  .task-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .task-name.done { color: #888; text-decoration: line-through; }
+  .time-box { padding: 2px 4px; border: 1px solid var(--line); background: var(--soft-2); font-family: var(--mono); font-size: 8px; }
+  .icon-box { padding: 2px 4px; border: 1px solid var(--line); background: var(--soft-2); font-family: var(--mono); font-size: 8px; }
+  .hours-row { justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid #d2d2cd; font-size: 9px; }
+  .hours-label { color: var(--ink-2); font-weight: 650; }
+  .hours-control { display: inline-flex; align-items: center; gap: 4px; }
+  .unit { color: var(--muted); font-size: 8px; }
+  .inline-error { display: block; margin-top: 5px; padding: 4px 6px; border: 1px dashed var(--ink); background: var(--soft); font-size: 9px; }
+  .quota { margin-top: 8px; padding: 8px 9px; border: 1px solid var(--ink); background: var(--soft-2); }
+  .quota-line { justify-content: space-between; gap: 10px; }
+  .quota-line strong { font-size: 10px; }
+  .quota-number { font-family: var(--mono); font-size: 12px; }
+  .cost { margin-top: 2px; color: var(--muted); font-size: 9px; }
+  .quota.zero { border-width: 2px; }
+  .alert { margin-top: 8px; padding: 7px 8px; border: 1px solid var(--ink); border-left-width: 5px; background: var(--paper); font-size: 9px; }
+  .alert strong { display: block; font-size: 9px; }
+  .alert span { display: block; margin-top: 2px; color: var(--muted); }
+  .alert.error { border-left-style: double; }
+  .alert.note { border-style: dashed; border-left-style: dashed; background: var(--soft-2); }
+  .summary-row { justify-content: space-between; padding: 6px 7px; border: 1px solid var(--line); background: var(--paper); font-size: 9px; }
+  .summary-row + .summary-row { margin-top: 5px; }
+  .summary-row span:last-child { color: var(--muted); font-family: var(--mono); font-size: 8px; }
+  .loading-lines { display: grid; gap: 5px; margin-top: 9px; }
+  .loading-line { height: 22px; border: 1px solid #ccc; background: repeating-linear-gradient(135deg, #f3f3f0 0 5px, #e5e5e0 5px 6px); }
+  .loading-line.short { width: 70%; }
+  .progress { height: 7px; margin-top: 8px; border: 1px solid var(--line); background: repeating-linear-gradient(135deg, #eee 0 5px, #ccc 5px 6px); }
+  .schedule { margin-top: 8px; }
+  .schedule-title { margin: 0 0 5px; font-size: 10px; font-weight: 750; }
+  .schedule-group { padding: 7px; border: 1px solid var(--line); background: var(--paper); }
+  .schedule-group + .schedule-group { margin-top: 4px; }
+  .schedule-group-title { display: flex; justify-content: space-between; gap: 8px; font-size: 9px; font-weight: 700; }
+  .priority { color: var(--muted); font-family: var(--mono); font-size: 7px; font-weight: 400; }
+  .schedule-item { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; color: var(--ink-2); font-size: 8px; }
+  .schedule-item span:last-child { color: var(--muted); white-space: nowrap; }
+  .old-result { margin-top: 8px; padding: 7px; border: 1px dashed var(--line); background: var(--soft-2); color: var(--muted); font-size: 8px; }
+  .tabs-row { align-items: stretch; margin-top: 7px; }
+  .mini-tab { flex: 1; min-width: 0; padding: 7px; border: 1px solid var(--line); background: var(--paper); }
+  .mini-tab + .mini-tab { margin-left: 5px; }
+  .mini-tab h4 { margin: 0 0 5px; font-family: var(--mono); font-size: 8px; }
+  .mini-tab p { margin: 3px 0; font-size: 8px; }
+  .mini-tab .quota { margin-top: 5px; padding: 5px; }
+  .mini-tab .btn { width: 100%; margin-top: 5px; }
+  .refresh-row { justify-content: space-between; margin-top: 8px; padding: 8px; border: 1px solid var(--ink); border-left-width: 5px; background: var(--paper); font-size: 9px; }
+  .login-wrap { min-height: 330px; display: grid; place-items: center; padding: 20px 12px; background: var(--soft-2); }
+  .login-card { width: min(300px, 100%); padding: 16px; border: 1px solid var(--ink); background: var(--paper); }
+  .login-logo { width: 100%; height: 52px; margin-bottom: 10px; border: 1px dashed var(--line-2); background: repeating-linear-gradient(135deg, #f3f3f0 0 6px, #deded9 6px 7px); display: grid; place-items: center; color: #666; font-family: var(--mono); font-size: 8px; }
+  .login-card h4 { margin: 0; font-size: 16px; text-align: center; }
+  .login-card > p { margin: 4px 0 10px; color: var(--muted); font-size: 9px; text-align: center; }
+  .login-field { display: block; margin-top: 7px; }
+  .login-field span { display: block; margin-bottom: 3px; font-size: 8px; font-weight: 650; }
+  .login-field .input { display: block; width: 100%; }
+  .login-foot { margin-top: 8px; color: var(--muted); font-size: 8px; text-align: center; }
+  .browser-short { min-height: 270px; }
+  .handoff { margin: auto 15px 15px; padding-top: 11px; border-top: 1px solid var(--ink); }
+  .handoff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+  .handoff-label { display: block; margin-bottom: 4px; font-family: var(--mono); font-size: 7px; letter-spacing: .08em; text-transform: uppercase; }
+  .ops { margin: 0; padding: 0; list-style: none; }
+  .ops li { display: flex; align-items: flex-start; gap: 5px; margin: 0 0 4px; font-size: 9px; }
+  .ops li:last-child { margin-bottom: 0; }
+  .ops .mark { width: 15px; height: 15px; margin-top: 1px; }
+  .dest { font-size: 9px; }
+  .dest p { margin: 0 0 3px; }
+  .dest a { text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  .muted { color: var(--muted); }
+  .review-section { margin-top: 50px; padding: 22px; border: 1px solid var(--ink); background: var(--paper); }
+  .review-section h2 { margin: 0 0 5px; font-size: 24px; }
+  .review-section > p { margin: 0 0 16px; color: var(--muted); font-size: 12px; }
+  .review-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; }
+  .review-card { padding: 12px; border: 1px dashed var(--line-2); background: var(--soft-2); }
+  .review-card h3 { margin: 0 0 4px; font-size: 12px; }
+  .review-card p { margin: 0; color: var(--ink-2); font-size: 10px; }
+  .review-card .tag { display: inline-block; margin-bottom: 6px; }
+  .coverage { width: 100%; margin-top: 16px; border-collapse: collapse; font-size: 10px; }
+  .coverage th, .coverage td { padding: 8px 9px; border: 1px solid var(--line); text-align: left; vertical-align: top; }
+  .coverage th { background: var(--soft); font-family: var(--mono); font-size: 9px; letter-spacing: .03em; }
+  .coverage td:first-child { width: 14%; font-family: var(--mono); white-space: nowrap; }
+  .doc-footer { padding: 20px 0 38px; border-top: 1px solid var(--ink); color: var(--muted); font-size: 10px; }
+  .doc-footer p { margin: 4px 0; }
+  @media (max-width: 1120px) {
+    .screen-grid { grid-template-columns: 1fr; }
+    .review-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 680px) {
+    .doc-header, .doc-main, .doc-footer { width: min(100% - 22px, 1560px); }
+    .doc-header { padding-top: 28px; }
+    .lede { font-size: 14px; }
+    .group-head { display: block; }
+    .group-head p { margin-top: 4px; text-align: left; }
+    .screen-head { grid-template-columns: auto minmax(0, 1fr); }
+    .screen-head .tag { grid-column: 2; justify-self: start; }
+    .wire { margin: 9px; }
+    .handoff { margin-inline: 9px; }
+    .handoff-grid { grid-template-columns: 1fr; }
+    .review-section { padding: 14px; }
+    .review-grid { grid-template-columns: 1fr; }
+    .tabs-row { display: block; }
+    .mini-tab + .mini-tab { margin: 6px 0 0; }
+    .coverage { display: block; overflow-x: auto; }
+  }
+  @media print {
+    body { background: #fff; }
+    .doc-header, .doc-main, .doc-footer { width: 100%; }
+    .toc { display: none; }
+    .screen { break-inside: avoid; }
+    .screen-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<header class="doc-header">
+  <p class="kicker">产品方向 / 低保真 / 单页原型</p>
+  <h1>额度处理：完整核心交互流程</h1>
+  <p class="lede">从登录、首次进入、准备任务，到发起生成、成功、失败、额度不足、并发耗尽、超时与中断恢复。所有页面按真实使用顺序平铺，只表达信息层级、核心文案、按钮位置和页面状态。</p>
+  <div class="meta-line">
+    <span>依据：docs/product/PRD.md</span>
+    <span>流程：FLOW.md</span>
+    <span>验收：ACCEPTANCE.md / AC-01–AC-14</span>
+    <span>版本：2026-10-25</span>
+  </div>
+  <div class="scope-note">
+    <strong>范围说明</strong>
+    <p>登录与账号注册沿用现有产品，本次不新增独立权限申请、角色授权或浏览器权限弹窗。管理员补充额度发生在产品外；本版本不做支付、自助充值、额度流水或排队。所有未在 PRD 中定义的功能均未加入。</p>
+  </div>
+  <nav class="toc" aria-label="页面状态索引">
+    <a href="#group-a">A 进入与准备 · 01–05</a>
+    <a href="#group-b">B 发起生成 · 06</a>
+    <a href="#group-c">C 结果与阻断 · 07–12</a>
+    <a href="#group-d">D 一致性与恢复 · 13–16</a>
+    <a href="#review">决策与范围核对</a>
+  </nav>
+</header>
+<main class="doc-main">
+  <div class="legend" aria-label="线框图例">
+    <span class="legend-item"><span class="swatch black"></span>主按钮 / 当前状态</span>
+    <span class="legend-item"><span class="swatch"></span>可操作控件</span>
+    <span class="legend-item"><span class="swatch dashed"></span>禁用 / 非本次结果</span>
+    <span class="legend-item"><span class="swatch hatch"></span>图片或图标占位</span>
+    <span class="legend-item"><span class="legend-mark">1</span>操作标注</span>
+  </div>
+
+  <section class="flow-map" aria-labelledby="flow-title">
+    <h2 id="flow-title">主流程与分支索引</h2>
+    <div class="flow-row">
+      <span class="flow-label">进入</span>
+      <a class="flow-node" href="#s01">01 登录 / 会话失效</a><span class="flow-arrow">→</span>
+      <a class="flow-node primary" href="#s02">02 读取中</a><span class="flow-arrow">→</span>
+      <a class="flow-node" href="#s03">03 空任务</a><span class="flow-arrow">→</span>
+      <a class="flow-node" href="#s04">04 可生成</a>
+    </div>
+    <div class="flow-row">
+      <span class="flow-label">主路径</span>
+      <a class="flow-node" href="#s04">04 可生成</a><span class="flow-arrow">→</span>
+      <a class="flow-node primary" href="#s06">06 生成中</a><span class="flow-arrow">→</span>
+      <a class="flow-node" href="#s07">07 成功</a>
+    </div>
+    <div class="flow-row">
+      <span class="flow-label">请求前阻断</span>
+      <a class="flow-node warn" href="#s03">03 无任务</a>
+      <a class="flow-node warn" href="#s05">05 时长非法</a>
+      <a class="flow-node warn" href="#s10">10 额度不足</a>
+      <a class="flow-node warn" href="#s14">14 额度不可用</a>
+    </div>
+    <div class="flow-row">
+      <span class="flow-label">请求后结果</span>
+      <a class="flow-node warn" href="#s08">08 模型失败</a>
+      <a class="flow-node warn" href="#s09">09 保存失败</a>
+      <a class="flow-node warn" href="#s11">11 并发耗尽</a>
+      <a class="flow-node warn" href="#s12">12 结果待确认</a>
+    </div>
+    <div class="flow-row">
+      <span class="flow-label">一致性与恢复</span>
+      <a class="flow-node" href="#s13">13 多标签滞后</a>
+      <a class="flow-node" href="#s14">14 读取失败</a><span class="flow-arrow">→</span>
+      <a class="flow-node" href="#s15">15 刷新恢复</a>
+      <a class="flow-node" href="#s16">16 中断后返回</a>
+    </div>
+  </section>
+
+  <section class="group" id="group-a">
+    <div class="group-head">
+      <h2>A. 进入与准备</h2>
+      <p>登录 → 读取 → 空任务 → 可生成 → 非法时长 · 共 5 屏</p>
+    </div>
+    <div class="screen-grid">
+
+      <article class="screen" id="s01">
+        <header class="screen-head">
+          <span class="screen-num">01</span>
+          <div>
+            <h3>登录 / 会话失效</h3>
+            <p class="screen-pos">位置：进入任务规划前；未登录或会话过期 · 关联 R7 / F13 / AC-11</p>
+          </div>
+          <span class="tag">前置 / 会话失效</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 登录</span></div>
+          <div class="login-wrap">
+            <div class="login-card">
+              <div class="login-logo">品牌 / 产品标识占位</div>
+              <h4>登录任务规划实验室</h4>
+              <p>使用现有账号继续，登录后回到任务规划页。</p>
+              <div class="alert error">
+                <strong>登录已失效，请重新登录</strong>
+                <span>仅会话失效时显示；首次进入不显示这句提示。</span>
+              </div>
+              <label class="login-field"><span>用户名</span><span class="input">请输入用户名</span></label>
+              <label class="login-field"><span>密码</span><span class="input">请输入密码</span></label>
+              <button class="btn primary full">登录 <span class="mark">1</span></button>
+              <div class="login-foot">还没有账号？注册沿用现有能力；本方案不新增权限申请。</div>
+            </div>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>输入现有账号与密码，点击“登录”。</span></li>
+                <li><span class="mark">—</span><span>会话失效时看到固定提示；首次进入只看标准登录页。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>登录成功 → <a href="#s02">02 读取中</a>，随后回到任务规划页。</p>
+              <p>登录失败 → 留在本页；本方案不新增错误形态。</p>
+              <p>不出现独立权限申请或浏览器权限弹窗。</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen" id="s02">
+        <header class="screen-head">
+          <span class="screen-num">02</span>
+          <div>
+            <h3>读取任务与额度</h3>
+            <p class="screen-pos">位置：登录后进入，或用户刷新页面 · 关联 R5 / F1 / AC-01</p>
+          </div>
+          <span class="tag">加载中</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">输入待办事项和可用时长，生成一份模拟日程。</div>
+            <div class="panel">
+              <div class="summary-row"><span>任务</span><span>读取中…</span></div>
+              <div class="loading-lines"><div class="loading-line"></div><div class="loading-line short"></div></div>
+              <div class="blank-note">任务读取中…</div>
+              <div class="hours-row"><span class="hours-label">今天可用的工作时长</span><span class="hours-control"><span class="input tiny muted">—</span><span class="unit">小时</span></span></div>
+            </div>
+            <div class="quota">
+              <div class="quota-line"><span>剩余额度</span><strong>额度读取中…</strong></div>
+              <div class="cost">每次成功生成消耗 1 个额度，失败不扣</div>
+            </div>
+            <button class="btn primary full disabled" disabled>生成日程 · 消耗 1 额度 <span class="mark">1</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">—</span><span>等待任务与额度读取完成。</span></li>
+                <li><span class="mark">1</span><span>生成按钮不可用，不能提交请求。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>任务为空 → <a href="#s03">03 新用户空任务</a></p>
+              <p>任务非空且额度可用 → <a href="#s04">04 可生成</a></p>
+              <p>额度读取失败 → <a href="#s14">14 额度读取失败</a></p>
+              <p>会话失效 → <a href="#s01">01 登录 / 会话失效</a></p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen" id="s03">
+        <header class="screen-head">
+          <span class="screen-num">03</span>
+          <div>
+            <h3>首次使用 · 空任务</h3>
+            <p class="screen-pos">位置：已登录，任务列表为空 · 关联 F1/F5 / AC-09</p>
+          </div>
+          <span class="tag">首次使用 / 无数据</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">先添加待办，再生成日程。</div>
+            <div class="panel">
+              <div class="field-row"><span class="input">输入待办事项</span><button class="btn primary">添加任务 <span class="mark">1</span></button></div>
+              <div class="blank-note">请先添加待办事项</div>
+              <div class="hours-row"><span class="hours-label">今天可用的工作时长</span><span class="hours-control"><span class="input tiny">4</span><span class="unit">小时</span></span></div>
+            </div>
+            <div class="quota">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">3 次</strong></div>
+              <div class="cost">新账号初始 3 个额度；每次成功生成消耗 1 个额度，失败不扣</div>
+            </div>
+            <button class="btn primary full disabled" disabled>生成日程 · 消耗 1 额度 <span class="mark">2</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>输入待办并点击“添加任务”；任务出现在列表，页面仍在本屏。</span></li>
+                <li><span class="mark">2</span><span>无任务时生成按钮不可用；不调用模型，余额保持 3。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>成功添加任务 → 留在 03，任务列表出现该事项。</p>
+              <p>有任务且时长合法 → <a href="#s04">04 可生成</a></p>
+              <p>时长改为非法值 → <a href="#s05">05 时长非法</a></p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen" id="s04">
+        <header class="screen-head">
+          <span class="screen-num">04</span>
+          <div>
+            <h3>任务就绪 · 可生成</h3>
+            <p class="screen-pos">位置：有任务、时长合法、余额大于 0 · 关联 F2/F3 / AC-01 / AC-06</p>
+          </div>
+          <span class="tag dark">正常主路径</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">输入待办事项和可用时长，生成一份模拟日程。</div>
+            <div class="panel">
+              <div class="field-row"><span class="input">输入新的待办事项</span><button class="btn">添加任务</button></div>
+              <div class="task-list">
+                <div class="task"><span class="checkbox"></span><span class="task-name">整理项目周报</span><span class="time-box">60 分钟</span><span class="icon-box">编辑</span></div>
+                <div class="task"><span class="checkbox"></span><span class="task-name">准备评审材料</span><span class="time-box">90 分钟</span><span class="icon-box">编辑</span></div>
+              </div>
+              <div class="hours-row"><span class="hours-label">今天可用的工作时长</span><span class="hours-control"><span class="input tiny">4</span><span class="unit">小时</span></span></div>
+            </div>
+            <div class="quota">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">3 次</strong></div>
+              <div class="cost">每次成功生成消耗 1 个额度，失败不扣</div>
+            </div>
+            <button class="btn primary full">生成日程 · 消耗 1 额度 <span class="mark">1</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>点击生成；进入请求中状态，按钮立即禁用，只发一次请求。</span></li>
+                <li><span class="mark">—</span><span>仍可添加、编辑、完成或删除任务；这些操作不改变余额。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>点击生成 → <a href="#s06">06 生成中</a></p>
+              <p>时长改为非法值 → <a href="#s05">05 时长非法</a></p>
+              <p>其他标签页先用完额度 → <a href="#s11">11 并发额度用完</a></p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen" id="s05">
+        <header class="screen-head">
+          <span class="screen-num">05</span>
+          <div>
+            <h3>工作时长非法</h3>
+            <p class="screen-pos">位置：准备生成时，时长不在 1–24 小时 · 关联 F5 / AC-09</p>
+          </div>
+          <span class="tag dashed">输入校验 / 阻断</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">输入待办事项和可用时长，生成一份模拟日程。</div>
+            <div class="panel">
+              <div class="task-list">
+                <div class="task"><span class="checkbox"></span><span class="task-name">整理项目周报</span><span class="time-box">60 分钟</span><span class="icon-box">编辑</span></div>
+                <div class="task"><span class="checkbox"></span><span class="task-name">准备评审材料</span><span class="time-box">90 分钟</span><span class="icon-box">编辑</span></div>
+              </div>
+              <div class="hours-row"><span class="hours-label">今天可用的工作时长</span><span class="hours-control"><span class="input tiny invalid">0</span><span class="unit">小时</span></span></div>
+              <span class="inline-error">工作时长范围 1–24 小时 <span class="mark">1</span></span>
+            </div>
+            <div class="quota">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">3 次</strong></div>
+              <div class="cost">余额未变化；未调用模型，也未扣费。</div>
+            </div>
+            <button class="btn primary full disabled" disabled>生成日程 · 消耗 1 额度 <span class="mark">2</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>把时长改回 1–24 小时；行内错误消失。</span></li>
+                <li><span class="mark">2</span><span>错误未修正前生成按钮不可用，不进入生成中。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>修正为合法时长 → <a href="#s04">04 可生成</a></p>
+              <p>继续输入非法值 → 留在 05，余额保持 3。</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+  <section class="group" id="group-b">
+    <div class="group-head">
+      <h2>B. 发起生成</h2>
+      <p>按钮锁定 → 服务端预留 → 等待结果 · 共 1 屏</p>
+    </div>
+    <div class="screen-grid">
+
+      <article class="screen" id="s06">
+        <header class="screen-head">
+          <span class="screen-num">06</span>
+          <div>
+            <h3>生成中 · 不允许重复提交</h3>
+            <p class="screen-pos">位置：点击生成后，结果返回前 · 关联 R4/F8 / AC-05 / AC-06</p>
+          </div>
+          <span class="tag dark">请求中 / 已锁定</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">正在生成日程，请等待结果。</div>
+            <div class="panel">
+              <div class="summary-row"><span>待办任务</span><span>2 条 · 已保留</span></div>
+              <div class="summary-row"><span>今天可用的工作时长</span><span>4 小时 · 已保留</span></div>
+              <div class="progress" aria-label="生成中进度占位"></div>
+            </div>
+            <div class="quota">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">结果返回后刷新</strong></div>
+              <div class="cost">每次成功生成消耗 1 个额度，失败不扣</div>
+            </div>
+            <button class="btn primary full disabled" disabled>生成中… <span class="mark">1</span></button>
+            <div class="alert note"><strong>按钮已禁用</strong><span>同一页面快速连点也只发送一次；服务端先预留 1 个额度，再调用模型。</span></div>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>等待；不能再次提交，也不弹出二次确认。</span></li>
+                <li><span class="mark">—</span><span>任务和时长继续显示，避免结果回来时丢失上下文。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>成功保存 → <a href="#s07">07 成功</a></p>
+              <p>模型明确失败 → <a href="#s08">08 模型失败</a></p>
+              <p>保存失败 → <a href="#s09">09 保存失败</a></p>
+              <p>超时或断网 → <a href="#s12">12 结果待确认</a></p>
+              <p>刷新 / 离开后返回 → <a href="#s16">16 中断后返回</a></p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="group" id="group-c">
+    <div class="group-head">
+      <h2>C. 结果与阻断</h2>
+      <p>成功 → 失败 → 额度不足 → 并发 → 结果待确认 · 共 6 屏</p>
+    </div>
+    <div class="screen-grid">
+
+      <article class="screen" id="s07">
+        <header class="screen-head">
+          <span class="screen-num">07</span>
+          <div>
+            <h3>生成成功 · 扣 1 并刷新余额</h3>
+            <p class="screen-pos">位置：服务端已保存可查看日程 · 关联 R2/R6 / F4 / AC-02</p>
+          </div>
+          <span class="tag dark">成功 / 已扣费</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">生成完成，以下为本次日程。</div>
+            <div class="alert"><strong>已消耗 1 个额度，剩余 2 个</strong><span>余额已按服务端最新值刷新。</span></div>
+            <div class="panel">
+              <div class="result-head"><strong>本次日程</strong><span class="muted">2 条任务 · 4 小时</span></div>
+              <div class="schedule">
+                <p class="schedule-title">上午</p>
+                <div class="schedule-group">
+                  <div class="schedule-group-title"><span>09:00–10:00</span><span class="priority">专注块</span></div>
+                  <div class="schedule-item"><span>整理项目周报</span><span>60 分钟</span></div>
+                </div>
+                <p class="schedule-title" style="margin-top:7px">下午</p>
+                <div class="schedule-group">
+                  <div class="schedule-group-title"><span>14:00–15:30</span><span class="priority">专注块</span></div>
+                  <div class="schedule-item"><span>准备评审材料</span><span>90 分钟</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="quota">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">2 次</strong></div>
+              <div class="cost">每次成功生成消耗 1 个额度，失败不扣</div>
+            </div>
+            <button class="btn primary full">再次生成 · 消耗 1 额度 <span class="mark">1</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>再次生成；如仍有余量，进入新的请求，成功后继续减 1。</span></li>
+                <li><span class="mark">—</span><span>查看日程，或返回任务列表继续调整；调整任务不扣额度。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>再次生成 → <a href="#s06">06 生成中</a></p>
+              <p>余额被其他标签页用完 → <a href="#s11">11 并发额度用完</a></p>
+              <p>剩余额度为 0 时再进入 → <a href="#s10">10 额度不足</a></p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen" id="s08">
+        <header class="screen-head">
+          <span class="screen-num">08</span>
+          <div>
+            <h3>模型明确失败 · 不扣费</h3>
+            <p class="screen-pos">位置：模型返回失败，未产生可查看日程 · 关联 R2 / F6 / AC-04</p>
+          </div>
+          <span class="tag dashed">失败 / 未扣费</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">生成未完成，可修改任务后重试。</div>
+            <div class="panel">
+              <div class="alert error">
+                <strong>生成失败，额度未扣除</strong>
+                <span>任务和今天可用的工作时长已保留。</span>
+              </div>
+              <div class="task-list">
+                <div class="task"><span class="checkbox"></span><span class="task-name">整理项目周报</span><span class="time-box">60 分钟</span><span class="icon-box">编辑</span></div>
+                <div class="task"><span class="checkbox"></span><span class="task-name">[fail] 准备评审材料</span><span class="time-box">90 分钟</span><span class="icon-box">编辑</span></div>
+              </div>
+              <div class="hours-row"><span class="hours-label">今天可用的工作时长</span><span class="hours-control"><span class="input tiny">4</span><span class="unit">小时</span></span></div>
+            </div>
+            <div class="quota">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">2 次</strong></div>
+              <div class="cost">预留额度已释放，余额回到请求前；本次未扣。</div>
+            </div>
+            <button class="btn primary full">重试生成 · 消耗 1 额度 <span class="mark">1</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>直接重试，或先修改任务内容；余额仍为 2。</span></li>
+                <li><span class="mark">—</span><span>不自动重试；只有用户再次点击才发新请求。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>重试 → <a href="#s06">06 生成中</a></p>
+              <p>修改任务后重试 → 仍从 06 进入，成功后到 07。</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen" id="s09">
+        <header class="screen-head">
+          <span class="screen-num">09</span>
+          <div>
+            <h3>结果保存失败 · 不扣费</h3>
+            <p class="screen-pos">位置：模型已返回，但日程结果未保存 · 关联 R2 / F9 / AC-08</p>
+          </div>
+          <span class="tag dashed">失败 / 未扣费</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">本次结果没有保存成功，请重试。</div>
+            <div class="panel">
+              <div class="alert error">
+                <strong>生成结果未保存，额度未扣除</strong>
+                <span>保存与最终扣费同成同败；预留额度已释放。</span>
+              </div>
+              <div class="old-result">
+                <strong>上一次生成结果</strong> · 不是本次结果<br>
+                09:00–10:00 整理项目周报 · 仅用于对比，不能当作本次成功
+              </div>
+              <div class="task-list">
+                <div class="task"><span class="checkbox"></span><span class="task-name">整理项目周报</span><span class="time-box">60 分钟</span><span class="icon-box">编辑</span></div>
+                <div class="task"><span class="checkbox"></span><span class="task-name">准备评审材料</span><span class="time-box">90 分钟</span><span class="icon-box">编辑</span></div>
+              </div>
+              <div class="hours-row"><span class="hours-label">今天可用的工作时长</span><span class="hours-control"><span class="input tiny">4</span><span class="unit">小时</span></span></div>
+            </div>
+            <div class="quota">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">2 次</strong></div>
+              <div class="cost">余额已刷新为服务端值；本次未扣。</div>
+            </div>
+            <button class="btn primary full">再次生成 · 消耗 1 额度 <span class="mark">1</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>直接再次生成，无需重新输入任务和时长。</span></li>
+                <li><span class="mark">—</span><span>旧日程仍可见，但明确标注“不是本次结果”。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>再次生成 → <a href="#s06">06 生成中</a></p>
+              <p>成功后 → <a href="#s07">07 成功</a>，旧结果不再冒充本次结果。</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen" id="s10">
+        <header class="screen-head">
+          <span class="screen-num">10</span>
+          <div>
+            <h3>额度不足 · 请求前阻断</h3>
+            <p class="screen-pos">位置：有任务，但服务端可用额度为 0 · 关联 R3 / F5 / AC-03</p>
+          </div>
+          <span class="tag dashed">阻断 / 不调用模型</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">当前额度不足，无法开始新的生成。</div>
+            <div class="panel">
+              <div class="alert error">
+                <strong>额度不足</strong>
+                <span>本次未生成，也未扣除额度。</span>
+                <span>请联系管理员补充额度。</span>
+              </div>
+              <div class="task-list">
+                <div class="task"><span class="checkbox"></span><span class="task-name">整理项目周报</span><span class="time-box">60 分钟</span><span class="icon-box">编辑</span></div>
+                <div class="task"><span class="checkbox"></span><span class="task-name">准备评审材料</span><span class="time-box">90 分钟</span><span class="icon-box">编辑</span></div>
+              </div>
+              <div class="hours-row"><span class="hours-label">今天可用的工作时长</span><span class="hours-control"><span class="input tiny">4</span><span class="unit">小时</span></span></div>
+            </div>
+            <div class="quota zero">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">0 次</strong></div>
+              <div class="cost">管理员补充后，请手动刷新页面或重新进入；本版本不做自动轮询。</div>
+            </div>
+            <button class="btn primary full disabled" disabled>生成日程 · 消耗 1 额度 <span class="mark">1</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>生成按钮不可用；不发送请求，不出现“生成中…”。</span></li>
+                <li><span class="mark">—</span><span>管理员补充额度后，用户手动刷新或重新进入。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>补充额度并刷新 → <a href="#s02">02 读取中</a> → <a href="#s04">04 可生成</a></p>
+              <p>余额仍为 0 → 留在 10；任务和时长保留。</p>
+              <p>无站内充值、流水或排队入口。</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen" id="s11">
+        <header class="screen-head">
+          <span class="screen-num">11</span>
+          <div>
+            <h3>并发请求后额度用完</h3>
+            <p class="screen-pos">位置：本页显示有额度，但服务端预留时已被其他请求用尽 · 关联 R4/F7 / AC-05</p>
+          </div>
+          <span class="tag dashed">并发 / 快速失败</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">同一账号 · 多标签或快速并发</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">本次请求未能获得额度，没有生成新日程。</div>
+            <div class="panel">
+              <div class="summary-row"><span>请求前本页显示</span><span>1 次</span></div>
+              <div class="summary-row"><span>服务端最新可用额度</span><span>0 次</span></div>
+              <div class="alert error">
+                <strong>额度已被用完，本次未扣费</strong>
+                <span>没有生成新日程；不会自动重试此前失败的请求。</span>
+              </div>
+              <div class="task-list">
+                <div class="task"><span class="checkbox"></span><span class="task-name">整理项目周报</span><span class="time-box">60 分钟</span><span class="icon-box">编辑</span></div>
+                <div class="task"><span class="checkbox"></span><span class="task-name">准备评审材料</span><span class="time-box">90 分钟</span><span class="icon-box">编辑</span></div>
+              </div>
+            </div>
+            <div class="quota zero">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">0 次</strong></div>
+              <div class="cost">余额已按服务端刷新；页面旧值不作为扣费依据。</div>
+            </div>
+            <button class="btn primary full disabled" disabled>生成日程 · 消耗 1 额度 <span class="mark">1</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>当前 0 额度，生成按钮不可用；本次不重试。</span></li>
+                <li><span class="mark">—</span><span>联系管理员补充额度，之后手动刷新或重新进入。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>补充额度并刷新 → <a href="#s04">04 可生成</a>，由用户主动重试。</p>
+              <p>仍为 0 → <a href="#s10">10 额度不足</a></p>
+              <p>其他标签页的操作也会在结束后刷新，不出现负余额。</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen" id="s12">
+        <header class="screen-head">
+          <span class="screen-num">12</span>
+          <div>
+            <h3>超时 / 断网 · 结果待确认</h3>
+            <p class="screen-pos">位置：请求已发出，但客户端未拿到确定结果 · 关联 R2/F14 / AC-12</p>
+          </div>
+          <span class="tag dashed">异常 / 只保留刷新</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">网络响应中断，本次结果需要刷新后确认。</div>
+            <div class="panel">
+              <div class="alert error">
+                <strong>结果待确认</strong>
+                <span>不自动重试，请刷新后查看余额和日程；如余额减少但无日程，联系管理员核对。</span>
+              </div>
+              <div class="summary-row"><span>待办任务</span><span>2 条 · 已保留</span></div>
+              <div class="summary-row"><span>今天可用的工作时长</span><span>4 小时 · 已保留</span></div>
+              <div class="refresh-row"><span>刷新以读取服务端余额和最新日程</span><button class="btn">刷新 <span class="mark">1</span></button></div>
+            </div>
+            <div class="quota">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">刷新后确认</strong></div>
+              <div class="cost">超时可能发生在服务端已完成之后，因此不承诺未扣费。</div>
+            </div>
+            <button class="btn primary full disabled" disabled>刷新确认前不可再次生成 <span class="mark">2</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>只点击刷新，读取服务端余额与日程；系统不自动重发请求。</span></li>
+                <li><span class="mark">2</span><span>刷新确认前生成按钮不可用，避免重复请求扩大不确定性。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>刷新 → <a href="#s02">02 读取中</a>，再按服务端结果进入成功、可生成或额度不足。</p>
+              <p>余额减少且有新日程 → 以 <a href="#s07">07 成功</a> 的实际结果为准。</p>
+              <p>余额减少但无日程 → 联系管理员核对，不自行重试。</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+  <section class="group" id="group-d">
+    <div class="group-head">
+      <h2>D. 一致性与恢复</h2>
+      <p>多标签 → 读取失败 → 刷新恢复 → 中断返回 · 共 4 屏</p>
+    </div>
+    <div class="screen-grid">
+
+      <article class="screen" id="s13">
+        <header class="screen-head">
+          <span class="screen-num">13</span>
+          <div>
+            <h3>多标签页 · 旧余额不参与判定</h3>
+            <p class="screen-pos">位置：标签页 A 已成功扣费，标签页 B 仍显示旧值 · 关联 R5 / F10 / AC-07</p>
+          </div>
+          <span class="tag dashed">一致性 / 旧值</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划（标签页 B）</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">两个标签页可能短暂显示不同余额，最终以服务端判定为准。</div>
+            <div class="panel">
+              <div class="tabs-row">
+                <div class="mini-tab">
+                  <h4>A · 已完成生成</h4>
+                  <p>本次日程已保存</p>
+                  <div class="quota zero">
+                    <div class="quota-line"><span>剩余额度</span><strong class="quota-number">0 次</strong></div>
+                  </div>
+                  <div class="alert"><strong>已消耗 1 个额度</strong><span>余额已刷新为 0。</span></div>
+                </div>
+                <div class="mini-tab">
+                  <h4>B · 当前页面</h4>
+                  <p>仍是进入本页时读取的旧余额</p>
+                  <div class="quota">
+                    <div class="quota-line"><span>剩余额度</span><strong class="quota-number">1 次</strong></div>
+                  </div>
+                  <button class="btn primary">生成日程 · 消耗 1 额度 <span class="mark">1</span></button>
+                </div>
+              </div>
+              <div class="alert note">
+                <strong>本页不会因 A 的成功自动刷新</strong>
+                <span>B 的“1 次”只作展示；点击生成后由服务端原子预留，余额不足时快速失败，不出现负余额。</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>在 B 点击生成；请求提交后由服务端按最新余额判定，不沿用页面旧值。</span></li>
+                <li><span class="mark">—</span><span>也可先刷新 B，读取 A 扣费后的最新余额。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>B 预留成功 → <a href="#s07">07 成功</a>，余额按服务端结果刷新。</p>
+              <p>B 预留失败 → <a href="#s11">11 并发额度用完</a>，本次不扣费。</p>
+              <p>手动刷新 → <a href="#s02">02 读取中</a>，不做自动轮询。</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen" id="s14">
+        <header class="screen-head">
+          <span class="screen-num">14</span>
+          <div>
+            <h3>额度读取失败 · 暂不生成</h3>
+            <p class="screen-pos">位置：任务已读取，但额度查询失败 · 关联 R5 / F11 / AC-10</p>
+          </div>
+          <span class="tag dashed">异常 / 只保留刷新</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">任务仍可查看，但暂时无法确认剩余额度。</div>
+            <div class="panel">
+              <div class="alert error">
+                <strong>额度暂不可用，请刷新</strong>
+                <span>无法确认余额时不会发起生成，也不把读取失败当作 0 额度。</span>
+              </div>
+              <div class="summary-row"><span>待办任务</span><span>2 条 · 已保留</span></div>
+              <div class="summary-row"><span>今天可用的工作时长</span><span>4 小时 · 已保留</span></div>
+              <div class="refresh-row"><span>刷新以重新读取服务端余额</span><a class="btn" href="#s02">刷新 <span class="mark">1</span></a></div>
+            </div>
+            <div class="quota">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">暂不可用</strong></div>
+              <div class="cost">本次不调用模型、不扣额度；恢复后按最新余额重新判断。</div>
+            </div>
+            <button class="btn primary full disabled" disabled>额度不可用，暂不能生成 <span class="mark">2</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>点击刷新，重新读取任务与额度；系统不自动轮询。</span></li>
+                <li><span class="mark">2</span><span>生成按钮不可用，不能提交请求。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>刷新 → <a href="#s02">02 读取中</a></p>
+              <p>恢复且余额大于 0 → <a href="#s04">04 可生成</a></p>
+              <p>恢复但余额为 0 → <a href="#s10">10 额度不足</a></p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen" id="s15">
+        <header class="screen-head">
+          <span class="screen-num">15</span>
+          <div>
+            <h3>刷新恢复 · 以服务端结果为准</h3>
+            <p class="screen-pos">位置：结果待确认后点击刷新，服务端返回余额与日程 · 关联 R2/R5 / F14 / AC-12</p>
+          </div>
+          <span class="tag dark">恢复 / 已核对</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">刷新完成，已按服务端余额和日程恢复本次结果。</div>
+            <div class="alert">
+              <strong>本次生成已确认，已消耗 1 个额度，剩余 2 个</strong>
+              <span>刷新只读取服务端数据，没有自动重试或补发生成请求。</span>
+            </div>
+            <div class="panel">
+              <div class="result-head"><strong>本次日程</strong><span class="muted">2 条任务 · 4 小时</span></div>
+              <div class="schedule">
+                <p class="schedule-title">下午</p>
+                <div class="schedule-group">
+                  <div class="schedule-group-title"><span>14:00–15:30</span><span class="priority">专注块</span></div>
+                  <div class="schedule-item"><span>准备评审材料</span><span>90 分钟</span></div>
+                </div>
+              </div>
+              <div class="alert note">
+                <strong>余额减少但没有本次日程？</strong>
+                <span>联系管理员核对，以服务端记录为准；不要自行重复生成。</span>
+              </div>
+            </div>
+            <div class="quota">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">2 次</strong></div>
+              <div class="cost">余额与日程均已刷新；本次只扣服务端确认成功的 1 次。</div>
+            </div>
+            <button class="btn primary full">再次生成 · 消耗 1 额度 <span class="mark">1</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>查看已确认的本次日程，或继续调整任务。</span></li>
+                <li><span class="mark">—</span><span>若余额减少但无本次日程，联系管理员核对，不自行重试。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>确认成功 → <a href="#s07">07 成功</a></p>
+              <p>余额未变且无新日程 → <a href="#s04">04 可生成</a>，本次未成功，可手动重试。</p>
+              <p>余额减少但无日程 → 留在恢复说明，联系管理员核对。</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="screen" id="s16">
+        <header class="screen-head">
+          <span class="screen-num">16</span>
+          <div>
+            <h3>生成中离开 · 重新进入</h3>
+            <p class="screen-pos">位置：生成中刷新、关闭或离开后再次进入 · 关联 R5/F14 / AC-14</p>
+          </div>
+          <span class="tag dashed">中断 / 不自动恢复</span>
+        </header>
+        <div class="wire">
+          <div class="chrome"><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-dot"></span><span class="chrome-url">task-planner.local / 任务规划</span></div>
+          <div class="appbar"><span class="ph logo">LOGO</span><span class="brand">任务规划实验室</span><span class="ph avatar">头像</span></div>
+          <div class="app-main">
+            <div class="page-title">AI 任务规划</div>
+            <div class="page-sub">已重新读取服务端最新余额；上次生成结果未确认。</div>
+            <div class="panel">
+              <div class="alert error">
+                <strong>上次生成结果未确认</strong>
+                <span>系统不会自动重试，也不会自动恢复上次结果；刷新可核对余额和日程。</span>
+              </div>
+              <div class="summary-row"><span>待办任务</span><span>2 条 · 已保留</span></div>
+              <div class="summary-row"><span>今天可用的工作时长</span><span>4 小时 · 已保留</span></div>
+              <div class="blank-note">本次未恢复日程结果</div>
+              <div class="refresh-row"><span>如需核对上次结果，请刷新读取服务端记录</span><a class="btn" href="#s02">刷新 <span class="mark">1</span></a></div>
+            </div>
+            <div class="quota">
+              <div class="quota-line"><span>剩余额度</span><strong class="quota-number">2 次</strong></div>
+              <div class="cost">当前值来自服务端；再次生成将作为新请求，不复用上次结果。</div>
+            </div>
+            <button class="btn primary full">生成日程 · 消耗 1 额度 <span class="mark">2</span></button>
+          </div>
+        </div>
+        <div class="handoff">
+          <div class="handoff-grid">
+            <div>
+              <span class="handoff-label">用户可以执行的操作</span>
+              <ol class="ops">
+                <li><span class="mark">1</span><span>先刷新核对上次结果；系统不自动重试、不自动恢复日程。</span></li>
+                <li><span class="mark">2</span><span>页面保持普通可操作状态；再次生成会发起新的请求。</span></li>
+              </ol>
+            </div>
+            <div class="dest">
+              <span class="handoff-label">操作后去向</span>
+              <p>刷新 → <a href="#s02">02 读取中</a>，再按服务端结果进入成功或可生成。</p>
+              <p>开始新生成 → <a href="#s06">06 生成中</a></p>
+              <p>余额被用完 → <a href="#s10">10 额度不足</a></p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="review-section" id="review">
+    <h2>决策与范围核对</h2>
+    <p>PRD 第 11 节中的已定决策已同步到 16 屏。评审时重点核对实现是否按这些决定落地，而不是重新引入未定义分支。</p>
+    <div class="review-grid">
+      <div class="review-card">
+        <span class="tag dark">已定</span>
+        <h3>登录与权限</h3>
+        <p>沿用现有登录；未登录或会话失效进入登录页。会话失效显示固定提示。不新增独立权限申请、角色授权或浏览器权限弹窗。</p>
+      </div>
+      <div class="review-card">
+        <span class="tag dark">已定</span>
+        <h3>0 额度 / 读取失败 / 非法时长</h3>
+        <p>生成按钮不可用并说明原因；不进入生成中、不调用模型。额度读取失败不能显示成 0 额度，只保留刷新入口。</p>
+      </div>
+      <div class="review-card">
+        <span class="tag dark">已定</span>
+        <h3>补充额度后</h3>
+        <p>管理员在产品外补充；用户手动刷新或重新进入页面后读取最新余额，不做自动轮询。</p>
+      </div>
+      <div class="review-card">
+        <span class="tag dark">已定</span>
+        <h3>超时 / 断网</h3>
+        <p>显示“结果待确认”；不自动重试；刷新确认前生成按钮不可用，只保留刷新入口。余额与日程以服务端结果为准。</p>
+      </div>
+      <div class="review-card">
+        <span class="tag dark">已定</span>
+        <h3>中断后返回</h3>
+        <p>不自动重试，也不自动恢复上次结果；重新进入显示最新余额和“上次结果未确认”，页面保持普通可操作状态。</p>
+      </div>
+      <div class="review-card">
+        <span class="tag dark">已定</span>
+        <h3>并发与旧日程</h3>
+        <p>旧余额不作为扣费依据，由服务端原子预留判定且不透支。新请求失败时保留旧日程，但明确标注“不是本次结果”。</p>
+      </div>
+      <div class="review-card">
+        <span class="tag dark">范围外</span>
+        <h3>明确不做</h3>
+        <p>支付、订阅、自助充值、额度流水、额度排队、服务崩溃自动补偿、历史结果恢复、跨账号防刷。</p>
+      </div>
+    </div>
+
+    <table class="coverage">
+      <thead>
+        <tr><th>核对项</th><th>覆盖内容</th><th>对应页面 / 交付物</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>F1–F4</td><td>余额可见、成本透明、可生成、成功扣 1 并刷新</td><td>02、04、06、07、15</td></tr>
+        <tr><td>F5 / F8</td><td>0 额度阻断、请求中防重复点击</td><td>03、05、06、10</td></tr>
+        <tr><td>F6 / F9</td><td>模型失败不扣费、保存失败可重试、旧日程不冒充新结果</td><td>08、09</td></tr>
+        <tr><td>F7 / F10</td><td>并发不透支、多标签页旧余额不作为扣费依据</td><td>11、13</td></tr>
+        <tr><td>F11–F14</td><td>读取失败、事件、会话失效、超时与断网</td><td>01、12、14、15、16；F12 为后台事件，无独立用户页面</td></tr>
+        <tr><td>AC-01–AC-14</td><td>正常、阻断、失败、并发、恢复、会话、超时与中断返回验收</td><td>16 屏逐项对应；执行结果仍以验收记录为准</td></tr>
+        <tr><td>T1–T5</td><td>状态字段、余额与成本、输入校验、0 额度、请求中锁定</td><td>01–06、10、14</td></tr>
+        <tr><td>T6–T10</td><td>原子预留、成功扣费、两类失败、结束刷新</td><td>06–12、15</td></tr>
+        <tr><td>T11–T16</td><td>多标签一致性、读取失败、会话恢复、超时、事件、回归</td><td>01、11–16；实现与验证见 BREAKDOWN.md</td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+<footer class="doc-footer">
+  <p>低保真原型 · 16 屏完整状态 · 所有内容平铺在本文件。</p>
+  <p>依据：docs/product/PRD.md、FLOW.md、ACCEPTANCE.md。未增加充值、流水、排队、权限申请或其他 PRD 外功能。</p>
+</footer>
+</body>
+</html>
