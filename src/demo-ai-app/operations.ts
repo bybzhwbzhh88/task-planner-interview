@@ -1,82 +1,43 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
-import { HttpError, prisma } from "wasp/server";
+import { randomUUID } from "node:crypto";
+import type { PlanResult, Task } from "wasp/entities";
+import { HttpError } from "wasp/server";
 import type {
   CreateTask,
   DeleteTask,
   GeneratePlan,
   GetAllTasksByUser,
   GetPlanResults,
+  GetCredits,
+  GetLatestPlan,
   UpdateTask,
 } from "wasp/server/operations";
 import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
-import type { GeneratedSchedule } from "./schedule";
+import type { GenerateInput, GenerationOutcome, StoredPlan, ViewerInput } from "./generation";
+import { generateForUser, GenerationError } from "./planGeneration";
+import { createPlanStore, parsePlan } from "./planStore";
 import { generateMockSchedule } from "./mockAi";
 
 
 //#region Actions
-const generatePlanInputSchema = z.object({
-  hours: z.number(),
-});
-
-type GeneratePlanInput = z.infer<typeof generatePlanInputSchema>;
-
-export const generatePlan: GeneratePlan<
-  GeneratePlanInput,
-  GeneratedSchedule
-> = async (rawArgs, context) => {
-  if (!context.user) {
-    throw new HttpError(
-      401,
-      "Only authenticated users are allowed to perform this operation",
-    );
+export const generatePlan: GeneratePlan<GenerateInput, GenerationOutcome> = async (rawArgs, context) => {
+  if (!context.user) throw new HttpError(401, "请重新登录。", { code: "NOT_AUTHENTICATED" });
+  try {
+    return await generateForUser(context.user.id, rawArgs, {
+      store: createPlanStore({ user: context.entities.User, task: context.entities.Task, planResult: context.entities.PlanResult }),
+      generate: generateMockSchedule,
+      newId: randomUUID,
+      log: event => console.info(JSON.stringify(event)),
+    });
+  } catch (error) {
+    if (error instanceof GenerationError) {
+      const messages = { INVALID_INPUT: "请输入 1–24 小时的有效时长。", NO_TASKS: "请先添加任务。", NO_CREDITS: "当前没有可用额度，本次未调用模型。" };
+      throw new HttpError(error.code === "NO_CREDITS" ? 402 : 400, messages[error.code], { code: error.code });
+    }
+    // All uncertain writes are already converted to typed outcomes by the orchestration.
+    console.error(JSON.stringify({ event: "plan-generation.before-reservation-error", userId: context.user.id }));
+    throw new HttpError(500, "本次请求未执行，请刷新后重试。");
   }
-
-  const { hours } = ensureArgsSchemaOrThrowHttpError(
-    generatePlanInputSchema,
-    rawArgs,
-  );
-  const tasks = await context.entities.Task.findMany({
-    where: {
-      user: {
-        id: context.user.id,
-      },
-    },
-  });
-
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
-    );
-  }
-
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
-  });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
-  }
-
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
-
-  return generatedSchedule;
 };
 
 const createTaskInputSchema = z.object({
@@ -214,3 +175,25 @@ export const getAllTasksByUser: GetAllTasksByUser<void, Task[]> = async (
 };
 //#endregion
 
+
+
+function requireViewer(rawArgs: unknown, userId: string | undefined): string {
+  if (!userId) throw new HttpError(401, "请重新登录。");
+  const parsed = z.object({ viewerId: z.string().nonempty() }).safeParse(rawArgs);
+  if (!parsed.success) throw new HttpError(400, "账号查询参数无效。");
+  if (parsed.data.viewerId !== userId) throw new HttpError(403, "账号已变化，请刷新页面。");
+  return userId;
+}
+
+export const getCredits: GetCredits<ViewerInput, { availableCredits: number }> = async (args, context) => {
+  const userId = requireViewer(args, context.user?.id);
+  const user = await context.entities.User.findUnique({ where: { id: userId }, select: { credits: true } });
+  if (!user) throw new HttpError(401, "请重新登录。");
+  return { availableCredits: user.credits };
+};
+
+export const getLatestPlan: GetLatestPlan<ViewerInput, StoredPlan | null> = async (args, context) => {
+  const userId = requireViewer(args, context.user?.id);
+  const record = await context.entities.PlanResult.findFirst({ where: { userId }, orderBy: [{ createdAt: "desc" }, { id: "desc" }] });
+  return record ? parsePlan(record) : null;
+};

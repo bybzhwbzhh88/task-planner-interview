@@ -1,16 +1,19 @@
 import { type Task } from "wasp/entities";
+import { useAuth } from "wasp/client/auth";
 
 import {
   createTask,
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCredits,
+  getLatestPlan,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
 
 import { Loader2, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { Button } from "../client/components/ui/button";
 import {
   Card,
@@ -21,7 +24,8 @@ import {
 import { Checkbox } from "../client/components/ui/checkbox";
 import { Input } from "../client/components/ui/input";
 import { Label } from "../client/components/ui/label";
-import { toast } from "../client/hooks/use-toast";
+import { generationFeedback, type GenerationFeedback } from "./generationFeedback";
+import { pickNewestPlan, type StoredPlan } from "./generation";
 import { cn } from "../client/utils";
 import type {
   GeneratedSchedule,
@@ -31,6 +35,7 @@ import type {
 } from "./schedule";
 
 export function DemoAppPage() {
+  const { data: user } = useAuth();
   return (
     <div className="py-10 lg:mt-10">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -45,7 +50,7 @@ export function DemoAppPage() {
         {/* begin AI-powered Todo List */}
         <Card className="bg-muted/10 my-8">
           <CardContent className="mx-auto my-8 space-y-10 px-6 py-10 sm:w-[90%] md:w-[70%] lg:w-[50%]">
-            <NewTaskForm handleCreateTask={createTask} />
+            {user && <NewTaskForm key={user.id} viewerId={user.id} handleCreateTask={createTask} />}
           </CardContent>
         </Card>
         {/* end AI-powered Todo List */}
@@ -56,16 +61,26 @@ export function DemoAppPage() {
 
 function NewTaskForm({
   handleCreateTask,
+  viewerId,
 }: {
+  viewerId: string;
   handleCreateTask: typeof createTask;
 }) {
   const [description, setDescription] = useState<string>("");
   const [todaysHours, setTodaysHours] = useState<number>(8);
-  const [response, setResponse] = useState<GeneratedSchedule | null>(null);
+  const [response, setResponse] = useState<StoredPlan | null>(null);
+  const [feedback, setFeedback] = useState<GenerationFeedback | null>(null);
+  const busy = useRef(false);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
 
-  const { data: tasks, isLoading: isTasksLoading } =
+  const { data: tasks, isLoading: isTasksLoading, error: tasksError } =
     useQuery(getAllTasksByUser);
+  const credits = useQuery(getCredits, { viewerId });
+  const latest = useQuery(getLatestPlan, { viewerId });
+  const noCredits = credits.isSuccess && credits.data?.availableCredits === 0;
+  const validHours = Number.isFinite(todaysHours) && todaysHours >= 1 && todaysHours <= 24;
+  const shownPlan = pickNewestPlan(response, latest.data);
+  const refresh = async () => { await Promise.allSettled([credits.refetch(), latest.refetch()]); };
 
   const handleSubmit = async () => {
     try {
@@ -79,42 +94,36 @@ function NewTaskForm({
   };
 
   const handleGeneratePlan = async () => {
+    if (busy.current || !validHours || !tasks?.length) return;
+    busy.current = true;
+    setIsPlanGenerating(true);
     try {
-      setIsPlanGenerating(true);
-      const response = await generatePlan({
-        hours: todaysHours,
-      });
-      if (response) {
-        setResponse(response);
-      }
-    } catch (err) {
-      const statusCode =
-        err && typeof err === "object" && "statusCode" in err
-          ? err.statusCode
-          : undefined;
-      if (statusCode === 402) {
-        toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
-          variant: "destructive",
-        });
-      }
+      const outcome = await generatePlan({ hours: todaysHours });
+      if (outcome.status === "succeeded") setResponse(outcome.plan);
+      setFeedback(generationFeedback(outcome));
+    } catch (error) {
+      setFeedback(generationFeedback(error));
     } finally {
+      await refresh();
+      busy.current = false;
       setIsPlanGenerating(false);
     }
   };
 
   return (
     <div className="flex flex-col justify-center gap-10">
+      <div className="bg-muted/30 rounded-lg border p-4" aria-live="polite">
+        <p className="font-semibold" data-testid="available-credits">可用额度：{credits.isLoading ? "读取中…" : credits.error || !credits.data ? "暂不可用" : credits.data.availableCredits}</p>
+        <p className="text-muted-foreground mt-1 text-sm">每成功生成并保存一次日程消耗 1 个额度；生成期间暂时预占额度。</p>
+        {noCredits && <p className="mt-2 text-sm">当前没有可用额度；若有日程正在生成，请等待结束后刷新。</p>}
+        {credits.error && <p className="mt-2 text-sm">额度读取失败，请刷新后确认。</p>}
+        {latest.error && <p className="mt-2 text-sm">最近日程读取失败，请刷新后核对。</p>}
+        <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => { void refresh(); }} disabled={credits.isFetching || latest.isFetching}>刷新额度与最近日程</Button>
+      </div>
+      {feedback && <div role="status" className={cn("rounded-lg border p-4 text-sm", feedback.tone === "success" ? "border-green-600/30 bg-green-500/5" : "border-amber-500/30 bg-amber-500/5")}>
+        <p className="font-semibold">{feedback.title}</p><p className="mt-1">{feedback.message}</p>
+        {feedback.title === "登录已失效" && <a className="mt-2 inline-block underline" href="/login">重新登录</a>}
+      </div>}
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <Input
@@ -143,6 +152,7 @@ function NewTaskForm({
       </div>
 
       <div className="col-span-full space-y-10">
+        {tasksError && <p role="alert">任务读取失败，请刷新页面后再试。</p>}
         {isTasksLoading && (
           <div className="text-muted-foreground">Loading...</div>
         )}
@@ -160,14 +170,14 @@ function NewTaskForm({
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-3">
                 <Label
-                  htmlFor="time"
+                  htmlFor="available-hours"
                   className="text-muted-foreground text-nowrap text-sm font-semibold"
                 >
                   今天可用的工作时长
                 </Label>
                 <Input
                   type="number"
-                  id="time"
+                  id="available-hours"
                   step={0.5}
                   min={1}
                   max={24}
@@ -185,9 +195,10 @@ function NewTaskForm({
         )}
       </div>
 
+      {!validHours && <p className="text-destructive text-sm" role="alert">请输入 1–24 小时的有效时长。</p>}
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || isTasksLoading || !tasks?.length || !validHours || credits.isLoading || noCredits}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -204,12 +215,13 @@ function NewTaskForm({
         )}
       </Button>
 
-      {!!response && (
+      {!!shownPlan && (
         <div className="flex flex-col">
           <h3 className="text-foreground mb-4 text-lg font-semibold">
-            本次日程
+            最近成功日程
           </h3>
-          <Schedule schedule={response} />
+          <p className="text-muted-foreground text-sm">生成时间：{new Date(shownPlan.createdAt).toLocaleString()}</p>
+          <Schedule key={shownPlan.id} schedule={shownPlan.schedule} />
         </div>
       )}
     </div>
