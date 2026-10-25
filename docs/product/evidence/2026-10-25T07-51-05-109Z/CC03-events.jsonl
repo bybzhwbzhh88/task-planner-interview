@@ -1,0 +1,4 @@
+{"event":"mock-ai.started","callId":"db13c8ba-ac8c-47b6-88ac-82149f4dfbcc"}
+{"event":"mock-ai.started","callId":"bc536248-a510-4580-bfd3-0b8d2b84c49a"}
+{"event":"mock-ai.succeeded","callId":"db13c8ba-ac8c-47b6-88ac-82149f4dfbcc"}
+{"event":"mock-ai.succeeded","callId":"bc536248-a510-4580-bfd3-0b8d2b84c49a"}
