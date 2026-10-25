@@ -1,0 +1,17 @@
+
+> test:concurrency
+> vitest run --project integration tests/integration/concurrency.test.ts
+
+
+ RUN  v4.1.11 <repo>
+
+{"case":"A04","connections":10,"succeeded":1,"noCredits":9,"started":1,"credits":0,"results":1}
+{"case":"A05-round-1","connections":10,"succeeded":3,"noCredits":7,"started":3,"credits":0,"results":3}
+{"case":"A05-round-2","connections":10,"succeeded":3,"noCredits":7,"started":3,"credits":0,"results":3}
+{"case":"A05-round-3","connections":10,"succeeded":3,"noCredits":7,"started":3,"credits":0,"results":3}
+{"case":"A06","inFlightRejected":9,"refundedCredits":1,"retrySucceeded":1,"started":2,"finalCredits":0}
+
+ Test Files  1 passed (1)
+      Tests  3 passed (3)
+   Start at  12:11:28
+   Duration  3.57s (transform 36ms, setup 0ms, import 89ms, tests 3.40s, environment 0ms)

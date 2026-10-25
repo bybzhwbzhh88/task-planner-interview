@@ -1,0 +1,36 @@
+
+[   Db  !] Error: P1001
+[   Db  !]
+[   Db  !] Can't reach database server at `localhost:5432`
+[   Db  !]
+[   Db  !] Please make sure your database server is running at `localhost:5432`.
+[   Db  !]
+🐝 --- Compiling wasp project... --------------------------------------------------
+
+
+✅ --- Successfully completed npm install. ----------------------------------------
+
+
+🐝 --- Setting up database... -----------------------------------------------------
+
+
+✅ --- Database successfully set up. ----------------------------------------------
+
+
+🐝 --- Building SDK... ------------------------------------------------------------
+
+
+[  Wasp  ] > wasp@1.0.0 build
+[  Wasp  ] > tsc && node ./scripts/copy-assets.js
+[  Wasp  ]
+[  Wasp  ] [copy-assets] 0 copied, 9 skipped
+✅ --- SDK built successfully. ----------------------------------------------------
+
+
+✅ --- Your wasp project has successfully compiled. -------------------------------
+
+
+
+👀 --- [Warning] Your wasp project reported following warnings during compilation: ---
+
+- Wasp was unable to verify your database is up to date. Running `wasp db migrate-dev` may fix this and will provide more info.

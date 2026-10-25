@@ -1,0 +1,19 @@
+
+> test:db:prepare
+> node scripts/test-db.mjs
+
+Prisma schema loaded from .wasp/out/db/schema.prisma
+
+✔ Generated Prisma Client (v5.19.1) to ./node_modules/@prisma/client in 48ms
+
+Start by importing your Prisma Client (See: http://pris.ly/d/importing-client)
+
+Tip: Want to react to database changes in your app as they happen? Discover how with Pulse: https://pris.ly/tip-1-pulse
+
+Prisma schema loaded from .wasp/out/db/schema.prisma
+Datasource "db": PostgreSQL database "generation_quota_test", schema "public" at "127.0.0.1:55439"
+
+1 migration found in prisma/migrations
+
+
+No pending migrations to apply.

@@ -1,6 +1,6 @@
 # 日程生成额度处理 Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** 完成数据库原子预占、可靠结果反馈和可重复并发验证。
 
@@ -34,9 +34,9 @@
 
 **Interfaces:** Produces `generateForUser(userId: string, args: unknown, deps: GenerationDeps): Promise<GenerationOutcome>`。`PlanStore` 提供 listTasks/reserve/save/find/refund/credits。`StoredPlan={id,createdAt,schedule}`；`GenerationOutcome` 为 succeeded（plan、availableCredits: number|null）或 failed（code、requestId）。`GenerationError` 表示未执行的输入/空任务/无额度；`SaveRejectedError` 标记明确未提交。Consumes 现有 schema、mock provider，注入 ID 和日志。
 
-- [ ] 写 reserve=false 时 provider=0、成功少 1、模型失败恢复额度、非法参数与空任务不预占测试；运行 `npm run test:unit`，观察缺失编排红灯。
-- [ ] 实现上述接口，最小通过；添加保存拒绝、已提交后报错、核对为空/失败、预占提交后报错、返还前/后抛错、余额读取失败、无效模型输出测试，逐组先红后绿。
-- [ ] `npm run test:unit` 全通过；提交 Task 1。
+- [x] 写 reserve=false 时 provider=0、成功少 1、模型失败恢复额度、非法参数与空任务不预占测试；运行 `npm run test:unit`，观察缺失编排红灯。
+- [x] 实现上述接口，最小通过；添加保存拒绝、已提交后报错、核对为空/失败、预占提交后报错、返还前/后抛错、余额读取失败、无效模型输出测试，逐组先红后绿。
+- [x] `npm run test:unit` 全通过；提交 Task 1。
 
 ### Task 2: Prisma、Wasp 入口及真实数据库并发
 
@@ -44,10 +44,10 @@
 
 **Interfaces:** Consumes Task 1；produces `createPlanStore(client): PlanStore`、`getCredits({viewerId}): {availableCredits}`、`getLatestPlan({viewerId}): StoredPlan|null`。viewerId 必须与登录账号一致。准备脚本校验 `QUOTA_TEST_DATABASE_URL` 为本地且库名以 `_quota_test` 结尾，应用既有迁移，不能重置应用库。
 
-- [ ] 写入口身份与越权查询、测试库保护测试；先运行红灯，再实现适配器、入口和查询。
-- [ ] 写 A01–A06 数据库测试：实际编排、适配器和 mock，每请求独立连接，以屏障确保重叠；断言调用日志、成功数、结果数及余额。A06 在模型完成前阻止返还，等待其他请求拒绝。
-- [ ] 执行 `npm run test:db:prepare`、`npm run test:integration`、`npm run test:concurrency`，预期 A04=1/9，A05 每轮=3/7，A06 失败后可重试。
-- [ ] 执行单元测试和 `wasp compile`；预期全通过；提交 Task 2。
+- [x] 写入口身份与越权查询、测试库保护测试；先运行红灯，再实现适配器、入口和查询。
+- [x] 写 A01–A06 数据库测试：实际编排、适配器和 mock，每请求独立连接，以屏障确保重叠；断言调用日志、成功数、结果数及余额。A06 在模型完成前阻止返还，等待其他请求拒绝。
+- [x] 执行 `npm run test:db:prepare`、`npm run test:integration`、`npm run test:concurrency`，预期 A04=1/9，A05 每轮=3/7，A06 失败后可重试。
+- [x] 执行单元测试和 `wasp compile`；预期全通过；提交 Task 2。
 
 ### Task 3: 页面额度、结果恢复及操作反馈
 
@@ -55,10 +55,10 @@
 
 **Interfaces:** Consumes Task 2 的 generatePlan/getCredits/getLatestPlan 和 useAuth；produces `generationFeedback(outcome|error): {title,message,tone}`；账号 key 重建本地状态，查询刷新并恢复最近日程。
 
-- [ ] 写成功消费 1、模型/保存已返还、未知不能宣称未扣费、401 下一步及网络中断测试；先红后绿。
-- [ ] 接入服务端额度和最近结果查询；页头共用事实来源，未知余额不显示 0；时长 1–24，生成中禁用，0 额度解释原因，提供刷新核对/重新登录。
-- [ ] 独立应用库运行浏览器：注册、任务、成功、刷新恢复、模型失败、0 额度、生成中禁用、账号隔离、非法时长；保留证据。
-- [ ] 单元测试、Wasp compile、两个 tsc --noEmit 均通过；提交 Task 3。
+- [x] 写成功消费 1、模型/保存已返还、未知不能宣称未扣费、401 下一步及网络中断测试；先红后绿。
+- [x] 接入服务端额度和最近结果查询；页头共用事实来源，未知余额不显示 0；时长 1–24，生成中禁用，0 额度解释原因，提供刷新核对/重新登录。
+- [x] 独立应用库运行浏览器：注册、任务、成功、刷新恢复、模型失败、0 额度、生成中禁用、账号隔离、非法时长；保留证据。
+- [x] 单元测试、Wasp compile、两个 tsc --noEmit 均通过；提交 Task 3。
 
 ### Task 4: 实际验证、交接及最终评审
 
@@ -66,10 +66,10 @@
 
 **Interfaces:** Consumes Tasks 1–3 证据及 A01–A16，产出可复现命令与实际结果。
 
-- [ ] 运行 `npm test` 全套、Wasp compile、两个 tsc；记录预期、实际及未执行项，区分单元、数据库和浏览器证据。
-- [ ] 写测试库准备、并发命令、未知状态人工核对，身份留待本人填写；更新 spec 最终状态及修订。
-- [ ] 对 `114aeb2..HEAD` 做独立整分支评审；重要问题一轮 RED→GREEN 修复，再跑全套。
-- [ ] 提交交接及证据，检查无私有配置和生成目录；保留 worktree，不合并/推送。
+- [x] 运行 `npm test` 全套、Wasp compile、两个 tsc；记录预期、实际及未执行项，区分单元、数据库和浏览器证据。
+- [x] 写测试库准备、并发命令、未知状态人工核对，身份留待本人填写；更新 spec 最终状态及修订。
+- [x] 对 `114aeb2..HEAD` 做独立整分支评审；重要问题一轮 RED→GREEN 修复，再跑全套。
+- [x] 提交交接及证据，检查无私有配置和生成目录；保留 worktree，不合并/推送。
 
 ## 执行说明
 
