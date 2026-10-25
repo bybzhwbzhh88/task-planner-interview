@@ -1,0 +1,10 @@
+PASS success: generating disables button, success renders result, refreshes credits, restores button
+PASS 402: clear no-quota explanation, refresh credits, retain previous successful schedule
+PASS 502: confirmed refund, actionable retry guidance, retained previous schedule
+PASS 503: unknown quota state is not advertised as refunded
+PASS network error: does not claim refund, asks user to check before generating again
+PASS refresh failure preserves generation outcome; manual refresh clears stale-credit warning
+PASS 400: invalid operation explains correction and no consumption
+PASS 401: authentication failure directs user to log in again
+PASS empty tasks: generation disabled
+Frontend component checks: 9 passed. Real React/ReactDOM/jsdom and source components; Wasp auth/transport are fixtures. Not a Wasp build or end-to-end run.

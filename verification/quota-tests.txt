@@ -1,0 +1,27 @@
+
+> test:quota
+> vitest run --config vitest.quota.config.ts --reporter=verbose
+
+
+ RUN  v4.1.11 E:/笔试题目/task-planner-interview
+
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A1: 成功只扣一次并保存结果，不采用旧的零余额快照 561ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A2: 数据库余额为零时不调用模型，即使请求快照还有额度 6ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A3: 模型明确失败返还额度，移除失败任务后可以重试 1063ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A4/A5: 1 次额度下同时请求 10 次，只调用有额度的次数 535ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A4/A5: 3 次额度下同时请求 10 次，只调用有额度的次数 531ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A6: 保存失败时返还预占额度，不留下结果 515ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A7: 返还失败时报告状态待确认，不谎报已返还 534ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A10: 同账号并发一成一败，返还不能覆盖另一次成功的扣减 531ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 未登录不调用模型 2ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 空待办不占额度、不调用模型 5ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 非法时长 0 不占额度、不调用模型 6ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 非法时长 -1 不占额度、不调用模型 5ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 非法时长 25 不占额度、不调用模型 5ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 非法时长 NaN 不占额度、不调用模型 5ms
+ ✓ tests/quota.integration.test.ts > 真实 PostgreSQL 上的日程额度处理 > A8: 非法时长 Infinity 不占额度、不调用模型 4ms
+
+ Test Files  1 passed (1)
+      Tests  15 passed (15)
+   Start at  14:43:40
+   Duration  4.77s (transform 67ms, setup 0ms, import 223ms, tests 4.35s, environment 0ms)

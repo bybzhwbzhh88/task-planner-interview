@@ -1,0 +1,46 @@
+v24.14.1
+
+If you wish to install/switch to the latest version of Wasp, do:
+  npm i -g @wasp.sh/wasp-cli@latest
+
+If you want a specific x.y.z version of Wasp, do:
+  npm i -g @wasp.sh/wasp-cli@x.y.z
+
+Check https://github.com/wasp-lang/wasp/releases for the list of valid versions, including the latest one.
+
+0.25.0
+
+🐝 --- Compiling wasp project... --------------------------------------------------
+
+
+✅ --- Successfully completed npm install. ----------------------------------------
+
+
+🐝 --- Setting up database... -----------------------------------------------------
+
+
+[   Db   ] No difference detected.
+[   Db   ]
+[   Db   ] Environment variables loaded from .env
+[   Db   ] Prisma schema loaded from ../db/schema.prisma
+[   Db   ] Datasource "db": PostgreSQL database "quota_test", schema "public" at "codex-quota-db-20261025:5432"
+[   Db   ]
+[   Db   ] 1 migration found in prisma/migrations
+[   Db   ]
+[   Db   ] Database schema is up to date!
+✅ --- Database successfully set up. ----------------------------------------------
+
+
+🐝 --- Building SDK... ------------------------------------------------------------
+
+
+[  Wasp  ] > wasp@1.0.0 build
+[  Wasp  ] > tsc && node ./scripts/copy-assets.js
+[  Wasp  ]
+[  Wasp  ] [copy-assets] 0 copied, 9 skipped
+✅ --- SDK built successfully. ----------------------------------------------------
+
+
+✅ --- Your wasp project has successfully compiled. -------------------------------
+
+WASP_COMPILE_AND_BOTH_TYPESCRIPT_CHECKS_PASSED
