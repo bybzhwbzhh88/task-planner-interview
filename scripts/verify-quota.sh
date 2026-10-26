@@ -6,6 +6,7 @@
 #   1. dev server 已启动（wasp start），并把输出写进日志文件：
 #        wasp start 2>&1 | tee /tmp/wasp.log
 #   2. 有 psql 可连到同一个库（默认读 .env.server 里的 DATABASE_URL）
+#   3. 数据库账号需能建触发器（仅 AC-04 用；脚本自行创建，退出时连同函数一起删除）
 #
 # 用法：
 #   bash scripts/verify-quota.sh
@@ -79,6 +80,23 @@ count_started() { since "$1" | grep -c 'mock-ai.started'; }
 count_failed() { since "$1" | grep -c 'mock-ai.failed'; }
 clean_fail() { q "DELETE FROM \"Task\" WHERE description LIKE '[fail]%' AND \"userId\"='$USERID';" >/dev/null; }
 
+# AC-04 用：装一个只对本账号生效的 BEFORE INSERT 触发器，让「模型成功、落库失败」可复现。
+TRIGGER_ON=0
+trigger_on() {
+  q "CREATE OR REPLACE FUNCTION vq_fail_planresult() RETURNS trigger AS \$\$ BEGIN RAISE EXCEPTION 'vq simulated insert failure'; END; \$\$ LANGUAGE plpgsql;" >/dev/null
+  q "DROP TRIGGER IF EXISTS vq_fail_planresult ON \"PlanResult\";" >/dev/null 2>&1
+  q "CREATE TRIGGER vq_fail_planresult BEFORE INSERT ON \"PlanResult\" FOR EACH ROW WHEN (NEW.\"userId\" = '$USERID') EXECUTE FUNCTION vq_fail_planresult();" >/dev/null
+  TRIGGER_ON=1
+}
+trigger_off() {
+  q "DROP TRIGGER IF EXISTS vq_fail_planresult ON \"PlanResult\";" >/dev/null 2>&1
+  q "DROP FUNCTION IF EXISTS vq_fail_planresult();" >/dev/null 2>&1
+  TRIGGER_ON=0
+}
+# 中断退出也必须撤掉触发器，否则后续用例都会被它带崩。
+cleanup() { [ "$TRIGGER_ON" = "1" ] && trigger_off >/dev/null 2>&1; }
+trap cleanup EXIT
+
 # ---------- 建临时账号 ----------
 U="verify_$RANDOM$RANDOM"
 PW="verify1234"
@@ -137,6 +155,26 @@ else
   skip "mock-ai 计数" "需要 --log"
 fi
 clean_fail
+
+# ---------- AC-04 ----------
+section "AC-04 落库失败不消耗额度"
+set_credits 2
+B=$(plan_count); M=$(mark)
+trigger_on
+check "触发器已就位" 1 "$(q "SELECT count(*) FROM pg_trigger WHERE tgname='vq_fail_planresult';")"
+CODE=$(plan /tmp/vq_ac04.json)
+check "HTTP" 424 "$CODE"
+check "credits 退回" 2 "$(credits)"
+check "PlanResult 未新增" 0 "$(( $(plan_count) - B ))"
+if [ -n "$LOG" ]; then
+  check "mock-ai.started" 1 "$(count_started "$M")"
+  # 失败发生在 INSERT，不在模型侧，所以不该出现 failed
+  check "mock-ai.failed" 0 "$(count_failed "$M")"
+else
+  skip "mock-ai 计数" "需要 --log"
+fi
+trigger_off
+check "触发器已清理" 0 "$(q "SELECT count(*) FROM pg_trigger WHERE tgname='vq_fail_planresult';")"
 
 # ---------- AC-05 ----------
 section "AC-05 并发不透支：credits=1，并发 2"

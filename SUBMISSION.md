@@ -34,7 +34,7 @@ PR 标题：`产品｜小缪｜136****6099`
 | [src/demo-ai-app/operations.ts](src/demo-ai-app/operations.ts) | `generatePlan` 改为先扣后调、失败退还；新增 `getMyCredits` 查询；删除 `=== null` 死代码 |
 | [src/demo-ai-app/demo-ai-app.wasp.ts](src/demo-ai-app/demo-ai-app.wasp.ts) | 注册 `getMyCredits` |
 | [src/demo-ai-app/DemoAppPage.tsx](src/demo-ai-app/DemoAppPage.tsx) | 余额展示、按钮三态、402 / 424 分支提示 |
-| [scripts/verify-quota.sh](scripts/verify-quota.sh) | 新增。AC-01 ~ AC-07 的一键复验脚本，24 项断言 |
+| [scripts/verify-quota.sh](scripts/verify-quota.sh) | 新增。AC-01 ~ AC-07 的一键复验脚本，31 项断言 |
 
 ### 运行与复验
 
@@ -93,7 +93,7 @@ AC-00.3 同时印证 `generatedSchedule === null` 是死代码——`mockAi.ts` 
 
 AC-04 的模拟方式：在 `PlanResult` 上装 `BEFORE INSERT` 触发器抛异常，让模型成功但落库失败，确认走的是退还分支（余额不变、无新增记录），测完即删触发器。
 
-以上 AC-01 / AC-02 / AC-03 / AC-05 / AC-06 / AC-07 已固化为 `scripts/verify-quota.sh`，一条命令跑完 24 项断言，本机实测全部通过。AC-04 需要临时改数据库结构，未放进脚本。
+AC-01 ~ AC-07 已全部固化为 `scripts/verify-quota.sh`，一条命令跑完 31 项断言，本机实测全部通过。AC-04 的触发器由脚本自行创建、只对本脚本的临时账号生效，退出时（含中途失败）由 `trap` 兜底删除。
 
 ### AC-08 / AC-09 前端呈现（代码已实现，视觉未核对）
 
@@ -105,7 +105,6 @@ AC-04 的模拟方式：在 `PlanResult` 上装 `BEFORE INSERT` 触发器抛异�
 
 - AC-08 / AC-09 的页面视觉核对（登录后目视确认余额位置、置灰态、两条错误文案）。
 - 单元测试（T-07 的第一条）未写。当前验证是端到端的，依赖 `wasp start` 与数据库；单测能把「余额 1 并发 2 只成功 1 次」这条逻辑从环境里剥离出来，更适合进 CI。
-- AC-04（落库失败）未纳入 `scripts/verify-quota.sh`，因为它要临时建删触发器。复现步骤见 `05-acceptance.md` §2.4。
 
 **已知问题（本期不处理）**
 

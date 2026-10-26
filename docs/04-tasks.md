@@ -106,7 +106,7 @@
 | T-04 | 已完成 | 新增 `getMyCredits` 查询，注册在 `demo-ai-app.wasp.ts` |
 | T-05 | 已完成，视觉待确认 | 按钮左侧常驻「剩余 N 次」，余额 0 时置灰 |
 | T-06 | 已完成，视觉待确认 | 402 / 424 分支提示，失败后保留输入可直接重试 |
-| T-07 | 部分完成 | 端到端脚本 `scripts/verify-quota.sh` 已就位（24 项断言）；单元测试未写 |
+| T-07 | 部分完成 | 端到端脚本 `scripts/verify-quota.sh` 覆盖 AC-01 ~ AC-07（31 项断言，含触发器模拟落库失败）；单元测试未写 |
 | T-08 | 已完成 | 本目录文档与 `SUBMISSION.md` 已同步 |
 
 同时删掉了原 `generatePlan` 里 `generatedSchedule === null` 的死代码分支——`mockAi.ts` 失败时抛异常，从不返回 `null`，该分支永远进不去。现在统一由 `try/catch` 处理。
