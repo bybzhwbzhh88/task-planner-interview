@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCredits,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -63,9 +64,17 @@ function NewTaskForm({
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
+  // 额度以服务端为准：初次进入用 getCredits 查询，之后用每次生成的返回值覆盖，
+  // 避免依赖「本地拿旧值判断」——判断权始终在服务端的原子扣减上。
+  const [creditsOverride, setCreditsOverride] = useState<number | null>(null);
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+
+  const { data: creditsData } = useQuery(getCredits);
+
+  const credits = creditsOverride ?? creditsData ?? null;
+  const isOutOfCredits = credits !== null && credits <= 0;
 
   const handleSubmit = async () => {
     try {
@@ -81,11 +90,12 @@ function NewTaskForm({
   const handleGeneratePlan = async () => {
     try {
       setIsPlanGenerating(true);
-      const response = await generatePlan({
+      const result = await generatePlan({
         hours: todaysHours,
       });
-      if (response) {
-        setResponse(response);
+      if (result) {
+        setResponse(result.schedule);
+        setCreditsOverride(result.creditsRemaining);
       }
     } catch (err) {
       const statusCode =
@@ -93,12 +103,25 @@ function NewTaskForm({
           ? err.statusCode
           : undefined;
       if (statusCode === 402) {
+        // 服务端判定额度不足时不会发起模型调用，这里同步按钮状态。
+        setCreditsOverride(0);
         toast({
-          title: "额度不足",
+          title: "额度已用完",
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description:
+            "生成日程需要 1 个额度，当前账号没有剩余额度，本次未发起生成。",
+        });
+      } else if (statusCode === 502) {
+        toast({
+          title: "生成失败",
+          style: {
+            minWidth: "400px",
+          },
+          description:
+            "模型没有返回结果，本次不消耗额度。可调整任务（例如移除 [fail] 标记）后重试。",
+          variant: "destructive",
         });
       } else {
         toast({
@@ -176,6 +199,29 @@ function NewTaskForm({
                   onChange={(e) => setTodaysHours(+e.currentTarget.value)}
                 />
               </div>
+              <div
+                className="flex items-center justify-between gap-3"
+                data-testid="credits-status"
+              >
+                <Label
+                  className="text-muted-foreground text-nowrap text-sm font-semibold"
+                >
+                  剩余额度
+                </Label>
+                <span
+                  className={cn("text-sm font-semibold", {
+                    "text-warning": credits === null,
+                    "text-success": credits !== null && credits > 0,
+                    "text-destructive": isOutOfCredits,
+                  })}
+                >
+                  {credits === null
+                    ? "加载中…"
+                    : isOutOfCredits
+                      ? "0（已用完，无法生成日程）"
+                      : `${credits} 个`}
+                </span>
+              </div>
             </div>
           </div>
         ) : (
@@ -187,7 +233,7 @@ function NewTaskForm({
 
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || tasks?.length === 0 || isOutOfCredits}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -199,6 +245,8 @@ function NewTaskForm({
             <Loader2 className="mr-2 inline-block animate-spin" />
             生成中…
           </>
+        ) : isOutOfCredits ? (
+          "额度已用完"
         ) : (
           "生成日程"
         )}
