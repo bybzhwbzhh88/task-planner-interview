@@ -4,7 +4,7 @@
 >
 > - **问题判断**：`generatePlan` 把额度判断放在模型调用之后，且判断依据是请求上下文里的旧快照 `context.user.credits`，扣减又是无条件 `decrement`。三点叠加导致：额度为 0 仍会发起模型调用；并发请求可以透支成负数；用户看不懂失败原因。
 > - **采用方案**：把「一次带条件的原子 UPDATE」当作唯一的额度闸门——`updateMany({ where: { id: userId, credits: { gte: 1 } }, data: { credits: { decrement: 1 } } })`，更新行数 0 即判定额度不足并直接返回 402。占位成功后才调用模型；模型失败则 `increment: 1` 退还。额度逻辑抽成不依赖 Wasp 运行时的模块，验证脚本直接复用同一份代码。
-> - **当前完成状态**：实现已完成，验证脚本已可重复执行；Windows 上无法运行 Wasp CLI（仅 linux/darwin 发行版），因此 `wasp compile` / 端到端页面验证**未在本机运行**，见 [第 7 节](#7-验证方式与环境限制) 与 `VERIFICATION.md`。
+> - **当前完成状态**：实现完成；数据库层验证已真实运行（真实 PostgreSQL 16 + Prisma 直连，6/6 场景、28 条断言全部通过，含基线问题复现）。Windows 上无法安装 Wasp CLI（仅 linux/darwin 发行版），因此 `wasp compile` / `tsc --noEmit`（Wasp 生成物相关）/ 页面端到端**未在本机运行**，见 [第 7 节](#7-验证方式与环境限制) 与 `VERIFICATION.md`。
 
 ## 1. 问题判断
 
@@ -66,7 +66,7 @@
 
 **退还的处理**：退还只在「本次占位成功」之后执行一次，写在 `catch` 里，一次请求最多退还一次。退还语句自身失败时记录 `credits.refund_failed` 错误日志并向用户返回 502，额度会少退 1——这是已知限制（见第 8 节）。
 
-**日志可自证**：占位、退还、模型调用都按 `callId` 打印结构化日志。额度不足的 402 路径上**不会出现** `mock-ai.started`，这条断言直接写进验证脚本。
+**日志可自证**：占位、退还、落库按 plan 层 `callId` 打印结构化日志（`mockAi.ts` 内部另有自己的 callId，两层靠计数对应）。额度不足的 402 路径上不会出现 `mock-ai.started`，这条断言（模型调用次数 = 0）直接写进验证脚本。
 
 ## 5. 实现拆解
 
@@ -87,20 +87,26 @@ T1/T2 刻意不依赖 Wasp 运行时：验证脚本通过动态 `import()` 加�
 
 | 编号 | 场景 | 前置条件 | 操作 | 可观察的预期结果 |
 | --- | --- | --- | --- | --- |
+| A0 | 基线对照（反向证据） | 复刻 `114aeb2` 的旧额度逻辑 | 同一账号并发发起 10 次生成 | 旧逻辑下额度为 0 时模型仍被调用；`credits = 1` 时并发 10 次后 `credits = -9`、模型被调用 10 次。问题被复现 = 修复有必要 |
 | A1 | 成功生成 | `credits = 3`，至少 1 条任务，任务描述不含 `[fail]` | 点击「生成日程」 | 页面显示日程；额度显示变为 2；服务端日志出现 `mock-ai.started` 与 `mock-ai.succeeded`（同一 `callId`）；`PlanResult` 新增 1 条 |
 | A2 | 额度不足 | `credits = 0`，至少 1 条任务 | 点击「生成日程」 | 返回 402；页面提示额度已用完且按钮禁用；服务端日志**没有** `mock-ai.started`；`credits` 保持 0；`PlanResult` 不新增 |
 | A3 | 模型失败 | `credits = 2`，任务描述包含 `[fail]` | 点击「生成日程」 | 返回 502；页面提示生成失败且明确未消耗额度；日志出现 `mock-ai.started` 与 `mock-ai.failed`；`credits` 仍为 2；`PlanResult` 不新增 |
 | A4 | 并发不透支 | `credits = 1`，至少 1 条任务 | 同一账号并发发起 10 次生成 | 恰好 1 次成功、9 次 402；`credits = 0`（不为负）；模型调用次数 = 1；`PlanResult` 新增 1 条 |
 | A5 | 并发多额度 | `credits = 3`，至少 1 条任务 | 同一账号并发发起 10 次生成 | 恰好 3 次成功、7 次 402；`credits = 0`；模型调用次数 = 3 |
 
-A4 / A5 由 `scripts/verify-quota.mjs` 覆盖，可重复执行；A1–A3 同时由脚本和页面两种路径验证。
+A0 / A4 / A5 由 `scripts/verify-quota.mjs` 覆盖（A0 是对旧逻辑的复刻对照，用来证明问题真实存在）；A1–A3 同时由脚本和页面两种路径验证。
 
 ## 7. 验证方式与环境限制
 
 ```bash
-# 1) 数据库层验证（覆盖 A1–A5，不需要 Wasp）
-export DATABASE_URL="postgresql://postgres:postgres@localhost:5433/quota_verify"
-node scripts/verify-quota.mjs
+# 0) 准备一个工具目录（Windows 跑不了 Wasp 时验证数据库层用）
+mkdir quota-tools && cd quota-tools && npm init -y
+npm install @prisma/client@5.19.1 prisma@5.19.1 esbuild typescript zod
+
+# 1) 数据库层验证（覆盖 A0–A5，不需要 Wasp）
+export DATABASE_URL="postgresql://postgres@localhost:5433/quota_verify"
+npx prisma db push --schema ../task-planner-interview/schema.prisma
+PRISMA_CLIENT_DIR=$(pwd) node ../task-planner-interview/scripts/verify-quota.mjs
 
 # 2) 应用内验证（需要 Linux/macOS + Wasp 0.25）
 wasp db migrate-dev && wasp start     # 页面操作 A1–A3
@@ -109,9 +115,14 @@ npx tsc --project tsconfig.src.json --noEmit
 npx tsc --project tsconfig.wasp.json --noEmit
 ```
 
-脚本如何做到「测的是真实代码」：脚本用 `createRequire` 从 `PRISMA_CLIENT_DIR`（默认当前目录）加载 `@prisma/client`，再用动态 `import()` 加载 `src/demo-ai-app/planGeneration.ts` 与 `mockAi.ts`，因此 A1–A5 跑的是线上同一份逻辑与同一个模拟接口；`provider` 参数包一层计数器，用来断言调用次数。
+脚本如何做到「测的是真实代码」：脚本用 `createRequire` 从 `PRISMA_CLIENT_DIR`（默认当前目录）加载 `@prisma/client` 与 `esbuild`；esbuild 把 `src/demo-ai-app/planGeneration.ts`、`mockAi.ts`（连同无扩展名相对导入）打包成 Node 可加载的 ESM 后动态 `import()`，因此 A0–A5 跑的是仓库里同一份逻辑与同一个模拟接口；`provider` 参数包一层计数器，用来断言调用次数。A0 是对基线 `generatePlan`（`114aeb2`）额度行为的**复刻**（先调用、快照判断、无条件扣减），已在脚本里明确标注，不算线上代码。
 
-**环境限制（真实情况，不掩饰）**：Wasp CLI 0.25 的 npm 包 `os` 字段为 `linux,darwin`，Windows 上无法安装；本机 WSL 的 Ubuntu 发行版未注册（虚拟机平台未启用，错误 0x80370102）。因此本次 `wasp compile`、`tsc --noEmit` 与端到端页面验证**未运行**，改用本机原生 PostgreSQL 16 + Prisma 直连完成 A1–A5 的数据库层验证。逐条结果见 `VERIFICATION.md`。
+**环境限制（真实情况，不掩饰）**：Wasp CLI 0.25 的 npm 包 `os` 字段为 `linux,darwin`，Windows 上无法安装（`EBADPLATFORM`）；本机 WSL 的 Ubuntu 发行版未注册（虚拟机平台未启用，错误 0x80370102）。因此：
+
+- **已运行**：数据库层验证（真实 PostgreSQL 16.9，`scripts/verify-quota.mjs`，6/6 场景通过）；`credits.ts` 与 `planGeneration.ts` 的独立 `tsc --noEmit --strict` 类型检查；改动文件的 esbuild 语法检查。
+- **未运行**：`wasp compile`、两个 `tsc --noEmit`（依赖 `.wasp/` 生成物）、页面端到端（A1–A3 的 UI 部分）。`operations.ts` / `DemoAppPage.tsx` 的完整类型检查也依赖 Wasp 生成物，未在本机执行。接手者在 Linux/macOS 上按上面第 2 步命令补齐即可。
+
+逐条运行记录见 `VERIFICATION.md`。
 
 ## 8. 风险、已知限制与待办
 
