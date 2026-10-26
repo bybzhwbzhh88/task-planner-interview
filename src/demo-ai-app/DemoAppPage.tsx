@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getMyCredits,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -67,6 +68,10 @@ function NewTaskForm({
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
 
+  const { data: credits, refetch: refetchCredits } = useQuery(getMyCredits);
+  // 余额未知时不提前禁用，交给服务端拦截，避免加载期间按钮闪成灰色。
+  const isOutOfCredits = typeof credits === "number" && credits <= 0;
+
   const handleSubmit = async () => {
     try {
       await handleCreateTask({ description });
@@ -94,11 +99,21 @@ function NewTaskForm({
           : undefined;
       if (statusCode === 402) {
         toast({
-          title: "额度不足",
+          title: "额度已用完",
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description:
+            "本次未生成日程，也没有消耗额度。如需继续使用，请联系管理员补充额度。",
+        });
+      } else if (statusCode === 424) {
+        toast({
+          title: "生成失败",
+          style: {
+            minWidth: "400px",
+          },
+          description: "模型没有返回结果，本次未消耗额度。可以调整任务后重试。",
+          variant: "destructive",
         });
       } else {
         toast({
@@ -110,6 +125,8 @@ function NewTaskForm({
       }
     } finally {
       setIsPlanGenerating(false);
+      // 无论成功、失败还是被拒绝，余额都可能变化，统一刷新一次。
+      refetchCredits();
     }
   };
 
@@ -185,24 +202,41 @@ function NewTaskForm({
         )}
       </div>
 
-      <Button
-        type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
-        onClick={() => handleGeneratePlan()}
-        variant="default"
-        size="default"
-        className="w-full"
-        data-testid="generate-schedule-button"
-      >
-        {isPlanGenerating ? (
-          <>
-            <Loader2 className="mr-2 inline-block animate-spin" />
-            生成中…
-          </>
-        ) : (
-          "生成日程"
-        )}
-      </Button>
+      <div className="flex items-center justify-between gap-4">
+        <span
+          className={cn("text-sm font-semibold", {
+            "text-destructive": isOutOfCredits,
+            "text-muted-foreground": !isOutOfCredits,
+          })}
+          data-testid="remaining-credits"
+        >
+          剩余 {typeof credits === "number" ? credits : "…"} 次
+        </span>
+        <Button
+          type="button"
+          disabled={isPlanGenerating || tasks?.length === 0 || isOutOfCredits}
+          onClick={() => handleGeneratePlan()}
+          variant="default"
+          size="default"
+          className="min-w-40"
+          data-testid="generate-schedule-button"
+        >
+          {isPlanGenerating ? (
+            <>
+              <Loader2 className="mr-2 inline-block animate-spin" />
+              生成中…
+            </>
+          ) : (
+            "生成日程"
+          )}
+        </Button>
+      </div>
+
+      {isOutOfCredits && (
+        <p className="text-muted-foreground text-center text-sm">
+          额度已用完，生成按钮已禁用。如需继续使用，请联系管理员补充额度。
+        </p>
+      )}
 
       {!!response && (
         <div className="flex flex-col">
