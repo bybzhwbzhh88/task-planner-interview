@@ -4,6 +4,7 @@ import {
   createTask,
   deleteTask,
   generatePlan,
+  getCreditBalance,
   getAllTasksByUser,
   updateTask,
   useQuery,
@@ -66,6 +67,8 @@ function NewTaskForm({
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+  const { data: credits, isLoading: isCreditsLoading, refetch: refetchCredits } =
+    useQuery(getCreditBalance);
 
   const handleSubmit = async () => {
     try {
@@ -79,36 +82,37 @@ function NewTaskForm({
   };
 
   const handleGeneratePlan = async () => {
+    setResponse(null); // Do not show a stale schedule if this request fails.
+    setIsPlanGenerating(true);
     try {
-      setIsPlanGenerating(true);
-      const response = await generatePlan({
-        hours: todaysHours,
+      const nextSchedule = await generatePlan({ hours: todaysHours });
+      setResponse(nextSchedule);
+      toast({
+        title: "日程生成成功",
+        description: "已保存本次日程并消耗 1 个额度。",
       });
-      if (response) {
-        setResponse(response);
-      }
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
           : undefined;
-      if (statusCode === 402) {
-        toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
-          variant: "destructive",
-        });
-      }
+      const messages: Record<number, { title: string; description: string }> = {
+        400: { title: "无法生成", description: "请添加任务，并设置 1–24 小时的可用时长。" },
+        402: { title: "额度不足", description: "本次没有调用模型或扣费；请联系管理员补充额度。" },
+        502: { title: "日程生成失败", description: "模拟模型未能生成日程，额度已返还。请检查 [fail] 任务后重试。" },
+        500: { title: "日程保存失败", description: "本次未完成保存，额度已返还，请稍后重试。" },
+        503: { title: "额度服务异常", description: "请稍后刷新余额再试；若生成失败后余额未恢复，请联系管理员核对。" },
+      };
+      const feedback =
+        typeof statusCode === "number" ? messages[statusCode] : undefined;
+      toast({
+        title: feedback?.title ?? "操作失败",
+        description: feedback?.description ?? "请求未完成，请稍后重试。",
+        variant: "destructive",
+      });
     } finally {
+      // The balance query is a snapshot; refresh it after success/refund.
+      void refetchCredits();
       setIsPlanGenerating(false);
     }
   };
@@ -185,6 +189,14 @@ function NewTaskForm({
         )}
       </div>
 
+      <div className="text-muted-foreground text-sm" role="status" data-testid="credit-balance">
+        {isCreditsLoading || credits === undefined
+          ? "正在读取剩余额度…"
+          : `剩余额度：${credits}（成功生成一次消耗 1 个）`}
+        {credits === 0 && (
+          <p>当前额度已用完。继续提交会提示额度不足，不会调用模型。</p>
+        )}
+      </div>
       <Button
         type="button"
         disabled={isPlanGenerating || tasks?.length === 0}

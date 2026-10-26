@@ -75,3 +75,19 @@ npx tsc --project tsconfig.wasp.json --noEmit
 ## 开源许可
 
 第三方代码的版权声明与使用条件见 [LICENSE](LICENSE) 和 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+## 额度处理改进的验收与交接
+
+本项目按 [SPEC.md](SPEC.md) 先行设计：余额通过 `User.updateMany` 的 `credits > 0` 条件原子预占，模型或结果保存失败返还；无余额时不会调用模型。前端显示余额及成功、额度不足、失败反馈。
+
+不启动 Wasp 即可执行独立业务逻辑与模拟接口测试：
+
+```sh
+npm run test:quota
+```
+
+真实 PostgreSQL 并发验证：`QUOTA_TEST_DATABASE_URL` 指向**已完成迁移的独立测试数据库**、本地安装 `psql` 后执行 `npm run test:quota:db`。运行结果和手工验收细节见 [docs/VALIDATION.md](docs/VALIDATION.md)。
+
+应用编译与数据库迁移继续使用上文的 Wasp 命令；修改未引入新的表或迁移。项目交付说明见 [SUBMISSION.md](SUBMISSION.md)。
+
+若从下载的 ZIP 而非 Git clone 开始开发，需在自己的 Fork 中按 [补丁应用说明](docs/APPLY_TO_FORK.md) 依次提交 SPEC、实现和验证记录；请勿用无上游历史的临时仓库直接创建 PR。

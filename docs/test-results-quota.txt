@@ -1,0 +1,108 @@
+
+> test:quota
+> node --experimental-strip-types --test tests/creditQuota.test.mjs tests/mockAi.test.mjs
+
+TAP version 13
+# (node:798) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: A01: success spends one credit and returns generated schedule
+ok 1 - A01: success spends one credit and returns generated schedule
+  ---
+  duration_ms: 2.429829
+  type: 'test'
+  ...
+# Subtest: A02: 0 credits prevents both provider invocation and persistence
+ok 2 - A02: 0 credits prevents both provider invocation and persistence
+  ---
+  duration_ms: 0.708406
+  type: 'test'
+  ...
+# Subtest: A03: provider rejection refunds exactly once; save not called
+ok 3 - A03: provider rejection refunds exactly once; save not called
+  ---
+  duration_ms: 0.540544
+  type: 'test'
+  ...
+# Subtest: A03: provider returning null is a failure and refunds
+ok 4 - A03: provider returning null is a failure and refunds
+  ---
+  duration_ms: 0.231669
+  type: 'test'
+  ...
+# Subtest: A04: result persistence failure refunds once
+ok 5 - A04: result persistence failure refunds once
+  ---
+  duration_ms: 0.313803
+  type: 'test'
+  ...
+# Subtest: A05: 10 simultaneous requests with 1 credit: exactly one calls provider
+ok 6 - A05: 10 simultaneous requests with 1 credit: exactly one calls provider
+  ---
+  duration_ms: 20.926063
+  type: 'test'
+  ...
+# Subtest: A06: 50 simultaneous requests with 3 credits: exactly 3 successful
+ok 7 - A06: 50 simultaneous requests with 3 credits: exactly 3 successful
+  ---
+  duration_ms: 0.99602
+  type: 'test'
+  ...
+# Subtest: A07: reservation infrastructure failure does not start provider
+ok 8 - A07: reservation infrastructure failure does not start provider
+  ---
+  duration_ms: 0.183066
+  type: 'test'
+  ...
+# Subtest: A08: refund failure reports uncertain state and retains original error
+ok 9 - A08: refund failure reports uncertain state and retains original error
+  ---
+  duration_ms: 0.494675
+  type: 'test'
+  ...
+# Subtest: Prisma adapter: uses conditional atomic UPDATE and 1-unit refund
+ok 10 - Prisma adapter: uses conditional atomic UPDATE and 1-unit refund
+  ---
+  duration_ms: 0.824522
+  type: 'test'
+  ...
+# Subtest: Prisma adapter: count=0 means no credits
+ok 11 - Prisma adapter: count=0 means no credits
+  ---
+  duration_ms: 0.237127
+  type: 'test'
+  ...
+# Subtest: Prisma adapter: count>1 is an infrastructure error
+ok 12 - Prisma adapter: count>1 is an infrastructure error
+  ---
+  duration_ms: 0.150236
+  type: 'test'
+  ...
+# Subtest: missing userId rejected before reserving
+ok 13 - missing userId rejected before reserving
+  ---
+  duration_ms: 0.140391
+  type: 'test'
+  ...
+# (node:804) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: mock provider: successful call emits started + succeeded once
+ok 14 - mock provider: successful call emits started + succeeded once
+  ---
+  duration_ms: 502.32299
+  type: 'test'
+  ...
+# Subtest: mock provider: [fail] emits started + failed and rejects
+ok 15 - mock provider: [fail] emits started + failed and rejects
+  ---
+  duration_ms: 501.2679
+  type: 'test'
+  ...
+1..15
+# tests 15
+# suites 0
+# pass 15
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1137.760125
