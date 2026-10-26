@@ -14,7 +14,7 @@ PR 标题：`产品｜小缪｜136****6099`
 
 **主要方案**：选「先占位、失败退还」（方案 B）——把额度检查改成一条带 `credits > 0` 条件的更新，扣到才调用模型；模型或落库失败则退还。扣减在数据库层面天然串行，因此不需要应用层加锁，也不用依赖事务隔离级别。前端补上常驻余额、按钮三态，以及能回答「发生了什么 / 扣没扣 / 下一步做什么」的文案。
 
-**完成状态**：产品方向五份交付物已齐（需求、流程、原型、任务拆解、验收案例）。应用已在 WSL2 + Ubuntu 26.04 + PostgreSQL 18.6 上实际跑通：先用原始代码复现了三个缺陷，再按 `04-tasks.md` 落地了额度处理的修复，AC-01 ~ AC-07 全部通过实测（含 5 并发场景）。剩下 AC-08 / AC-09 是页面呈现，代码已实现、构建通过，但视觉未做浏览器人工核对，已在下方标注。
+**完成状态**：产品方向五份交付物已齐（需求、流程、原型、任务拆解、验收案例）。应用已在 WSL2 + Ubuntu 26.04 + PostgreSQL 18.6 上实际跑通：先用原始代码复现了三个缺陷，再按 `04-tasks.md` 落地了额度处理的修复，AC-01 ~ AC-07 全部通过实测（含 5 并发场景），并补上 7 个不依赖数据库的单元测试。剩下 AC-08 / AC-09 是页面呈现，代码已实现、构建通过，但视觉未做浏览器人工核对，已在下方标注。
 
 ## 交付入口
 
@@ -35,6 +35,8 @@ PR 标题：`产品｜小缪｜136****6099`
 | [src/demo-ai-app/demo-ai-app.wasp.ts](src/demo-ai-app/demo-ai-app.wasp.ts) | 注册 `getMyCredits` |
 | [src/demo-ai-app/DemoAppPage.tsx](src/demo-ai-app/DemoAppPage.tsx) | 余额展示、按钮三态、402 / 424 分支提示 |
 | [scripts/verify-quota.sh](scripts/verify-quota.sh) | 新增。AC-01 ~ AC-07 的一键复验脚本，31 项断言 |
+| [src/demo-ai-app/credits.test.ts](src/demo-ai-app/credits.test.ts) | 新增。7 个单元测试，假存储覆盖扣减 / 退还 / 并发判定 |
+| [vitest.config.ts](vitest.config.ts)、[src/test/wasp-server.stub.ts](src/test/wasp-server.stub.ts) | 新增。测试配置与 `wasp/server` 占位，`package.json` 补 `npm test` |
 
 ### 运行与复验
 
@@ -42,14 +44,19 @@ PR 标题：`产品｜小缪｜136****6099`
 cp .env.server.example .env.server && cp .env.client.example .env.client
 wasp install && wasp db migrate-dev
 
+# 单元测试：不需要数据库和 dev server
+npm test
+
 # 终端一：启动并把日志写到文件，脚本要靠它判断模型有没有被调用
 wasp start 2>&1 | tee /tmp/wasp.log
 
-# 终端二：复验
+# 终端二：端到端复验
 bash scripts/verify-quota.sh --log /tmp/wasp.log
 ```
 
-脚本会新建一个临时账号，自己造任务、改额度、发并发请求，逐项对照预期，最后打印「通过 N / 失败 N」。不用 `--log` 时跳过三处「模型是否被调用」的断言，其余照常执行。
+单元测试跑 `src/demo-ai-app/credits.test.ts`，7 个用例，约 0.2 秒。
+
+端到端脚本会新建一个临时账号，自己造任务、改额度、发并发请求，逐项对照预期，最后打印「通过 N / 失败 N」。不用 `--log` 时跳过三处「模型是否被调用」的断言，其余照常执行。
 
 阅读顺序建议：`01` 看判断和取舍 → `04` 看怎么落地 → `05` 看怎么验。`02` 与 `03` 是给开发对齐细节用的。
 
@@ -66,6 +73,7 @@ bash scripts/verify-quota.sh --log /tmp/wasp.log
 | `wasp db migrate-dev` | 迁移 `20261015081629_init` 应用成功，库与 schema 同步 |
 | `npx tsc -p tsconfig.src.json --noEmit` | exit 0 |
 | `npx tsc -p tsconfig.wasp.json --noEmit` | exit 0 |
+| `npm test` | 7 passed，耗时约 0.2 s |
 
 ### AC-00 现状复现（已执行，三个缺陷全部成立）
 
@@ -104,7 +112,6 @@ AC-01 ~ AC-07 已全部固化为 `scripts/verify-quota.sh`，一条命令跑完 
 **未完成**
 
 - AC-08 / AC-09 的页面视觉核对（登录后目视确认余额位置、置灰态、两条错误文案）。
-- 单元测试（T-07 的第一条）未写。当前验证是端到端的，依赖 `wasp start` 与数据库；单测能把「余额 1 并发 2 只成功 1 次」这条逻辑从环境里剥离出来，更适合进 CI。
 
 **已知问题（本期不处理）**
 
@@ -115,6 +122,7 @@ AC-01 ~ AC-07 已全部固化为 `scripts/verify-quota.sh`，一条命令跑完 
 **已处理**
 
 - 删掉了 `generatePlan` 里 `generatedSchedule === null` 的死代码分支——`mockAi.ts` 失败时抛 `Error` 从不返回 `null`，该分支永远进不去。现在统一由 `try/catch` 处理并退还额度。
+- 补上了单元测试：`tryConsumeCredit` / `refundCredit` 改为接收可注入的 client（默认仍是 `prisma`），7 个用例用假存储覆盖「余额不足不扣」「连续扣减不跨负」「余额 1 并发 2 只成功 1 次」「扣减与退还相抵」。`npm test` 不需要数据库，适合进 CI。
 
 **接手须知**
 

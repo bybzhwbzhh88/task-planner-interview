@@ -190,6 +190,7 @@
 | `wasp db migrate-dev` | 应用迁移 `20261015081629_init`，`Your database is now in sync with your schema` |
 | `npx tsc -p tsconfig.src.json --noEmit` | exit 0 |
 | `npx tsc -p tsconfig.wasp.json --noEmit` | exit 0 |
+| `npm test` | 7 个用例全通过（见 §2.6） |
 
 ### 2.3 AC-00 实测结果（原始代码，2026-10-26）
 
@@ -263,3 +264,27 @@
 按 `03-prototype.md` 实现了：按钮左侧常驻「剩余 N 次」、余额为 0 时按钮置灰并附说明文案、402 与 424 分别对应「额度已用完」和「生成失败」两条不同提示。`tsc` 与 Vite 构建均通过。
 
 但**页面视觉效果没有经过浏览器人工核对**，服务端行为已由 AC-01 ~ AC-07 覆盖。这一项需要在 `http://localhost:3000` 登录后目视确认，因此不标为「通过」。
+
+### 2.6 单元测试（已执行，7 个用例）
+
+`npm test`（vitest）跑 `src/demo-ai-app/credits.test.ts`，不依赖数据库和 dev server：
+
+```
+✓ src/demo-ai-app/credits.test.ts (7 tests) 6ms
+  Test Files  1 passed (1)
+       Tests  7 passed (7)
+```
+
+| 用例 | 断言 |
+|---|---|
+| 余额大于 0 | 扣 1 次、返回 `true`、余额减 1 |
+| 余额为 0 | 返回 `false`、数据不变 |
+| 连续扣减 | 余额 2 时四次调用结果为 `[true, true, false, false]`，停 0 不跨负 |
+| 并发 | 余额 1、两个请求同时发出，只有一个拿到 `true`，余额 0 |
+| 账号不匹配 | 返回 `false`，不误扣 |
+| 退还 | 扣 1 再退 1，余额回到原值 |
+| 失败路径净额 | 扣减与退还可抵消，净变化 0 |
+
+**假存储怎么模拟并发**：`updateMany` 在被调用时同步完成「判断 + 扣减」，返回的 Promise 只承载结果。因此两个请求先后抵达时，第二个看到的是已经扣完的余额——这正是 `UPDATE ... WHERE credits > 0` 在数据库里串行执行的效果。这里验证的是**调用方如何解读 `count`**；数据库本身的原子性由 AC-05 / AC-06 的端到端脚本验证，两者互补，单测不能替代后者。
+
+**为什么加注入参数**：`tryConsumeCredit(userId, client = prisma)` 让测试能传假存储，生产调用点一个字都不用改。`src/test/wasp-server.stub.ts` 只在测试环境替换 `wasp/server`，被误用时立即抛错，避免测试静默打到真库。
