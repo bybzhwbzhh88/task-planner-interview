@@ -1,0 +1,190 @@
+{
+  "verifiedOn": "2026-10-26",
+  "dateSource": "客户端当前日期",
+  "surface": "Figma 浏览器演示，实际点击后核对 URL 中目标画板 ID",
+  "designUrl": "https://www.figma.com/design/cBSK0kbo375jB23Kkmmlhn",
+  "prototypeUrl": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn?node-id=11-632&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632",
+  "frameCount": 12,
+  "sourceBindingsReviewed": 25,
+  "actualClickCount": 32,
+  "steps": [
+    {
+      "nodeId": "00_前往01_从主线开始",
+      "to": "01",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-541&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "01_前往02_生成日程",
+      "to": "02",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-755&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "02_前往03_生成另一份日程",
+      "to": "03",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-849&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "03_前往04_演示：生成1成功",
+      "to": "04",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-952&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "04_前往05_演示：生成2失败",
+      "to": "05",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1055&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "05_前往06_重新生成",
+      "to": "06",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1155&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "06_前往07_结果待确认",
+      "to": "07",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1255&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "07_前往05_查询处理状态",
+      "to": "05",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1055&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "05_前往08_刷新恢复",
+      "to": "08",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1356&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "08_前往05_演示：生成2失败",
+      "to": "05",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1055&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "05_前往09_日程读取失败",
+      "to": "09",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1459&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "09_前往05_重新读取日程",
+      "to": "05",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1055&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "05_前往11_次数状态待确认",
+      "to": "11",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1631&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "11_前往05_重新读取次数",
+      "to": "05",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1055&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "05_前往10_尚无日程",
+      "to": "10",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1551&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "10_前往01_生成日程",
+      "to": "01",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-541&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "01_前往00_回到流程",
+      "to": "00",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-632&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "00_前往03_查看占用状态",
+      "to": "03",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-849&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "03_前往00_回到流程",
+      "to": "00",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-632&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "00_前往06_查看次数用完",
+      "to": "06",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1155&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "06_前往00_回到流程",
+      "to": "00",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-632&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "00_前往04_查看成功页面",
+      "to": "04",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-952&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "04_前往00_回到流程",
+      "to": "00",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-632&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "00_前往05_查看失败页面",
+      "to": "05",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1055&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "05_前往00_回到流程",
+      "to": "00",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-632&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "00_前往07_查看页面",
+      "to": "07",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1255&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "07_前往00_回到流程",
+      "to": "00",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-632&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "00_前往08_查看页面",
+      "to": "08",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1356&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "08_前往00_回到流程",
+      "to": "00",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-632&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "00_前往09_查看页面",
+      "to": "09",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1459&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "09_前往06_生成另一份日程",
+      "to": "06",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1155&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    },
+    {
+      "nodeId": "06_前往00_回到流程",
+      "to": "00",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-632&p=f&t=8KFUf5lubhrkVSl4-0&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632&show-proto-sidebar=1"
+    }
+  ],
+  "fixes": [
+    "清除页面容器与非按钮图层上的误绑定，逐个核对操作目标",
+    "公共导航六个按钮共用组件，各页使用实例",
+    "03/04/08附加演示按钮移到公共导航之后，消除重叠",
+    "总览异常入口改为日程读取失败；次数未知提示改为用户可理解的下一步"
+  ],
+  "screenshots": [
+    "00-生成流程-Figma.png",
+    "04-生成成功-Figma.png",
+    "07-结果待确认-Figma.png"
+  ],
+  "limits": [
+    "包含返回导航，32次不代表32个独立业务场景",
+    "公共组件六个源按钮及19个独立操作已核对；并未逐一点击所有页面的91个导航入口",
+    "桌面原型检查，未核验手机适配",
+    "静态状态演示；不支持真实编辑待办、提交模型、实时等待或执行计费",
+    "未修改业务程序，不作为改进后软件测试通过的证据"
+  ]
+}

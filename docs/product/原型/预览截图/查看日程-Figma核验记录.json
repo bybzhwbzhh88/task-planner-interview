@@ -1,0 +1,244 @@
+{
+  "date": "2026-10-26",
+  "dateSource": "客户端会话日期",
+  "surface": "Figma 原生 Prototype 桌面演示",
+  "file": "https://www.figma.com/design/cBSK0kbo375jB23Kkmmlhn",
+  "scope": "本轮按请求查看新增交互；不合并历史32次或填色17次点击",
+  "prototypeOnly": true,
+  "softwareImplemented": false,
+  "exampleData": true,
+  "frameCount": 16,
+  "overlayEntryCount": 8,
+  "openEntriesVerified": [
+    "04_查看生成1日程",
+    "05_查看生成1日程",
+    "06_查看生成3日程",
+    "07_查看生成1日程",
+    "08_查看生成1日程",
+    "09_查看生成1日程",
+    "12_查看生成1日程",
+    "12_查看生成2日程"
+  ],
+  "closeButtonsVerified": [
+    "13_关闭日程",
+    "13_返回任务页",
+    "14_关闭日程",
+    "14_返回任务页",
+    "15_关闭日程",
+    "15_返回任务页"
+  ],
+  "nativeInteractionSettings": [
+    {
+      "node": "04_前往12_演示：生成2成功",
+      "action": "Navigate to",
+      "to": "12 并发请求均成功"
+    },
+    {
+      "node": "04_查看生成1日程",
+      "action": "Open overlay",
+      "to": "13 查看生成1日程"
+    },
+    {
+      "node": "05_查看生成1日程",
+      "action": "Open overlay",
+      "to": "13 查看生成1日程"
+    },
+    {
+      "node": "06_查看生成3日程",
+      "action": "Open overlay",
+      "to": "15 查看生成3日程"
+    },
+    {
+      "node": "07_查看生成1日程",
+      "action": "Open overlay",
+      "to": "13 查看生成1日程"
+    },
+    {
+      "node": "07_前往05_查询处理状态",
+      "action": "Navigate to",
+      "to": "05 生成失败可重试"
+    },
+    {
+      "node": "08_查看生成1日程",
+      "action": "Open overlay",
+      "to": "13 查看生成1日程"
+    },
+    {
+      "node": "09_查看生成1日程",
+      "action": "Open overlay",
+      "to": "13 查看生成1日程"
+    },
+    {
+      "node": "12_查看生成1日程",
+      "action": "Open overlay",
+      "to": "13 查看生成1日程"
+    },
+    {
+      "node": "12_查看生成2日程",
+      "action": "Open overlay",
+      "to": "14 查看生成2日程"
+    },
+    {
+      "node": "12_前往00_回到流程",
+      "action": "Navigate to",
+      "to": "00 生成流程"
+    },
+    {
+      "node": "12_前往07_结果待确认",
+      "action": "Navigate to",
+      "to": "07 结果待确认"
+    },
+    {
+      "node": "12_前往08_刷新恢复",
+      "action": "Navigate to",
+      "to": "08 刷新后恢复"
+    },
+    {
+      "node": "12_前往09_日程读取失败",
+      "action": "Navigate to",
+      "to": "09 日程读取失败"
+    },
+    {
+      "node": "12_前往10_尚无日程",
+      "action": "Navigate to",
+      "to": "10 尚无成功日程"
+    },
+    {
+      "node": "12_前往11_次数状态待确认",
+      "action": "Navigate to",
+      "to": "11 次数状态待确认"
+    },
+    {
+      "node": "13_关闭日程",
+      "action": "Close overlay"
+    },
+    {
+      "node": "13_返回任务页",
+      "action": "Close overlay"
+    },
+    {
+      "node": "14_关闭日程",
+      "action": "Close overlay"
+    },
+    {
+      "node": "14_返回任务页",
+      "action": "Close overlay"
+    },
+    {
+      "node": "15_关闭日程",
+      "action": "Close overlay"
+    },
+    {
+      "node": "15_返回任务页",
+      "action": "Close overlay"
+    }
+  ],
+  "checks": [
+    {
+      "from": "04",
+      "action": "查看生成1日程",
+      "observed": "居中弹层：生成1，10:05保存，可用6小时；主页面仍为04，带遮罩"
+    },
+    {
+      "from": "04",
+      "action": "关闭弹层",
+      "observed": "返回04，额度与默认生成1不变"
+    },
+    {
+      "from": "04",
+      "action": "演示生成2成功",
+      "observed": "到12，两份成功，C/R/A均0；默认生成2，4小时，10:06保存"
+    },
+    {
+      "from": "12",
+      "action": "查看生成1日程",
+      "observed": "弹层生成1，6小时，10:05；底页默认仍为生成2，4小时，10:06"
+    },
+    {
+      "from": "12",
+      "action": "生成1弹层返回任务页",
+      "observed": "仍到12；默认生成2、4小时、10:06；可用/剩余/占用仍0"
+    },
+    {
+      "from": "12",
+      "action": "查看生成2日程",
+      "observed": "弹层生成2，4小时，10:06，与生成1内容区分"
+    },
+    {
+      "from": "12",
+      "action": "生成2弹层关闭",
+      "observed": "关闭回12"
+    },
+    {
+      "from": "12",
+      "action": "生成2弹层返回任务页",
+      "observed": "返回12，默认结果与次数不变"
+    },
+    {
+      "from": "12",
+      "action": "点击遮罩关闭",
+      "observed": "生成1弹层关闭后保持12"
+    },
+    {
+      "from": "12",
+      "action": "结果待确认导航",
+      "observed": "到07，C1/R1/A0，查询入口可见"
+    },
+    {
+      "from": "07",
+      "action": "查看生成1日程",
+      "observed": "弹层生成1，10:05，6小时；底页07保持"
+    },
+    {
+      "from": "07",
+      "action": "关闭后查询处理状态",
+      "observed": "到05，生成2明确失败，未消耗已解除占用，A1/R0/C1"
+    },
+    {
+      "from": "05",
+      "action": "查看生成1日程",
+      "observed": "展示生成1，6小时，10:05；底页05不被替换"
+    },
+    {
+      "from": "05",
+      "action": "关闭后重新生成",
+      "observed": "到06，生成3成功，剩余/占用/可用均0，最近生成3"
+    },
+    {
+      "from": "06",
+      "action": "查看生成3日程",
+      "observed": "弹层生成3，4小时，10:08"
+    },
+    {
+      "from": "06",
+      "action": "生成3弹层关闭与返回",
+      "observed": "两按钮均回06，C/R/A仍0，默认生成3"
+    },
+    {
+      "from": "08",
+      "action": "查看生成1日程",
+      "observed": "展示生成1，6小时，10:05，底页08恢复状态保持"
+    },
+    {
+      "from": "09",
+      "action": "查看生成1日程",
+      "observed": "指定请求读取成功示例：弹层生成1，6小时，10:05；底页主日程读取失败保持"
+    },
+    {
+      "from": "09",
+      "action": "关闭后重新读取日程",
+      "observed": "到05，读取既有生成1结果；不走生成成功新结果页面"
+    }
+  ],
+  "proofs": [
+    "12-并发请求均成功-查看日程-Figma.png",
+    "13-查看生成1日程-查看日程-Figma.png"
+  ],
+  "limits": [
+    "未模拟查看期间另一个后台请求完成，关闭显示最新规则由文档与后续验收约束",
+    "未绘制指定请求读取失败弹层，按同请求重读写入规则、任务、案例",
+    "没有逐一实际点击全部112个素材导航动作；新增12底部6个导航已配置，实际使用结果待确认入口，其余5个未逐一点击",
+    "没有手机适配检查",
+    "原型静态查看不扣次不等于业务程序验证了不扣次"
+  ]
+}

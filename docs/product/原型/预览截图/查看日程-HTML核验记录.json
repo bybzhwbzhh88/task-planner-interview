@@ -1,0 +1,385 @@
+{
+  "date": "2026-10-26",
+  "dateSource": "client conversation date, Asia/Shanghai",
+  "scope": "HTML design prototype only; no Figma or business software validation",
+  "browser": "Independent Edge session 1; temporary tab 1196925243; localhost 127.0.0.1:3018",
+  "interactionPaths": [
+    {
+      "path": "04→13→关闭→04",
+      "pass": true,
+      "hostUnchanged": true,
+      "hash": "#04",
+      "modal": "13"
+    },
+    {
+      "path": "04→12",
+      "pass": true,
+      "defaultResult": "生成 2 · 可用 4 小时 · 10:06 保存"
+    },
+    {
+      "path": "12→13→返回任务页→12",
+      "pass": true,
+      "hostUnchanged": true,
+      "modal": {
+        "hash": "#12",
+        "id": "13",
+        "modalRect": {
+          "height": 560,
+          "width": 720,
+          "x": 588.5,
+          "y": 175
+        },
+        "text": "13 查看生成1日程额度处理产品原型，次数与时间为方案示例。生成 1的日程10:05 保存 · 可用 6 小时关闭09:00—11:00阅读项目需求2 小时11:00—13:00整理额度处理方案2 小时14:00—16:00梳理页面流程2 小时仅查看已保存结果，不消耗次数。返回任务页",
+        "viewport": {
+          "height": 910,
+          "width": 1912
+        },
+        "visible": true
+      }
+    },
+    {
+      "path": "12→14→Esc→12",
+      "pass": true,
+      "hostUnchanged": true,
+      "modal": {
+        "hash": "#12",
+        "id": "14",
+        "modalRect": {
+          "height": 560,
+          "width": 720,
+          "x": 588.5,
+          "y": 175
+        },
+        "text": "14 查看生成2日程额度处理产品原型，次数与时间为方案示例。生成 2的日程10:06 保存 · 可用 4 小时关闭09:00—10:00阅读项目需求1 小时10:00—12:00整理额度处理方案2 小时13:00—14:00梳理页面流程1 小时仅查看已保存结果，不消耗次数。返回任务页",
+        "viewport": {
+          "height": 910,
+          "width": 1912
+        },
+        "visible": true
+      }
+    },
+    {
+      "path": "12→13→关闭→12",
+      "pass": true,
+      "hostUnchanged": true
+    },
+    {
+      "path": "06→15→返回任务页→06",
+      "pass": true,
+      "hostUnchanged": true,
+      "modal": {
+        "hash": "#06",
+        "id": "15",
+        "modalRect": {
+          "height": 560,
+          "width": 720,
+          "x": 588.5,
+          "y": 175
+        },
+        "text": "15 查看生成3日程额度处理产品原型，次数与时间为方案示例。生成 3的日程10:08 保存 · 可用 4 小时关闭09:00—10:00阅读项目需求1 小时10:00—12:00整理额度处理方案2 小时13:00—14:00梳理页面流程1 小时仅查看已保存结果，不消耗次数。返回任务页",
+        "viewport": {
+          "height": 910,
+          "width": 1912
+        },
+        "visible": true
+      }
+    },
+    {
+      "path": "07→查询处理状态→05",
+      "pass": true
+    },
+    {
+      "path": "09→重新读取日程→05",
+      "pass": true
+    },
+    {
+      "path": "05→13→关闭→05",
+      "pass": true,
+      "hostUnchanged": true,
+      "hash": "#05"
+    },
+    {
+      "path": "07→13→关闭→07",
+      "pass": true,
+      "hostUnchanged": true,
+      "hash": "#07"
+    },
+    {
+      "path": "08→13→关闭→08",
+      "pass": true,
+      "hostUnchanged": true,
+      "hash": "#08"
+    },
+    {
+      "path": "09→13→关闭→09",
+      "pass": true,
+      "hostUnchanged": true,
+      "hash": "#09"
+    }
+  ],
+  "renderChecks": [
+    {
+      "disabled": [],
+      "id": "00",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 54,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [],
+      "id": "01",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 50,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [],
+      "id": "02",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 52,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [
+        {
+          "action": null,
+          "id": "03_前往无_暂无可用次数",
+          "role": null,
+          "target": null,
+          "text": "暂无可用次数"
+        }
+      ],
+      "id": "03",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 57,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [
+        {
+          "action": null,
+          "id": "04_前往无_暂无可用次数",
+          "role": null,
+          "target": null,
+          "text": "暂无可用次数"
+        }
+      ],
+      "id": "04",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 59,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [],
+      "id": "05",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 57,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [
+        {
+          "action": null,
+          "id": "06_前往无_生成次数已用完",
+          "role": null,
+          "target": null,
+          "text": "生成次数已用完"
+        }
+      ],
+      "id": "06",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 57,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [
+        {
+          "action": null,
+          "id": "07_前往无_暂无可用次数",
+          "role": null,
+          "target": null,
+          "text": "暂无可用次数"
+        }
+      ],
+      "id": "07",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 57,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [
+        {
+          "action": null,
+          "id": "08_前往无_暂无可用次数",
+          "role": null,
+          "target": null,
+          "text": "暂无可用次数"
+        }
+      ],
+      "id": "08",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 58,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [],
+      "id": "09",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 50,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [],
+      "id": "10",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 42,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [
+        {
+          "action": null,
+          "id": "11_前往无_次数待确认",
+          "role": null,
+          "target": null,
+          "text": "次数待确认"
+        }
+      ],
+      "id": "11",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 50,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [
+        {
+          "action": null,
+          "id": "12_前往无_生成次数已用完",
+          "role": null,
+          "target": null,
+          "text": "生成次数已用完"
+        }
+      ],
+      "id": "12",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 58,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [],
+      "id": "13",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 14,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [],
+      "id": "14",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 14,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    },
+    {
+      "disabled": [],
+      "id": "15",
+      "outOfBounds": [],
+      "overlaps": [],
+      "textCount": 14,
+      "viewport": {
+        "height": 910,
+        "width": 1912
+      }
+    }
+  ],
+  "renderCheckMethod": "Each of 13 main screens selected through visible combobox; each of 3 overlays opened by visible request button. Text bounding boxes read through browser DOM getBoundingClientRect, normalized to SVG viewBox, checked for out-of-bounds and text-to-text intersection >1 source pixel. Disabled gray elements checked to have no action or target.",
+  "verifiedOpenOverlayButtons": 8,
+  "verifiedCloseKinds": [
+    "关闭按钮",
+    "返回任务页按钮",
+    "Esc"
+  ],
+  "hostUnchangedFields": [
+    "page",
+    "URL hash",
+    "quota text",
+    "default latest-result text",
+    "form text"
+  ],
+  "screenshots": [
+    "12-并发请求均成功-查看日程-HTML.png",
+    "13-查看生成1日程-查看日程-HTML.png"
+  ],
+  "limitations": [
+    "Did not click all 112 actions or rerun the complete old mainline.",
+    "Desktop viewport 1912×910 only; responsive/mobile behavior not tested.",
+    "Bounding-box checks establish text boundary and text overlap; they do not prove every aesthetic aspect.",
+    "Amounts and times are fixed design examples.",
+    "Prototype interactions do not invoke or validate actual models, credit transactions or databases.",
+    "Figma import and interaction verification is performed separately."
+  ],
+  "cleanup": {
+    "temporaryTab": "closed",
+    "temporaryServer3018": "stopped",
+    "existingLocalhost3000": "not touched"
+  }
+}

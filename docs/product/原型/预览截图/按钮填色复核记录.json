@@ -1,0 +1,335 @@
+{
+  "verifiedOn": "2026-10-26",
+  "source": "客户端日期与本轮Figma浏览器实际操作",
+  "style": {
+    "fill": "#002142",
+    "stroke": "#002142",
+    "text": "#FFFFFF",
+    "basis": "用户要求沿用现有从主线开始按钮的配色"
+  },
+  "changedSourceButtons": [
+    {
+      "nodeId": "00_前往03_查看占用状态",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "00_前往06_查看次数用完",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "00_前往04_查看成功页面",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "00_前往05_查看失败页面",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "00_前往07_查看页面",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "00_前往08_查看页面",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "00_前往09_查看页面",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "01_前往00_回到流程",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "01_前往07_结果待确认",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "01_前往08_刷新恢复",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "01_前往09_日程读取失败",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "01_前往10_尚无日程",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "01_前往11_次数状态待确认",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "03_前往04_演示：生成1成功",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "04_前往05_演示：生成2失败",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "08_前往05_演示：生成2失败",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "07_前往05_查询处理状态",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "09_前往05_重新读取日程",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    },
+    {
+      "nodeId": "11_前往05_重新读取次数",
+      "text": "FFFFFF",
+      "fill": "002142",
+      "stroke": "002142"
+    }
+  ],
+  "localSourceChecks": {
+    "scope": "Local SVG and HTML source consistency only; not Figma rendering or software testing",
+    "pages": 12,
+    "navigationEntries": 91,
+    "activeButtons": 91,
+    "activeFill": "#002142",
+    "activeStroke": "#002142",
+    "activeText": "#FFFFFF",
+    "disabledButtonsUnchanged": 6,
+    "navigationEntriesUnchanged": true,
+    "navigationOrderNote": "Regenerated listing follows current shared-footer ordering; target, label and node-id set unchanged",
+    "geometryTextAndNonButtonStylesUnchanged": true,
+    "pageChecks": [
+      {
+        "file": "00-生成流程.svg",
+        "activeButtons": 14,
+        "disabledButtons": 0,
+        "otherContentUnchanged": true,
+        "htmlMatches": true
+      },
+      {
+        "file": "01-可以生成.svg",
+        "activeButtons": 7,
+        "disabledButtons": 0,
+        "otherContentUnchanged": true,
+        "htmlMatches": true
+      },
+      {
+        "file": "02-生成中仍可继续.svg",
+        "activeButtons": 7,
+        "disabledButtons": 0,
+        "otherContentUnchanged": true,
+        "htmlMatches": true
+      },
+      {
+        "file": "03-次数已被占用.svg",
+        "activeButtons": 7,
+        "disabledButtons": 1,
+        "otherContentUnchanged": true,
+        "htmlMatches": true
+      },
+      {
+        "file": "04-生成成功.svg",
+        "activeButtons": 7,
+        "disabledButtons": 1,
+        "otherContentUnchanged": true,
+        "htmlMatches": true
+      },
+      {
+        "file": "05-生成失败可重试.svg",
+        "activeButtons": 7,
+        "disabledButtons": 0,
+        "otherContentUnchanged": true,
+        "htmlMatches": true
+      },
+      {
+        "file": "06-次数已用完.svg",
+        "activeButtons": 6,
+        "disabledButtons": 1,
+        "otherContentUnchanged": true,
+        "htmlMatches": true
+      },
+      {
+        "file": "07-结果待确认.svg",
+        "activeButtons": 7,
+        "disabledButtons": 1,
+        "otherContentUnchanged": true,
+        "htmlMatches": true
+      },
+      {
+        "file": "08-刷新后恢复.svg",
+        "activeButtons": 7,
+        "disabledButtons": 1,
+        "otherContentUnchanged": true,
+        "htmlMatches": true
+      },
+      {
+        "file": "09-日程读取失败.svg",
+        "activeButtons": 8,
+        "disabledButtons": 0,
+        "otherContentUnchanged": true,
+        "htmlMatches": true
+      },
+      {
+        "file": "10-尚无成功日程.svg",
+        "activeButtons": 7,
+        "disabledButtons": 0,
+        "otherContentUnchanged": true,
+        "htmlMatches": true
+      },
+      {
+        "file": "11-次数状态待确认.svg",
+        "activeButtons": 7,
+        "disabledButtons": 1,
+        "otherContentUnchanged": true,
+        "htmlMatches": true
+      }
+    ],
+    "newlyFilledButtons": 85,
+    "existingFilledButtons": 6
+  },
+  "actualClickCount": 17,
+  "steps": [
+    {
+      "nodeId": "00_前往01_从主线开始",
+      "to": "01",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-541&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "01_前往02_生成日程",
+      "to": "02",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-755&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "02_前往03_生成另一份日程",
+      "to": "03",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-849&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "03_前往04_演示：生成1成功",
+      "to": "04",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-952&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "04_前往05_演示：生成2失败",
+      "to": "05",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1055&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "05_前往06_重新生成",
+      "to": "06",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1155&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "06_前往07_结果待确认",
+      "to": "07",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1255&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "07_前往05_查询处理状态",
+      "to": "05",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1055&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "05_前往09_日程读取失败",
+      "to": "09",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1459&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "09_前往05_重新读取日程",
+      "to": "05",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1055&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "05_前往11_次数状态待确认",
+      "to": "11",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1631&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "11_前往05_重新读取次数",
+      "to": "05",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1055&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "05_前往08_刷新恢复",
+      "to": "08",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1356&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "08_前往05_演示：生成2失败",
+      "to": "05",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1055&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "05_前往10_尚无日程",
+      "to": "10",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-1551&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "10_前往01_生成日程",
+      "to": "01",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-541&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    },
+    {
+      "nodeId": "01_前往00_回到流程",
+      "to": "00",
+      "url": "https://www.figma.com/proto/cBSK0kbo375jB23Kkmmlhn/%E4%BB%BB%E5%8A%A1%E8%A7%84%E5%88%92%EF%BD%9C%E9%A2%9D%E5%BA%A6%E5%A4%84%E7%90%86%E5%8E%9F%E5%9E%8B?node-id=11-632&scaling=scale-down&content-scaling=fixed&starting-point-node-id=11%3A632"
+    }
+  ],
+  "visualChecks": [
+    "00总览：所有直接入口、公共导航均为深蓝底白字；非交互说明卡片保留白底",
+    "03占用：主操作保留灰色禁用，底部导航和演示成功按钮为深蓝",
+    "04成功：主操作保留灰色，底部导航及演示失败按钮深蓝",
+    "07待确认：查询处理状态按钮与导航深蓝，主操作禁用",
+    "09读取失败：生成、重新读取日程与导航均深蓝",
+    "11次数待确认：重新读取次数深蓝，主操作禁用",
+    "08刷新恢复：导航与演示失败深蓝"
+  ],
+  "screenshots": [
+    "00-生成流程-填色后-Figma.png",
+    "04-生成成功-填色后-Figma.png",
+    "07-结果待确认-填色后-Figma.png"
+  ],
+  "limits": [
+    "本轮为设计配色和主要跳转复核，非软件运行测试",
+    "本轮实际点击与原先32次记录分别保存；未再次点击全部91个导航入口",
+    "本地SVG/HTML检查为源文件一致性检查，未重跑HTML浏览器核验",
+    "未测试手机适配；未修改程序业务规则或实现"
+  ]
+}
