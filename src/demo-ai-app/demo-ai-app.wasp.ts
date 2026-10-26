@@ -2,6 +2,7 @@ import { action, page, query, route, type Spec } from "@wasp.sh/spec";
 
 import { DemoAppPage } from "./DemoAppPage" with { type: "ref" };
 import {
+  getCredits,
   createTask,
   deleteTask,
   generatePlan,
@@ -13,6 +14,7 @@ import {
 export const demoAiAppSpec: Spec = [
   route("DemoAppRoute", "/demo-app", page(DemoAppPage, { authRequired: true })),
 
+  query(getCredits, { entities: ["User"] }),
   query(getPlanResults, { entities: ["User", "PlanResult"] }),
   action(generatePlan, { entities: ["User", "Task", "PlanResult"] }),
 
