@@ -1,6 +1,8 @@
 import { type Task } from "wasp/entities";
 
 import {
+  getCredits,
+  getPlanResults,
   createTask,
   deleteTask,
   generatePlan,
@@ -67,6 +69,10 @@ function NewTaskForm({
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
 
+  const { data: credits, refetch: refreshCredits } = useQuery(getCredits);
+  const [notice, setNotice] = useState("");
+  const { data: history, refetch: refreshHistory } = useQuery(getPlanResults);
+
   const handleSubmit = async () => {
     try {
       await handleCreateTask({ description });
@@ -81,34 +87,41 @@ function NewTaskForm({
   const handleGeneratePlan = async () => {
     try {
       setIsPlanGenerating(true);
+      setNotice("正在生成，成功后消耗 1 个额度。");
       const response = await generatePlan({
         hours: todaysHours,
       });
       if (response) {
         setResponse(response);
+        setNotice("日程已保存，本次消耗 1 个额度。可查看下方日程或修改任务后再次生成。");
       }
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
           : undefined;
+      const message = statusCode === 402
+        ? "额度不足，本次未调用生成接口。请刷新余额；当前暂无充值入口。"
+        : err instanceof Error ? err.message : "生成结果未确认，请刷新余额和历史日程后再决定是否重试。";
+      setNotice(message);
       if (statusCode === 402) {
         toast({
           title: "额度不足",
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description: message,
         });
       } else {
         toast({
-          title: "Error",
+          title: "生成未成功",
           description:
             err instanceof Error ? err.message : "Something went wrong",
           variant: "destructive",
         });
       }
     } finally {
+      await Promise.allSettled([refreshCredits(), refreshHistory()]);
       setIsPlanGenerating(false);
     }
   };
@@ -185,9 +198,15 @@ function NewTaskForm({
         )}
       </div>
 
+      <div className="space-y-2" aria-live="polite">
+        <p>剩余额度：{credits ?? "加载中…"}；每次成功生成消耗 1 个额度。</p>
+        {credits === 0 && <p>额度已用尽，当前暂无充值入口。你仍可编辑任务和查看已有日程。</p>}
+        <p role="status">{notice}</p>
+        <Button variant="outline" type="button" onClick={() => { void Promise.allSettled([refreshCredits(), refreshHistory()]); }}>刷新余额和历史</Button>
+      </div>
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || !tasks?.length || credits === undefined || credits === 0 || !Number.isFinite(todaysHours) || todaysHours < 1 || todaysHours > 24}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -204,6 +223,17 @@ function NewTaskForm({
         )}
       </Button>
 
+      {!!history?.length && (
+        <details>
+          <summary>已保存日程（{history.length}）</summary>
+          {history.map(plan => (
+            <div key={plan.id} className="my-3">
+              <p>{new Date(plan.createdAt).toLocaleString()}</p>
+              <pre className="whitespace-pre-wrap break-words text-sm">{plan.content}</pre>
+            </div>
+          ))}
+        </details>
+      )}
       {!!response && (
         <div className="flex flex-col">
           <h3 className="text-foreground mb-4 text-lg font-semibold">
