@@ -115,6 +115,8 @@ npx tsc --project tsconfig.src.json --noEmit
 npx tsc --project tsconfig.wasp.json --noEmit
 ```
 
+上述第 2 组（需要 Wasp）已由 `scripts/wsl-verify.sh` 串成一条命令，在 WSL/Linux 内 `bash scripts/wsl-verify.sh` 即可依次跑完装环境、拉代码、建表、A0–A5、`wasp compile`、两个 `tsc --noEmit`，日志落盘 `~/verify-logs/`；加 `--with-page` 附带 `wasp start` + curl 冒烟。
+
 脚本如何做到「测的是真实代码」：脚本用 `createRequire` 从 `PRISMA_CLIENT_DIR`（默认当前目录）加载 `@prisma/client` 与 `esbuild`；esbuild 把 `src/demo-ai-app/planGeneration.ts`、`mockAi.ts`（连同无扩展名相对导入）打包成 Node 可加载的 ESM 后动态 `import()`，因此 A0–A5 跑的是仓库里同一份逻辑与同一个模拟接口；`provider` 参数包一层计数器，用来断言调用次数。A0 是对基线 `generatePlan`（`114aeb2`）额度行为的**复刻**（先调用、快照判断、无条件扣减），已在脚本里明确标注，不算线上代码。
 
 **环境限制（真实情况，不掩饰）**：Wasp CLI 0.25 的 npm 包 `os` 字段为 `linux,darwin`，Windows 上无法安装（`EBADPLATFORM`）；本机 WSL 的 Ubuntu 发行版未注册（虚拟机平台未启用，错误 0x80370102）。因此：

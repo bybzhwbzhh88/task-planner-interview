@@ -116,3 +116,19 @@ tsc --noEmit --strict --skipLibCheck --module esnext \
 | `npx tsc --project tsconfig.wasp.json --noEmit` | 同上 | 同上 |
 | 页面端到端（A1–A3 UI 部分） | 同上 | `wasp start` 后按 `SPEC.md` 6 节操作 |
 | `operations.ts` / `DemoAppPage.tsx` 完整类型检查 | 依赖 `wasp/entities`、`wasp/server` 等生成类型 | 同上；已做 esbuild 语法检查兜底 |
+
+## 如何补齐上面这些未运行项
+
+一条命令，幂等可重复执行：
+
+```bash
+# 在 WSL (Ubuntu 22.04) 内，项目必须放在 ext4 文件系统（~/），不要用 /mnt
+bash scripts/wsl-verify.sh              # 静态检查 + 数据库层 A0-A5
+bash scripts/wsl-verify.sh --with-page  # 额外 wasp start + curl 页面冒烟
+```
+
+脚本会依次完成：nvm 装 Node 24 → `git fetch/checkout quota-handling` → `npm i -g wasp.sh/wasp-cli@0.25.0` → `wasp install` → `prisma db push` → `node scripts/verify-quota.mjs` → `wasp compile` → 两个 `tsc --noEmit`，全过程日志落盘到 `~/verify-logs/`。
+
+数据库默认连 Windows 侧的 `localhost:5433`（WSL2 会转发宿主机 localhost）。若不可达，需先在 Windows 上启动 PostgreSQL，或在 WSL 内 `sudo apt install postgresql` 并把 `PG_PORT` 改成 5432。
+
+脚本退出码非 0 即为失败，可直接定位到 `~/verify-logs/` 下对应日志。
