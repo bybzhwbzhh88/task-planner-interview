@@ -47,10 +47,15 @@ export interface GeneratePlanParams {
   callId?: string;
 }
 
-export interface GeneratePlanOutcome {
+/**
+ * action 的返回值。必须是 type alias 而不是 interface：Wasp 的 `Payload` 约束
+ * 要求类型满足 `SuperJSONObject`（带 string index signature），而 TypeScript
+ * 只会给 type alias 的对象类型隐式生成 index signature，interface 不会。
+ */
+export type GeneratePlanOutcome = {
   schedule: GeneratedSchedule;
   creditsRemaining: number;
-}
+};
 
 /**
  * 日程生成的额度处理主流程：占位 → 调用 → 成功留存 / 失败退还。
