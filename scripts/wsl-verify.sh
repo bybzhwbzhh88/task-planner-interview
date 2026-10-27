@@ -60,7 +60,7 @@ log "node ready: $(node -v)"
 log "=== 2. 代码（ext4 内部，勿用 /mnt）==="
 if [ -d "$WORK/.git" ]; then
   cd "$WORK" || fail "cd $WORK"
-  git fetch origin >>"$LOG_DIR/run.log" 2>&1 || fail "git fetch"
+  git fetch origin >>"$LOG_DIR/run.log" 2>&1 || log "WARN: git fetch 失败，沿用本地代码"
   git checkout "$BRANCH" >>"$LOG_DIR/run.log" 2>&1 || fail "git checkout"
   git pull --ff-only >>"$LOG_DIR/run.log" 2>&1 || log "WARN: git pull not fast-forward, keep local HEAD"
 else
@@ -73,7 +73,7 @@ log "HEAD: $(git rev-parse --short HEAD)  branch: $(git rev-parse --abbrev-ref H
 # ---------------------------------------------------------------------------
 log "=== 3. Wasp CLI ${WASP_VERSION} ==="
 if ! command -v wasp >/dev/null 2>&1; then
-  npm install -g "wasp.sh/wasp-cli@${WASP_VERSION}" >>"$LOG_DIR/run.log" 2>&1 \
+  npm install -g "@wasp.sh/wasp-cli@${WASP_VERSION}" >>"$LOG_DIR/run.log" 2>&1 \
     || fail "wasp-cli install failed"
 fi
 log "wasp: $(wasp version 2>&1 | tail -1)"
