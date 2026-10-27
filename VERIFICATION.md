@@ -1,6 +1,11 @@
 # 验证记录
 
-> 结论：数据库层验证 **6/6 场景、28 条断言全部通过**（含基线问题复现）。环境与命令可复现，原始输出见下文。`wasp compile` / Wasp 侧 `tsc --noEmit` / 页面端到端**未运行**（Windows 装不了 Wasp CLI，原因见 `SPEC.md` 第 7 节），已在文末明确标注。
+> 结论：**全部可自动化验证项均已在真实环境跑通**。
+> - 额度逻辑：**6/6 场景、28 条断言通过**（含基线问题复现），在 Windows 与 WSL 原生 PostgreSQL 上各跑一遍，结果一致。
+> - Wasp 侧：`wasp compile` **通过**；`tsc --project tsconfig.src.json --noEmit` 与 `tsc --project tsconfig.wasp.json --noEmit` **均为 EXIT=0**。
+> - 页面端到端（浏览器里点按钮走 A1–A3）**未运行**，原因与补齐方式见文末。
+>
+> 值得一提的是：`wasp compile` 首次运行抓出了一个真实类型错误（`GeneratePlanOutcome` 不满足 Wasp 的 `Payload` 约束），已修复并记录在文末「编译期发现并修复的问题」。
 
 ## 环境
 
@@ -107,28 +112,52 @@ tsc --noEmit --strict --skipLibCheck --module esnext \
 # operations.ts / DemoAppPage.tsx / demo-ai-app.wasp.ts → SYNTAX OK
 ```
 
-## 未运行的检查（明确标注）
+## 编译与类型检查（WSL 实测）
+
+环境：WSL2 + Ubuntu 22.04，Node v24.22.1（nvm），Wasp CLI 0.25.0，PostgreSQL 14（WSL 内原生）。
+
+| 检查 | 命令 | 结果 |
+| --- | --- | --- |
+| Wasp 编译 | `wasp compile` | ✅ `Your wasp project has successfully compiled.` |
+| 公共/服务端类型检查 | `npx tsc --project tsconfig.src.json --noEmit` | ✅ EXIT=0，无报错输出 |
+| Wasp 生成物类型检查 | `npx tsc --project tsconfig.wasp.json --noEmit` | ✅ EXIT=0，无报错输出 |
+| 额度逻辑（WSL 复跑） | `node scripts/verify-quota.mjs` | ✅ 6/6 场景、28 条断言 |
+
+`wasp db` 阶段提示 `Your Prisma schema does not match your database`（`task_planner_dev` 为新建空库），不影响编译与上述验证——额度验证使用独立的 `quota_verify` 库。
+
+## 编译期发现并修复的问题
+
+`wasp compile` 首次运行失败：
+
+```text
+src/demo-ai-app/operations.ts(37,3): error TS2344:
+Type 'GeneratePlanOutcome' does not satisfy the constraint 'Payload'.
+  Type 'GeneratePlanOutcome' is not assignable to type 'SuperJSONObject'.
+    Index signature for type 'string' is missing in type 'GeneratePlanOutcome'.
+```
+
+**原因**：Wasp action 的返回值必须满足 `Payload`（即 `SuperJSONObject`，带 string index signature）。TypeScript 只会给 **type alias 的对象类型**隐式生成 index signature，**interface 不会**。原实现写的是 `export interface GeneratePlanOutcome`。
+
+**修复**（commit `87d4821`）：改为 `export type GeneratePlanOutcome = { schedule; creditsRemaining }`，编译随即通过。
+
+该问题在 Windows 上无法暴露——Wasp CLI 无 Windows 发行版，当时只能做 esbuild 语法检查（语法合法，但类型契约不满足）。它说明「未运行项如实标注、后续真机补齐」这个做法是有价值的。
+
+## 仍未运行
 
 | 检查 | 原因 | 补齐方式 |
 | --- | --- | --- |
-| `wasp compile` | Wasp CLI 0.25 npm 包 `os` 限 linux/darwin，Windows `EBADPLATFORM`；本机 WSL Ubuntu 未注册（0x80370102） | Linux/macOS 上执行 `wasp compile` |
-| `npx tsc --project tsconfig.src.json --noEmit` | 同上：`@wasp.sh/spec` 指向 `.wasp/` 生成物，无法在 Windows 安装依赖 | 同上 |
-| `npx tsc --project tsconfig.wasp.json --noEmit` | 同上 | 同上 |
-| 页面端到端（A1–A3 UI 部分） | 同上 | `wasp start` 后按 `SPEC.md` 6 节操作 |
-| `operations.ts` / `DemoAppPage.tsx` 完整类型检查 | 依赖 `wasp/entities`、`wasp/server` 等生成类型 | 同上；已做 esbuild 语法检查兜底 |
+| 页面端到端（浏览器操作 A1–A3） | 需 `wasp start` 后人工登录点击 | `wasp start` 后按 `SPEC.md` 第 6 节：额度 3 生成后变 2；额度 0 时按钮禁用；任务描述含 `[fail]` 时提示「不消耗额度，可重试」 |
 
-## 如何补齐上面这些未运行项
+其余改动文件（`operations.ts` / `DemoAppPage.tsx`）的完整类型检查已由 `tsc --project tsconfig.src.json` 覆盖，无需再单独兜底。
 
-一条命令，幂等可重复执行：
+## 一键重跑全部验证
 
 ```bash
-# 在 WSL (Ubuntu 22.04) 内，项目必须放在 ext4 文件系统（~/），不要用 /mnt
-bash scripts/wsl-verify.sh              # 静态检查 + 数据库层 A0-A5
+# 在 WSL (Ubuntu 22.04) 内，项目必须在 ext4（~/），不要放 /mnt
+bash scripts/wsl-verify.sh              # 装环境 → 建表 → A0–A5 → wasp compile → 两个 tsc
 bash scripts/wsl-verify.sh --with-page  # 额外 wasp start + curl 页面冒烟
 ```
 
-脚本会依次完成：nvm 装 Node 24 → `git fetch/checkout quota-handling` → `npm i -g wasp.sh/wasp-cli@0.25.0` → `wasp install` → `prisma db push` → `node scripts/verify-quota.mjs` → `wasp compile` → 两个 `tsc --noEmit`，全过程日志落盘到 `~/verify-logs/`。
+脚本幂等、可重复执行，全过程日志落盘 `~/verify-logs/`，退出码非 0 即为失败。
 
-数据库默认连 Windows 侧的 `localhost:5433`（WSL2 会转发宿主机 localhost）。若不可达，需先在 Windows 上启动 PostgreSQL，或在 WSL 内 `sudo apt install postgresql` 并把 `PG_PORT` 改成 5432。
-
-脚本退出码非 0 即为失败，可直接定位到 `~/verify-logs/` 下对应日志。
+数据库默认连 `localhost:5433`（Windows 侧）；若在 WSL 内用原生 PostgreSQL，设 `PG_PORT=5432` 并把 `DATABASE_URL` 写成 `postgresql://postgres:postgres@localhost:5432/quota_verify`。

@@ -119,10 +119,13 @@ npx tsc --project tsconfig.wasp.json --noEmit
 
 脚本如何做到「测的是真实代码」：脚本用 `createRequire` 从 `PRISMA_CLIENT_DIR`（默认当前目录）加载 `@prisma/client` 与 `esbuild`；esbuild 把 `src/demo-ai-app/planGeneration.ts`、`mockAi.ts`（连同无扩展名相对导入）打包成 Node 可加载的 ESM 后动态 `import()`，因此 A0–A5 跑的是仓库里同一份逻辑与同一个模拟接口；`provider` 参数包一层计数器，用来断言调用次数。A0 是对基线 `generatePlan`（`114aeb2`）额度行为的**复刻**（先调用、快照判断、无条件扣减），已在脚本里明确标注，不算线上代码。
 
-**环境限制（真实情况，不掩饰）**：Wasp CLI 0.25 的 npm 包 `os` 字段为 `linux,darwin`，Windows 上无法安装（`EBADPLATFORM`）；本机 WSL 的 Ubuntu 发行版未注册（虚拟机平台未启用，错误 0x80370102）。因此：
+**执行环境与结果（真实情况，不掩饰）**：Wasp CLI 0.25 的 npm 包 `os` 字段为 `linux,darwin`，Windows 上装不了（`EBADPLATFORM`）。因此验证分两步：
 
-- **已运行**：数据库层验证（真实 PostgreSQL 16.9，`scripts/verify-quota.mjs`，6/6 场景通过）；`credits.ts` 与 `planGeneration.ts` 的独立 `tsc --noEmit --strict` 类型检查；改动文件的 esbuild 语法检查。
-- **未运行**：`wasp compile`、两个 `tsc --noEmit`（依赖 `.wasp/` 生成物）、页面端到端（A1–A3 的 UI 部分）。`operations.ts` / `DemoAppPage.tsx` 的完整类型检查也依赖 Wasp 生成物，未在本机执行。接手者在 Linux/macOS 上按上面第 2 步命令补齐即可。
+- **Windows（原生 PostgreSQL 16.9）**：数据库层 A0–A5，6/6 场景、28 条断言通过。
+- **WSL2 + Ubuntu 22.04（原生 PostgreSQL 14，Node 24.22.1，Wasp 0.25.0）**：A0–A5 复跑结果一致；`wasp compile` 通过；`tsc --project tsconfig.src.json --noEmit` 与 `tsc --project tsconfig.wasp.json --noEmit` 均 EXIT=0。
+- **未运行**：页面端到端（A1–A3 的 UI 部分，需 `wasp start` 后人工点击），步骤见第 6 节。
+
+`wasp compile` 首次运行暴露了一个真实类型错误（`GeneratePlanOutcome` 用 interface 声明，不满足 Wasp 的 `Payload` 约束），修复过程记录在 `VERIFICATION.md`。
 
 逐条运行记录见 `VERIFICATION.md`。
 
