@@ -35,6 +35,10 @@
     "vitest": "^4.1.9"
   },
   "private": true,
+  "scripts": {
+    "test:quota": "node --test --test-isolation=none tests/generate-plan.test.ts",
+    "typecheck:quota": "tsc --project tsconfig.verify.json"
+  },
   "engines": {
     "node": ">=24.14.1"
   }

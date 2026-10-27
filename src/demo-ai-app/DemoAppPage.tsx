@@ -5,12 +5,13 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCreditBalance,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
 
 import { Loader2, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "../client/components/ui/button";
 import {
   Card,
@@ -21,8 +22,8 @@ import {
 import { Checkbox } from "../client/components/ui/checkbox";
 import { Input } from "../client/components/ui/input";
 import { Label } from "../client/components/ui/label";
-import { toast } from "../client/hooks/use-toast";
 import { cn } from "../client/utils";
+import type { GeneratePlanResult } from "./generate-plan";
 import type {
   GeneratedSchedule,
   Task as ScheduleTask,
@@ -54,6 +55,20 @@ export function DemoAppPage() {
   );
 }
 
+type PlanFeedback = {
+  kind: "success" | "error";
+  title: string;
+  detail: string;
+};
+
+function getErrorStatusCode(error: unknown): number | undefined {
+  if (!error || typeof error !== "object" || !("statusCode" in error)) {
+    return undefined;
+  }
+  const statusCode = (error as { statusCode?: unknown }).statusCode;
+  return typeof statusCode === "number" ? statusCode : undefined;
+}
+
 function NewTaskForm({
   handleCreateTask,
 }: {
@@ -63,9 +78,25 @@ function NewTaskForm({
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
+  const [feedback, setFeedback] = useState<PlanFeedback | null>(null);
+  const [credits, setCredits] = useState<number | null>(null);
+  const generatingRef = useRef(false);
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
+  const {
+    data: creditBalance,
+    isLoading: isCreditLoading,
+    refetch: refetchCreditBalance,
+  } = useQuery(getCreditBalance);
+
+  useEffect(() => {
+    if (creditBalance) {
+      setCredits(creditBalance.credits);
+    }
+  }, [creditBalance]);
+
+  const isOutOfCredits = credits === 0;
 
   const handleSubmit = async () => {
     try {
@@ -79,36 +110,68 @@ function NewTaskForm({
   };
 
   const handleGeneratePlan = async () => {
+    // Prevent a double click from sending two requests before re-render.
+    if (generatingRef.current || isOutOfCredits) {
+      return;
+    }
+    generatingRef.current = true;
+    setIsPlanGenerating(true);
+    setFeedback(null);
+
     try {
-      setIsPlanGenerating(true);
-      const response = await generatePlan({
+      const result: GeneratePlanResult = await generatePlan({
         hours: todaysHours,
       });
-      if (response) {
-        setResponse(response);
-      }
+      setResponse(result.schedule);
+      setCredits(result.remainingCredits);
+      setFeedback({
+        kind: "success",
+        title: "日程已生成",
+        detail: `本次消耗 1 个额度，剩余 ${result.remainingCredits} 个。`,
+      });
     } catch (err) {
-      const statusCode =
-        err && typeof err === "object" && "statusCode" in err
-          ? err.statusCode
-          : undefined;
+      const statusCode = getErrorStatusCode(err);
       if (statusCode === 402) {
-        toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+        setCredits(0);
+        setFeedback({
+          kind: "error",
+          title: "额度不足，本次未生成日程",
+          detail:
+            "没有调用模型，也没有扣费。请联系管理员补充额度，或使用新账号。",
+        });
+        // A concurrent failure may have refunded a credit; re-read the real balance.
+        void refetchCreditBalance?.();
+      } else if (statusCode === 502) {
+        setFeedback({
+          kind: "error",
+          title: "模型未通过本次请求，未扣额度",
+          detail:
+            "请删除包含 [fail] 的任务后重试；也可以调整任务内容再生成。",
+        });
+      } else if (statusCode === 400) {
+        setFeedback({
+          kind: "error",
+          title: "请求参数有误，本次未生成日程",
+          detail: "请检查可用工作时长后重试。本次没有扣额度。",
+        });
+      } else if (statusCode === 401) {
+        setFeedback({
+          kind: "error",
+          title: "登录状态已失效",
+          detail: "请重新登录后再生成日程。",
         });
       } else {
-        toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
-          variant: "destructive",
+        setFeedback({
+          kind: "error",
+          title: "生成失败，未生成日程",
+          detail:
+            "若已预占额度，系统会自动退回；如果余额减少，请联系管理员核对。",
         });
+        // Reflect a refund if the failure happened after reservation.
+        void refetchCreditBalance?.();
       }
     } finally {
+      generatingRef.current = false;
       setIsPlanGenerating(false);
     }
   };
@@ -185,9 +248,29 @@ function NewTaskForm({
         )}
       </div>
 
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-muted-foreground text-sm">
+          每成功生成一次日程消耗 1 个额度。
+        </p>
+        <span
+          className={cn(
+            "rounded-full border px-3 py-1 text-sm font-semibold",
+            isOutOfCredits
+              ? "border-destructive/30 text-destructive"
+              : "border-border text-foreground",
+          )}
+          data-testid="credit-balance"
+          aria-live="polite"
+        >
+          {isCreditLoading || credits === null
+            ? "额度加载中…"
+            : `剩余额度：${credits}`}
+        </span>
+      </div>
+
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || tasks?.length === 0 || isOutOfCredits}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -199,10 +282,35 @@ function NewTaskForm({
             <Loader2 className="mr-2 inline-block animate-spin" />
             生成中…
           </>
+        ) : isOutOfCredits ? (
+          "额度已用完"
         ) : (
           "生成日程"
         )}
       </Button>
+
+      {isOutOfCredits && (
+        <p className="text-destructive text-sm" data-testid="out-of-credits">
+          额度已用完，生成按钮已停用。请联系管理员补充额度，或使用新账号。
+        </p>
+      )}
+
+      {feedback && (
+        <div
+          role="status"
+          aria-live="polite"
+          data-testid="plan-feedback"
+          className={cn(
+            "rounded-md border p-4 text-sm",
+            feedback.kind === "success"
+              ? "border-success/30 bg-success/10"
+              : "border-destructive/30 bg-destructive/10",
+          )}
+        >
+          <p className="font-semibold">{feedback.title}</p>
+          <p className="text-muted-foreground mt-1">{feedback.detail}</p>
+        </div>
+      )}
 
       {!!response && (
         <div className="flex flex-col">
