@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>任务规划 · 额度处理交互原型</title>
+<style>
+:root{--ink:#17263c;--muted:#647086;--brand:#4057d6;--line:#dce2eb;--bg:#f3f5f9}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid #df9c21;outline-offset:3px}button:disabled{cursor:not-allowed;opacity:.55}.banner{background:#17263c;color:#e7ebff;padding:10px 24px;font-size:12px;text-align:center}.shell{max-width:1170px;margin:auto;padding:0 28px}header{padding:28px 0;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.brand{font-size:18px;font-weight:750}.brand small{font-size:11px;letter-spacing:2px;display:block;color:var(--muted);font-weight:500}.quota{background:white;border:1px solid var(--line);border-radius:100px;padding:7px 18px;font-size:13px}.quota strong{font-size:20px;color:var(--brand);margin:0 5px}.intro{padding:33px 0 25px}.eyebrow{letter-spacing:2px;color:var(--brand);font-size:11px;font-weight:750}h1{font-size:34px;line-height:1.3;letter-spacing:-1px;margin:9px 0 10px}p{margin:0 0 14px}.intro p{color:var(--muted)}main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}.card{background:white;border:1px solid var(--line);border-radius:16px;padding:26px;margin-bottom:20px;box-shadow:0 5px 20px #17263c04}.card h2{font-size:18px;margin:0 0 18px}.sectionline{display:flex;align-items:center;justify-content:space-between}.pill{border-radius:99px;background:#f0f3ff;color:var(--brand);font-size:11px;padding:3px 9px}.task{display:flex;gap:13px;padding:15px 0;border-top:1px solid #edf0f5}.task span:first-child{color:var(--brand)}.task small{display:block;color:var(--muted);font-size:12px}.hours{display:flex;align-items:center;justify-content:space-between;margin:12px 0 20px}.hours input{width:84px;padding:7px;border:1px solid var(--line);border-radius:8px;text-align:center}.primary{background:var(--brand);color:white;border:0;border-radius:9px;padding:13px 17px;font-weight:650;width:100%}.secondary{background:white;color:var(--ink);border:1px solid #cdd5e3;border-radius:8px;padding:8px 12px;font-size:13px}.muted{color:var(--muted);font-size:12px}.cost{text-align:center;margin:9px 0 0;font-size:12px;color:var(--muted)}.notice{margin:18px 0 0;border-radius:9px;padding:14px 16px;background:#f0f3ff;font-size:13px;border:1px solid #dbe2ff}.notice.success{background:#eef9f2;border-color:#cbe9d6;color:#21633e}.notice.error{background:#fff4ed;border-color:#f3d8c1;color:#8c4d1a}.notice.neutral{background:#f4f6fa;border-color:#e2e6ed;color:#546178}.notice strong{display:block;margin-bottom:3px}.result{display:none}.result.show{display:block}.timeline{border-left:2px solid #dfe5ff;padding-left:18px}.slot{margin-bottom:17px}.slot small{font-size:11px;color:var(--brand);display:block}.slot b{font-weight:600}.result time{font-size:11px;color:var(--muted)}aside .card{padding:22px}.legend{color:var(--muted);font-size:12px;margin-top:-8px}.presets{display:flex;gap:8px;margin:17px 0}.preset{flex:1;border:1px solid var(--line);border-radius:8px;padding:8px 0;background:#fff;color:var(--ink);font-size:13px}.preset[aria-pressed=true]{background:#eef1ff;border-color:#6679e6;color:var(--brand)}.toggle{display:flex;align-items:start;gap:9px;margin-bottom:15px;font-size:13px}.full{width:100%;margin-bottom:10px}.other{padding:12px;background:#f5f7fb;border-radius:8px;font-size:12px;margin:5px 0 16px;min-height:59px}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;border-top:1px solid var(--line);padding-top:14px}.stat span{display:block;font-size:11px;color:var(--muted)}.stat b{font-size:23px}.logs{font:11px/1.8 ui-monospace,monospace;color:#53617a;white-space:pre-wrap;overflow-wrap:anywhere;max-height:170px;overflow:auto}details{margin-top:15px}summary{font-size:12px;cursor:pointer}footer{margin:20px 0 36px;color:var(--muted);font-size:11px;display:flex;justify-content:space-between;gap:20px}a{color:var(--brand)}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+@media(max-width:800px){.shell{padding:0 18px}main{grid-template-columns:1fr}h1{font-size:28px}.card{padding:21px}.intro{padding-top:25px}footer{display:block}header{gap:15px}.quota{padding:6px 12px}}
+</style>
+</head>
+<body>
+<div class="banner">产品交互原型 · 所有额度、请求与结果均为浏览器内模拟，未连接业务后端</div>
+<div class="shell">
+<header><div class="brand">任务规划实验室<small>MAKE ROOM FOR WHAT MATTERS</small></div><div class="quota">剩余额度 <strong id="credits">3</strong> 次</div></header>
+<section class="intro"><div class="eyebrow">PLAN YOUR DAY</div><h1>把待办，变成今天的日程。</h1><p>每成功生成一份日程，消耗 1 次额度。明确失败不扣费。</p></section>
+<main>
+<section aria-label="任务与日程">
+<div class="card">
+<div class="sectionline"><h2>今天想完成什么</h2><span class="pill">示例任务 · 2 项</span></div>
+<div class="task"><span aria-hidden="true">○</span><div>整理面试资料<small>梳理项目经历，提炼关键成果</small></div></div>
+<div class="task"><span aria-hidden="true">○</span><div>练习自我介绍<small>录音复盘，控制表达节奏</small></div></div>
+<div class="hours"><label for="hours">今天可用时长 <span class="muted">/ 小时</span></label><input id="hours" type="number" min="1" max="24" step="0.5" value="2"></div>
+<button class="primary" id="generate">生成日程 · 成功后扣 1 次</button>
+<p class="cost">生成过程中不预扣额度；剩余额度以服务端结果为准。</p>
+<div id="notice" class="notice neutral" role="status" aria-live="polite"><strong>准备好了就开始</strong><span>成功后会同时显示日程和最新额度。</span></div>
+<button id="sync" class="secondary" style="margin-top:12px">刷新状态</button>
+</div>
+<div class="card result" id="result"><div class="sectionline"><h2 id="result-title">本次日程</h2><span class="pill">已保存</span></div><p><time id="saved-time"></time></p><div class="timeline" id="timeline"></div><p class="muted">再次生成是新的请求，成功后会再消耗 1 次额度。</p></div>
+</section>
+<aside aria-label="原型评审控制台">
+<div class="card"><div class="eyebrow">REVIEW CONTROLS</div><h2 style="margin-top:7px">切换验收场景</h2><p class="legend">下列控件仅用于演示，不属于正式页面。切换额度会清空本轮模拟记录。</p>
+<div class="presets" aria-label="初始额度"><button class="preset" data-credits="3" aria-pressed="true">3 次</button><button class="preset" data-credits="1" aria-pressed="false">1 次</button><button class="preset" data-credits="0" aria-pressed="false">0 次</button></div>
+<label class="toggle"><input id="fail" type="checkbox"><span>模拟模型明确失败<br><span class="muted">对应真实项目中含 [fail] 的任务</span></span></label>
+<label class="toggle"><input id="lost" type="checkbox"><span>模拟响应丢失<br><span class="muted">服务端继续完成，页面先不确认结果</span></span></label>
+<button class="secondary full" id="other">模拟另一标签页提交</button>
+<div id="other-status" class="other" role="status">另一标签页尚未提交。生成中点击上方按钮，可查看忙碌提示。</div>
+<button class="secondary full" id="direct">模拟绕过按钮直接请求</button>
+<p class="muted">用于验证 0 额度时，服务端仍需拒绝调用。此处仅演示规则。</p>
+<div class="stats"><div class="stat"><span>模拟模型调用</span><b id="calls">0</b></div><div class="stat"><span>模拟保存结果</span><b id="results">0</b></div></div>
+<details><summary>查看模拟事件记录</summary><pre class="logs" id="logs">等待操作</pre></details>
+</div>
+</aside>
+</main>
+<footer><span>产品方向 · 荣海洋 · 交互方案 v1.0</span><span>查看 <a href="PRODUCT.md">需求方案</a> · <a href="ACCEPTANCE.md">验收案例</a> · <a href="VALIDATION.md">验证状态</a></span></footer>
+</div>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  let balance = 3, visibleBalance = 3, busy = false, unknown = false, calls = 0, results = 0, saved = null, displayed = false;
+  const events = [];
+  function log(event) { events.push(event); $('logs').textContent = events.join('\n'); }
+  function notice(title, text, style = 'neutral') {
+    $('notice').className = 'notice ' + style;
+    $('notice').setAttribute('role', style === 'error' ? 'alert' : 'status');
+    $('notice').replaceChildren();
+    const strong = document.createElement('strong'); strong.textContent = title;
+    const span = document.createElement('span'); span.textContent = text;
+    $('notice').append(strong, span);
+  }
+  function render() {
+    $('credits').textContent = visibleBalance;
+    $('calls').textContent = calls; $('results').textContent = results;
+    $('generate').disabled = busy || unknown || visibleBalance < 1;
+    $('generate').textContent = busy ? '生成中…' : unknown ? '请先同步状态' : visibleBalance < 1 ? '额度已用完' : saved ? '重新生成 · 成功后扣 1 次' : '生成日程 · 成功后扣 1 次';
+    $('hours').disabled = busy || unknown;
+    document.querySelectorAll('.preset, #fail, #lost').forEach(el => el.disabled = busy || unknown);
+    $('result').classList.toggle('show', displayed);
+  }
+  function showSaved() {
+    if (!saved) return;
+    displayed = true;
+    $('result-title').textContent = '本次日程';
+    $('saved-time').textContent = '保存时间：' + saved.time;
+    $('timeline').replaceChildren();
+    ['整理面试资料','练习自我介绍'].forEach((name, index) => {
+      const div = document.createElement('div'); div.className = 'slot';
+      const small = document.createElement('small'); small.textContent = `第 ${index + 1} 项 · ${saved.hours / 2} 小时`;
+      const b = document.createElement('b'); b.textContent = name; div.append(small,b); $('timeline').append(div);
+    });
+  }
+  function sync() {
+    log('state.sync（只读取，不调用模型）');
+    if (busy) { notice('日程仍在生成中', '请等待完成后再次同步；此操作不扣额度。'); return; }
+    visibleBalance = balance; unknown = false;
+    if (saved) { showSaved(); $('result-title').textContent = '已保存日程'; }
+    notice('状态已同步', saved ? `已读取已保存日程及时间，剩余 ${balance} 次。请查看后再决定是否重新生成。` : `剩余 ${balance} 次；当前没有新生成的日程。`, balance ? 'success' : 'neutral');
+    render();
+  }
+  async function request(origin) {
+    if (unknown) { notice('请先同步状态', '尚未确认上次请求结果，请先刷新状态。'); return; }
+    if (busy) {
+      log('generation.busy 409（未调用模型）');
+      $('other-status').textContent = '409 · 该账号已有日程正在生成，请等待完成后刷新查看。此请求不调用、不排队。';
+      return;
+    }
+    const hours = Number($('hours').value);
+    if (!Number.isFinite(hours) || hours < 1 || hours > 24) { notice('请检查可用时长', '请输入 1–24 小时后重试。', 'error'); log('input.invalid 400'); return; }
+    if (balance < 1) {
+      log('quota.rejected 402（未调用模型）'); visibleBalance = balance;
+      notice('当前无可用额度', '你仍可编辑任务、查看已生成日程。', 'neutral');
+      if (origin === 'other') $('other-status').textContent = '402 · 额度不足，未调用模型。';
+      render(); return;
+    }
+    const fail = $('fail').checked, lost = $('lost').checked;
+    busy = true; calls++; log(`lock.acquired → balance.checked(${balance}) → mock-ai.started #${calls}`);
+    if (saved) $('result-title').textContent = '上次日程';
+    if (origin === 'other') $('other-status').textContent = '另一标签页生成中；共享同一账号额度。';
+    notice('正在生成日程', '成功后扣 1 次额度，请稍候。'); render();
+    await new Promise(resolve => setTimeout(resolve, 1800));
+    if (fail) {
+      log('mock-ai.failed → transaction.rollback → lock.released'); busy = false;
+      if (lost) { unknown = true; notice('暂时无法确认生成结果', '请先刷新状态，同步额度和已生成日程。'); }
+      else { notice('本次生成失败，未扣额度', '请检查任务后重试。真实本地测试请删除含 [fail] 的任务。', 'error'); }
+      if (origin === 'other') $('other-status').textContent = lost ? '响应丢失，请同步状态。' : '另一标签页生成失败，未扣额度。';
+      render(); return;
+    }
+    log('mock-ai.succeeded'); balance--; results++;
+    saved = {time:new Date().toLocaleString('zh-CN', {hour12:false}), hours};
+    log(`plan.committed（结果 +1，余额 ${balance}）→ lock.released`); busy = false;
+    if (lost) {
+      unknown = true; notice('暂时无法确认生成结果', '请先刷新状态，同步额度和已生成日程；不要直接重复生成。');
+    } else {
+      visibleBalance = balance; showSaved();
+      notice(`日程已生成，已消耗 1 次，剩余 ${balance} 次`, balance ? '可查看本次日程；如需重新生成，将再次消耗额度。' : '额度已用完。你仍可编辑任务、查看已生成日程。', 'success');
+    }
+    if (origin === 'other') $('other-status').textContent = lost ? '响应丢失，请同步状态。' : `另一标签页生成完成；共享余额 ${balance} 次。`;
+    render();
+  }
+  document.querySelectorAll('.preset').forEach(button => button.addEventListener('click', () => {
+    balance = visibleBalance = Number(button.dataset.credits); busy = unknown = displayed = false; calls = results = 0; saved = null; events.length = 0;
+    $('fail').checked = $('lost').checked = false; $('hours').value = '2'; $('logs').textContent = '等待操作'; $('other-status').textContent = '另一标签页尚未提交。生成中点击上方按钮，可查看忙碌提示。';
+    document.querySelectorAll('.preset').forEach(el => el.setAttribute('aria-pressed', String(el === button)));
+    notice(balance ? '准备好了就开始' : '当前无可用额度', balance ? '成功后会同时显示日程和最新额度。' : '你仍可编辑任务、查看已生成日程。'); render();
+  }));
+  $('generate').addEventListener('click', () => request('main'));
+  $('other').addEventListener('click', () => request('other'));
+  $('direct').addEventListener('click', () => request('direct'));
+  $('sync').addEventListener('click', sync);
+  render();
+})();
+</script>
+</body></html>
