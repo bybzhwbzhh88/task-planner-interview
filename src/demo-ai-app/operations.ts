@@ -1,6 +1,5 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
-import { HttpError, prisma } from "wasp/server";
+import type { PlanResult, Task } from "wasp/entities";
+import { HttpError } from "wasp/server";
 import type {
   CreateTask,
   DeleteTask,
@@ -32,6 +31,7 @@ export const generatePlan: GeneratePlan<
       "Only authenticated users are allowed to perform this operation",
     );
   }
+  const userId = context.user.id;
 
   const { hours } = ensureArgsSchemaOrThrowHttpError(
     generatePlanInputSchema,
@@ -45,39 +45,51 @@ export const generatePlan: GeneratePlan<
     },
   });
 
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
-    );
-  }
-
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
+  const reservation = await context.entities.User.updateMany({
+    where: { id: userId, credits: { gt: 0 } },
+    data: { credits: { decrement: 1 } },
   });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
+  if (reservation.count === 0) {
+    throw new HttpError(402, "额度不足，请等待额度补充后再试。");
   }
 
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
+  let generatedSchedule: GeneratedSchedule;
+  try {
+    generatedSchedule = await generateMockSchedule(tasks, hours);
+  } catch (error) {
+    await refundCredit(() =>
+      context.entities.User.update({
+        where: { id: userId },
+        data: { credits: { increment: 1 } },
+      }),
+    );
+    console.error("Mock schedule generation failed", error);
+    throw new HttpError(502, "日程生成失败，已退还本次额度，请稍后重试。");
+  }
+
+  try {
+    await context.entities.PlanResult.create({
+      data: {
+        user: { connect: { id: context.user.id } },
+        content: JSON.stringify(generatedSchedule),
+      },
+    });
+  } catch (error) {
+    await refundCredit(() =>
+      context.entities.User.update({
+        where: { id: userId },
+        data: { credits: { increment: 1 } },
+      }),
+    );
+    throw error;
+  }
 
   return generatedSchedule;
 };
+
+async function refundCredit(refund: () => Promise<unknown>): Promise<void> {
+  await refund();
+}
 
 const createTaskInputSchema = z.object({
   description: z.string().nonempty(),

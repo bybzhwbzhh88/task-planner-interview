@@ -8,6 +8,7 @@ import {
   updateTask,
   useQuery,
 } from "wasp/client/operations";
+import { useAuth } from "wasp/client/auth";
 
 import { Loader2, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -59,6 +60,7 @@ function NewTaskForm({
 }: {
   handleCreateTask: typeof createTask;
 }) {
+  const { data: user } = useAuth();
   const [description, setDescription] = useState<string>("");
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
@@ -98,7 +100,13 @@ function NewTaskForm({
           style: {
             minWidth: "400px",
           },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description: "当前没有可用额度，请等待额度补充后再生成。",
+        });
+      } else if (statusCode === 502) {
+        toast({
+          title: "日程生成失败",
+          description: "本次额度已退还，请检查任务内容后重试。",
+          variant: "destructive",
         });
       } else {
         toast({
@@ -187,7 +195,7 @@ function NewTaskForm({
 
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={isPlanGenerating || tasks?.length === 0 || user?.credits === 0}
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
@@ -200,9 +208,14 @@ function NewTaskForm({
             生成中…
           </>
         ) : (
-          "生成日程"
+          user?.credits === 0 ? "额度不足" : "生成日程（消耗 1 次）"
         )}
       </Button>
+      {user?.credits === 0 && (
+        <p className="text-muted-foreground -mt-8 text-center text-sm" role="status">
+          本次未生成日程。额度补充后可继续使用。
+        </p>
+      )}
 
       {!!response && (
         <div className="flex flex-col">
