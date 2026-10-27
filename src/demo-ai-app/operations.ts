@@ -1,17 +1,24 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
+import type { PlanResult, Task } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateTask,
   DeleteTask,
   GeneratePlan,
   GetAllTasksByUser,
+  GetCreditBalance,
   GetPlanResults,
   UpdateTask,
 } from "wasp/server/operations";
 import * as z from "zod";
 import { ensureArgsSchemaOrThrowHttpError } from "../server/validation";
-import type { GeneratedSchedule } from "./schedule";
+import {
+  CreditRefundError,
+  generatePlanWithQuota,
+  InsufficientCreditsError,
+  ModelRejectedError,
+  type GeneratePlanResult,
+  type PlanRepository,
+} from "./generate-plan";
 import { generateMockSchedule } from "./mockAi";
 
 
@@ -24,7 +31,7 @@ type GeneratePlanInput = z.infer<typeof generatePlanInputSchema>;
 
 export const generatePlan: GeneratePlan<
   GeneratePlanInput,
-  GeneratedSchedule
+  GeneratePlanResult
 > = async (rawArgs, context) => {
   if (!context.user) {
     throw new HttpError(
@@ -37,46 +44,71 @@ export const generatePlan: GeneratePlan<
     generatePlanInputSchema,
     rawArgs,
   );
-  const tasks = await context.entities.Task.findMany({
-    where: {
-      user: {
-        id: context.user.id,
-      },
-    },
-  });
+  const userId = context.user.id;
 
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
-    throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
+  const repo: PlanRepository = {
+    async listTasks(ownerId) {
+      return context.entities.Task.findMany({
+        where: { user: { id: ownerId } },
+        select: { description: true, time: true },
+      });
+    },
+    async reserveCredit(ownerId) {
+      // Single guarded UPDATE: PostgreSQL re-checks `credits > 0` after any
+      // row-lock wait, so concurrent requests cannot both take the last credit.
+      // The balance read is in the same transaction: if it fails, the decrement
+      // rolls back and the request cannot lose a credit silently.
+      const [updateResult, user] = await prisma.$transaction([
+        prisma.user.updateMany({
+          where: { id: ownerId, credits: { gt: 0 } },
+          data: { credits: { decrement: 1 } },
+        }),
+        prisma.user.findUnique({
+          where: { id: ownerId },
+          select: { credits: true },
+        }),
+      ]);
+      return {
+        ok: updateResult.count === 1,
+        remainingCredits: user?.credits ?? 0,
+      };
+    },
+    async refundCredit(ownerId) {
+      await context.entities.User.update({
+        where: { id: ownerId },
+        data: { credits: { increment: 1 } },
+      });
+    },
+    async savePlanResult(ownerId, content) {
+      await context.entities.PlanResult.create({
+        data: {
+          user: { connect: { id: ownerId } },
+          content,
+        },
+      });
+    },
+  };
+
+  try {
+    return await generatePlanWithQuota(
+      { userId, hours },
+      { repo, generateSchedule: generateMockSchedule },
     );
+  } catch (error) {
+    if (error instanceof InsufficientCreditsError) {
+      throw new HttpError(402, "INSUFFICIENT_CREDITS", {
+        remainingCredits: error.remainingCredits,
+      });
+    }
+    if (error instanceof ModelRejectedError) {
+      throw new HttpError(502, "MODEL_REJECTED");
+    }
+    if (error instanceof CreditRefundError) {
+      console.error("Failed to refund a reserved credit", error);
+      throw new HttpError(500, "CREDIT_REFUND_FAILED");
+    }
+    throw error;
   }
-
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
-  });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
-  }
-
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
-
-  return generatedSchedule;
 };
 
 const createTaskInputSchema = z.object({
@@ -178,6 +210,20 @@ export const deleteTask: DeleteTask<DeleteTaskInput, Task> = async (
 //#endregion
 
 //#region Queries
+export const getCreditBalance: GetCreditBalance<
+  void,
+  { credits: number }
+> = async (_args, context) => {
+  if (!context.user) {
+    throw new HttpError(401);
+  }
+  const user = await context.entities.User.findUnique({
+    where: { id: context.user.id },
+    select: { credits: true },
+  });
+  return { credits: user?.credits ?? 0 };
+};
+
 export const getPlanResults: GetPlanResults<void, PlanResult[]> = async (
   _args,
   context,

@@ -1,10 +1,30 @@
 import { randomUUID } from "node:crypto";
-import type { Task } from "wasp/entities";
 import type { GeneratedSchedule, TaskPriority } from "./schedule";
+
+export type MockAiTask = {
+  description: string;
+  time: string;
+};
+
+/**
+ * Must stay in sync with MODEL_REJECTED_CODE in generate-plan.ts.
+ * The orchestration layer duck-types on `code` to keep the core testable
+ * without importing the provider at runtime.
+ */
+export const MOCK_AI_REJECTED_CODE = "MOCK_AI_REJECTED";
+
+export class MockAiRejectedError extends Error {
+  readonly code = MOCK_AI_REJECTED_CODE;
+
+  constructor(callId: string) {
+    super(`Mock provider explicitly rejected the request (callId: ${callId})`);
+    this.name = "MockAiRejectedError";
+  }
+}
 
 /** Local provider fixture. Each invocation represents one billable provider call. */
 export async function generateMockSchedule(
-  tasks: Pick<Task, "description" | "time">[],
+  tasks: MockAiTask[],
   hours: number,
 ): Promise<GeneratedSchedule> {
   const callId = randomUUID();
@@ -12,7 +32,7 @@ export async function generateMockSchedule(
   await new Promise((resolve) => setTimeout(resolve, 500));
   if (tasks.some((task) => task.description.includes("[fail]"))) {
     console.info(JSON.stringify({ event: "mock-ai.failed", callId }));
-    throw new Error("Mock provider explicitly rejected the request");
+    throw new MockAiRejectedError(callId);
   }
   const result = {
     tasks: tasks.map((task) => ({

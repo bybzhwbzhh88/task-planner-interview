@@ -4,7 +4,7 @@
 
 ## 任务
 
-请阅读 [TASK.md](TASK.md)。项目中的额度处理是待改进的初始版本。
+请阅读 [TASK.md](TASK.md)。额度处理已完成一轮改进，行为、取舍与验收口径见 [SPEC.md](SPEC.md)，验证结果见 [VERIFICATION.md](VERIFICATION.md)。
 
 ## 环境
 
@@ -44,6 +44,15 @@ wasp start
 
 如果已有本地 PostgreSQL，可在 `.env.server` 中配置 `DATABASE_URL`，使用独立的空数据库，再执行迁移与启动。
 
+## 额度处理
+
+- 成功生成一次日程扣 1 个额度；额度不足时返回 402，不发起模型调用。
+- 模型明确失败或结果保存失败时退回预占的额度，页面会说明原因。
+- 并发安全由 `User.credits > 0` 条件下的单条数据库更新保证，不依赖页面按钮状态。
+- 生成区显示剩余额度；额度为 0 时按钮停用并提示下一步。
+
+实现细节、边界与取舍见 [SPEC.md](SPEC.md)。完整端到端验证需要下方环境；核心额度逻辑可在不启动 Wasp/Postgres 的情况下用测试验证。
+
 ## 模拟接口
 
 - 普通任务约 500 毫秒后返回模拟日程。
@@ -57,12 +66,23 @@ wasp start
 | --- | --- |
 | `main.wasp.ts` | 应用与路由配置 |
 | `schema.prisma` | 用户、任务和生成结果 |
-| `src/demo-ai-app/DemoAppPage.tsx` | 任务输入和日程展示 |
-| `src/demo-ai-app/operations.ts` | 服务端操作 |
+| `src/demo-ai-app/DemoAppPage.tsx` | 任务输入、额度展示和日程展示 |
+| `src/demo-ai-app/operations.ts` | 服务端操作与 Prisma 额度适配 |
+| `src/demo-ai-app/generate-plan.ts` | 与框架无关的预占/退款编排 |
 | `src/demo-ai-app/mockAi.ts` | 本地模拟接口 |
+| `tests/generate-plan.test.ts` | 额度状态机与并发测试 |
 | `src/auth/auth.wasp.ts` | 登录配置 |
 
-## 基础检查
+## 验证
+
+只验证额度核心，不需要 Wasp CLI 或 PostgreSQL：
+
+```sh
+npm run test:quota
+npm run typecheck:quota
+```
+
+完整项目检查：
 
 ```sh
 wasp compile
@@ -70,7 +90,7 @@ npx tsc --project tsconfig.src.json --noEmit
 npx tsc --project tsconfig.wasp.json --noEmit
 ```
 
-运行检查前需要完成依赖安装。首次启动前需要执行数据库迁移。
+运行完整检查前需要完成依赖安装；首次启动前需要执行数据库迁移。实际执行记录与未运行项见 [VERIFICATION.md](VERIFICATION.md)。
 
 ## 开源许可
 
