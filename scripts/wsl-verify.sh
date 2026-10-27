@@ -99,8 +99,24 @@ log "schema pushed"
 
 # ---------------------------------------------------------------------------
 log "=== 5. 额度逻辑验证（A0-A5，28 断言）==="
-# 脚本用 createRequire 从 PRISMA_CLIENT_DIR 加载 @prisma/client；仓库 node_modules 里已有
-PRISMA_CLIENT_DIR="$WORK" node scripts/verify-quota.mjs \
+# 项目根只声明了 prisma CLI（devDependencies），没有 @prisma/client 与 esbuild；
+# 脚本需要这两者，因此准备一个独立的工具目录（与 SUBMISSION.md 记录的方式一致）。
+TOOLS="$HOME/quota-tools"
+if [ ! -d "$TOOLS/node_modules/@prisma/client" ]; then
+  log "准备验证工具目录 $TOOLS（@prisma/client@5.19.1 + esbuild）..."
+  mkdir -p "$TOOLS"
+  cp schema.prisma "$TOOLS/schema.prisma"
+  (
+    cd "$TOOLS" || exit 1
+    npm init -y >/dev/null 2>&1
+    npm install @prisma/client@5.19.1 prisma@5.19.1 esbuild
+    npx prisma generate --schema schema.prisma
+  ) >> "$LOG_DIR/tools-install.log" 2>&1 \
+    || { tail -25 "$LOG_DIR/tools-install.log"; fail "验证工具依赖准备失败"; }
+  log "工具目录就绪"
+fi
+# 脚本用 createRequire 从 PRISMA_CLIENT_DIR 加载 @prisma/client；仓库 node_modules 里没有
+PRISMA_CLIENT_DIR="$TOOLS" node scripts/verify-quota.mjs \
   > "$LOG_DIR/verify-quota.log" 2>&1
 verify_rc=$?
 tail -40 "$LOG_DIR/verify-quota.log"
