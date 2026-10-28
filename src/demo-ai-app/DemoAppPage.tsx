@@ -1,4 +1,5 @@
 import { type Task } from "wasp/entities";
+import { useAuth } from "wasp/client/auth";
 
 import {
   createTask,
@@ -63,6 +64,8 @@ function NewTaskForm({
   const [todaysHours, setTodaysHours] = useState<number>(8);
   const [response, setResponse] = useState<GeneratedSchedule | null>(null);
   const [isPlanGenerating, setIsPlanGenerating] = useState<boolean>(false);
+  const [isPreviousResult, setIsPreviousResult] = useState(false);
+  const { refetch: refreshUser } = useAuth();
 
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
@@ -79,6 +82,7 @@ function NewTaskForm({
   };
 
   const handleGeneratePlan = async () => {
+    setIsPreviousResult(true);
     try {
       setIsPlanGenerating(true);
       const response = await generatePlan({
@@ -86,6 +90,8 @@ function NewTaskForm({
       });
       if (response) {
         setResponse(response);
+        setIsPreviousResult(false);
+        toast({ title: "生成成功", description: "已消耗 1 次额度，日程已显示在下方。" });
       }
     } catch (err) {
       const statusCode =
@@ -95,20 +101,23 @@ function NewTaskForm({
       if (statusCode === 402) {
         toast({
           title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          description: "生成额度已用完，本次未生成。你仍可编辑待办事项。",
+        });
+      } else if (statusCode === 502) {
+        toast({
+          title: "生成失败",
+          description: "本次未消耗额度，待办事项已保留。请检查任务后重试。",
+          variant: "destructive",
         });
       } else {
         toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
+          title: "暂时无法确认生成结果",
+          description: "请刷新页面核对剩余额度后再操作。",
           variant: "destructive",
         });
       }
     } finally {
+      await refreshUser();
       setIsPlanGenerating(false);
     }
   };
@@ -185,6 +194,9 @@ function NewTaskForm({
         )}
       </div>
 
+      <p className="text-muted-foreground text-center text-sm">
+        每成功生成一次消耗 1 次额度，生成失败不扣次。
+      </p>
       <Button
         type="button"
         disabled={isPlanGenerating || tasks?.length === 0}
@@ -207,7 +219,7 @@ function NewTaskForm({
       {!!response && (
         <div className="flex flex-col">
           <h3 className="text-foreground mb-4 text-lg font-semibold">
-            本次日程
+            {isPreviousResult ? "上次成功生成的日程" : "本次日程"}
           </h3>
           <Schedule schedule={response} />
         </div>

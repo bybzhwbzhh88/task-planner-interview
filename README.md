@@ -4,7 +4,7 @@
 
 ## 任务
 
-请阅读 [TASK.md](TASK.md)。项目中的额度处理是待改进的初始版本。
+题目要求见 [TASK.md](TASK.md)，处理方案见 [SPEC.md](SPEC.md)。
 
 ## 环境
 
@@ -71,6 +71,20 @@ npx tsc --project tsconfig.wasp.json --noEmit
 ```
 
 运行检查前需要完成依赖安装。首次启动前需要执行数据库迁移。
+
+## 额度测试
+
+完成依赖安装和 `wasp compile` 后，在项目根目录执行：
+
+```sh
+npm run test:quota
+```
+
+数据库需保持运行。脚本优先使用环境变量 `DATABASE_URL`，未设置时读取 `.env.server`。连接账号需要 `CREATEDB` 权限；Wasp 默认开发数据库账号具备该权限。
+
+脚本创建独立临时库，执行已有迁移和测试，结束后删除临时库，不改动原库数据。通过时显示 `11 passed`、退出码为 0；失败时返回非零退出码。强制结束进程可能遗留 `planner_quota_test_*` 临时库，需要手动清理。
+
+案例见 [SPEC.md](SPEC.md#验收案例)，实际验证记录见 [SUBMISSION.md](SUBMISSION.md#验证记录)。
 
 ## 开源许可
 

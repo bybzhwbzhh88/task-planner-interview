@@ -1,6 +1,9 @@
 {
   "name": "task-planner-interview",
   "type": "module",
+  "scripts": {
+    "test:quota": "node scripts/test-quota.mjs"
+  },
   "workspaces": [
     ".wasp/out/*",
     ".wasp/out/sdk/wasp"
