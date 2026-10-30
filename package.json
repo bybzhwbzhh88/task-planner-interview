@@ -37,5 +37,9 @@
   "private": true,
   "engines": {
     "node": ">=24.14.1"
+  },
+  "allowScripts": {
+    "@prisma/engines@5.19.1": true,
+    "prisma@5.19.1": true
   }
 }

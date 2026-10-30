@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCredits,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -67,6 +68,14 @@ function NewTaskForm({
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
 
+  const {
+    data: credits,
+    isLoading: isCreditsLoading,
+    isError: isCreditsError,
+    isFetching: isCreditsFetching,
+    refetch: refetchCredits,
+  } = useQuery(getCredits);
+
   const handleSubmit = async () => {
     try {
       await handleCreateTask({ description });
@@ -79,42 +88,76 @@ function NewTaskForm({
   };
 
   const handleGeneratePlan = async () => {
+    if (isPlanGenerating) return;
+
+    setIsPlanGenerating(true);
+
     try {
-      setIsPlanGenerating(true);
-      const response = await generatePlan({
+      const schedule = await generatePlan({
         hours: todaysHours,
       });
-      if (response) {
-        setResponse(response);
-      }
+
+      setResponse(schedule);
+
+      toast({
+        title: "日程已生成",
+        description: "本次消耗 1 次额度。",
+      });
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
           : undefined;
-      if (statusCode === 402) {
-        toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
-          variant: "destructive",
-        });
-      }
+
+      toast({
+        title: statusCode === 402 ? "额度不足" : "本次未生成新日程",
+        description:
+          err instanceof Error
+            ? err.message
+            : "未能确认操作结果，请刷新查看额度后再决定是否重试。",
+        variant: "destructive",
+      });
     } finally {
-      setIsPlanGenerating(false);
+      try {
+        await refetchCredits();
+      } finally {
+        setIsPlanGenerating(false);
+      }
     }
   };
 
+
   return (
     <div className="flex flex-col justify-center gap-10">
+      <div className="space-y-2" aria-live="polite">
+        <p className="font-semibold">
+          剩余可用额度：
+          {isCreditsLoading
+            ? "加载中…"
+            : isCreditsError || credits === undefined
+              ? "暂时无法获取"
+              : `${credits} 次`}
+        </p>
+
+        <p className="text-muted-foreground text-sm">
+          成功生成一次消耗 1 次额度，模型明确失败不扣额度。
+        </p>
+
+        {!isCreditsError && credits === 0 && (
+          <p className="text-muted-foreground text-sm">
+            暂无可用额度。如有生成中的请求，请等待完成后刷新额度。
+          </p>
+        )}
+
+        <Button
+          type="button"
+          variant="outline"
+          disabled={isPlanGenerating || isCreditsFetching}
+          onClick={() => void refetchCredits()}
+        >
+          {isCreditsFetching ? "刷新中…" : "刷新额度"}
+        </Button>
+      </div>
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between gap-3">
           <Input
@@ -187,7 +230,15 @@ function NewTaskForm({
 
       <Button
         type="button"
-        disabled={isPlanGenerating || tasks?.length === 0}
+        disabled={
+          isPlanGenerating ||
+          isTasksLoading ||
+          !tasks?.length ||
+          isCreditsLoading ||
+          isCreditsError ||
+          credits === undefined ||
+          credits <= 0
+        }
         onClick={() => handleGeneratePlan()}
         variant="default"
         size="default"
