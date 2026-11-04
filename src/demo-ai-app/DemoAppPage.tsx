@@ -5,6 +5,7 @@ import {
   deleteTask,
   generatePlan,
   getAllTasksByUser,
+  getCreditBalance,
   updateTask,
   useQuery,
 } from "wasp/client/operations";
@@ -67,6 +68,11 @@ function NewTaskForm({
   const { data: tasks, isLoading: isTasksLoading } =
     useQuery(getAllTasksByUser);
 
+  // 额度以数据库为准，不依赖请求快照（见 SPEC.md 假设 A-3）。
+  const { data: creditData, refetch: refetchCredits } =
+    useQuery(getCreditBalance);
+  const credits = creditData?.credits;
+
   const handleSubmit = async () => {
     try {
       await handleCreateTask({ description });
@@ -86,30 +92,54 @@ function NewTaskForm({
       });
       if (response) {
         setResponse(response);
+        toast({
+          title: "日程已生成",
+          description: "本次已消耗 1 个额度。",
+          style: { minWidth: "400px" },
+        });
       }
     } catch (err) {
       const statusCode =
         err && typeof err === "object" && "statusCode" in err
           ? err.statusCode
           : undefined;
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+
+      // 402 / 502 / 500 的正文由服务端统一给出（operations.ts），
+      // 前端只决定标题与样式，避免同一句话在两处各写一遍而失同步。
       if (statusCode === 402) {
         toast({
-          title: "额度不足",
-          style: {
-            minWidth: "400px",
-          },
-          description: "当前账号没有剩余额度，请检查账号状态。",
+          title: "额度已用完",
+          description: message,
+          style: { minWidth: "400px" },
+        });
+      } else if (statusCode === 502) {
+        toast({
+          title: "生成失败",
+          description: message,
+          variant: "destructive",
+          style: { minWidth: "400px" },
+        });
+      } else if (statusCode === 500) {
+        toast({
+          title: "结果保存失败",
+          description: message,
+          variant: "destructive",
+          style: { minWidth: "400px" },
         });
       } else {
         toast({
-          title: "Error",
-          description:
-            err instanceof Error ? err.message : "Something went wrong",
+          title: "请求异常",
+          description: message,
           variant: "destructive",
         });
       }
     } finally {
       setIsPlanGenerating(false);
+      // 成功和失败都要刷新：失败路径服务端会回补额度，
+      // 页面必须显示回补后的真实余额，否则用户会误以为已被扣费。
+      await refetchCredits();
     }
   };
 
@@ -184,6 +214,26 @@ function NewTaskForm({
           </div>
         )}
       </div>
+
+      <div
+        className="flex items-center justify-between gap-3"
+        data-testid="credit-balance"
+      >
+        <span className="text-muted-foreground text-sm">剩余额度</span>
+        <span
+          className={cn("text-sm font-semibold", {
+            "text-destructive": credits === 0,
+          })}
+        >
+          {credits === undefined ? "…" : credits}
+        </span>
+      </div>
+
+      {credits === 0 && (
+        <p className="text-destructive text-center text-sm">
+          额度已用完：点击生成不会调用模型，也不会扣除额度。
+        </p>
+      )}
 
       <Button
         type="button"
