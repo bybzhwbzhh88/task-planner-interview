@@ -1,11 +1,11 @@
-import type { PrismaPromise } from "@prisma/client";
-import type { PlanResult, Task, User } from "wasp/entities";
+import type { PlanResult, Task } from "wasp/entities";
 import { HttpError, prisma } from "wasp/server";
 import type {
   CreateTask,
   DeleteTask,
   GeneratePlan,
   GetAllTasksByUser,
+  GetCreditBalance,
   GetPlanResults,
   UpdateTask,
 } from "wasp/server/operations";
@@ -21,6 +21,57 @@ const generatePlanInputSchema = z.object({
 });
 
 type GeneratePlanInput = z.infer<typeof generatePlanInputSchema>;
+
+/** `context.entities.User` 的最小接口，只取额度处理真正用到的两个方法。 */
+type UserDelegate = Pick<
+  typeof prisma.user,
+  "updateMany" | "findUnique"
+>;
+
+/**
+ * 原子预占一个额度。
+ *
+ * 防透支的关键就在这里：检查与扣减是同一条 SQL
+ * `UPDATE "User" SET credits = credits - 1 WHERE id = ? AND credits >= 1`，
+ * PostgreSQL 对命中行加排他锁，使并发请求在此串行化。余额不足时
+ * `credits >= 1` 不成立，`count` 返回 0，调用方据此拒绝且不会触达模型。
+ *
+ * 用 `updateMany` 而非 `update`：后者在 where 不匹配时抛 RecordNotFound，
+ * 无法区分「余额不足」与「用户不存在」。
+ */
+async function reserveCredit(
+  users: UserDelegate,
+  userId: string,
+): Promise<boolean> {
+  const { count } = await users.updateMany({
+    where: { id: userId, credits: { gte: 1 } },
+    data: { credits: { decrement: 1 } },
+  });
+  return count === 1;
+}
+
+/**
+ * 回补一个额度。仅在确实预占成功、但后续步骤失败时调用一次。
+ * 用 `credits: { gte: 0 }` 兜住用户已被删除的情况，避免抛错掩盖原始异常。
+ */
+async function releaseCredit(
+  users: UserDelegate,
+  userId: string,
+): Promise<void> {
+  try {
+    await users.updateMany({
+      where: { id: userId, credits: { gte: 0 } },
+      data: { credits: { increment: 1 } },
+    });
+  } catch (error) {
+    // 回补失败意味着这一点额度丢失（见 SPEC.md 限制 L2）。
+    // 记录后不再抛出，以免覆盖真正导致失败的原始错误。
+    console.error(
+      JSON.stringify({ event: "credit.release-failed", userId }),
+      error,
+    );
+  }
+}
 
 export const generatePlan: GeneratePlan<
   GeneratePlanInput,
@@ -45,39 +96,89 @@ export const generatePlan: GeneratePlan<
     },
   });
 
-  console.log("Calling mock AI provider");
-  const generatedSchedule = await generateMockSchedule(tasks, hours);
-  if (generatedSchedule === null) {
+  // 步骤①：调用模型之前先原子预占额度。
+  // 额度不足时在这里终止，`generateMockSchedule` 不会被调用，
+  // 服务端日志因此不会出现 `mock-ai.started`。
+  const users = context.entities.User as unknown as UserDelegate;
+  const reserved = await reserveCredit(users, context.user.id);
+  if (!reserved) {
+    console.info(
+      JSON.stringify({
+        event: "credit.insufficient",
+        userId: context.user.id,
+      }),
+    );
     throw new HttpError(
-      500,
-      "Encountered a problem in communication with the mock provider",
+      402,
+      "额度已用完，本次未调用模型也未扣除额度。请等待额度恢复后再试。",
     );
   }
 
-  const createResponse = context.entities.PlanResult.create({
-    data: {
-      user: { connect: { id: context.user.id } },
-      content: JSON.stringify(generatedSchedule),
-    },
-  });
-
-  const transactions: PrismaPromise<PlanResult | User>[] = [createResponse];
-
-  // Baseline quota behavior is intentionally left for the interview exercise.
-  if (context.user.credits > 0) {
-    transactions.push(context.entities.User.update({
-      where: { id: context.user.id },
-      data: { credits: { decrement: 1 } },
-    }));
-  } else {
-    throw new HttpError(402, "User is out of credits");
+  // 步骤②：调用模型。失败则回补额度，不扣费。
+  let generatedSchedule: GeneratedSchedule;
+  try {
+    console.log("Calling mock AI provider");
+    generatedSchedule = await generateMockSchedule(tasks, hours);
+  } catch (error) {
+    await releaseCredit(users, context.user.id);
+    console.info(
+      JSON.stringify({
+        event: "credit.released",
+        userId: context.user.id,
+        reason: "provider-failed",
+      }),
+    );
+    throw new HttpError(
+      502,
+      "模型返回失败，本次未扣除额度，可以直接重试。",
+      { cause: error },
+    );
   }
 
-  console.log("Decrementing credits and saving response");
-  await prisma.$transaction(transactions);
+  // 步骤③：保存结果。保存失败同样回补，避免「扣了额度却没有日程」。
+  try {
+    console.log("Decrementing credits and saving response");
+    await context.entities.PlanResult.create({
+      data: {
+        user: { connect: { id: context.user.id } },
+        content: JSON.stringify(generatedSchedule),
+      },
+    });
+  } catch (error) {
+    await releaseCredit(users, context.user.id);
+    console.info(
+      JSON.stringify({
+        event: "credit.released",
+        userId: context.user.id,
+        reason: "persist-failed",
+      }),
+    );
+    throw new HttpError(
+      500,
+      "日程已生成但保存失败，本次未扣除额度，请重试。",
+      { cause: error },
+    );
+  }
 
   return generatedSchedule;
 };
+
+/** 供前端展示与刷新的剩余额度。额度以数据库为准，不读请求快照。 */
+export const getCreditBalance: GetCreditBalance<void, { credits: number }> =
+  async (_args, context) => {
+    if (!context.user) {
+      throw new HttpError(401);
+    }
+
+    const user = await context.entities.User.findUnique({
+      where: { id: context.user.id },
+      select: { credits: true },
+    });
+
+    // 理论上不会发生：登录态存在但用户行已被删除。返回 0 而非抛错，
+    // 避免前端额度组件因异常而整页失败。
+    return { credits: user?.credits ?? 0 };
+  };
 
 const createTaskInputSchema = z.object({
   description: z.string().nonempty(),
