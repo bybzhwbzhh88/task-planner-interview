@@ -20,7 +20,7 @@
 
 **方案**：改为「调用前原子预占 → 成功保留 → 明确失败回补」三段式。防透支的关键是把判断条件下推到数据库，用单条带 `credits >= 1` 条件的 `UPDATE` 完成检查与扣减，由 PostgreSQL 行锁保证原子性。
 
-**当前状态**：spec 初稿已提交；实现、验证见后续提交与 `SUBMISSION.md`。
+**当前状态**：实现与验证已完成——端到端脚本 45 项断言全部通过（含并发与保存失败回补），AC-11 已用真实浏览器实测；逐条验证记录见 `SUBMISSION.md`。相对初稿的修订（AC-8 预期、I6/I7 交付形态）保留在 Git 历史中，理由见 §5、§6。
 
 ## 2. 范围与假设
 
@@ -120,8 +120,8 @@
 | I3 | 新增 `getCreditBalance` query | `src/demo-ai-app/operations.ts` | 返回当前用户 `credits`，供前端展示与刷新 |
 | I4 | 注册新 query | `src/demo-ai-app/demo-ai-app.wasp.ts` | `query(getCreditBalance, { entities: ["User"] })` |
 | I5 | 前端接入额度展示与分状态提示 | `src/demo-ai-app/DemoAppPage.tsx` | 按 §4.3；生成后刷新额度 |
-| I6 | 单元测试（mock entities） | `src/demo-ai-app/__tests__/` | 覆盖时序：额度不足不得调用模型 |
-| I7 | 并发端到端脚本（真实 DB + HTTP） | `scripts/verify-credits.mjs` | 可复跑，输出断言结果 |
+| I6 | 时序与失败路径断言 | `scripts/verify-credits.sh` | 在真实数据库 + 真实 HTTP 下覆盖「额度不足不得调用模型」等时序断言。未单独交付脱离 Wasp 工具链的 mock 单元测试：操作依赖编译期生成的 SDK 类型，脱离工具链的 mock 成本高，端到端脚本已覆盖同等断言（取舍已记录） |
+| I7 | 端到端与并发验证脚本 | `scripts/verify-credits.sh` | 可复跑，逐项输出断言结果；psql 路径可用 `PG_BIN` 环境变量覆盖 |
 | I8 | 回归检查 | — | `wasp compile` + 两项 `tsc --noEmit` |
 
 **关键实现要点**：
@@ -144,13 +144,15 @@
 | AC-5 | 失败后可恢复 | 承接 AC-4 | 删除 `[fail]` 任务后再生成 | 生成成功；`credits = 2` |
 | AC-6 | 并发不透支（额度 1） | `credits = 1` | 同一账号同时发起 5 个生成请求 | 恰好 1 个 200、4 个 402；`credits = 0`（不为负）；`PlanResult` 新增 1 行；`mock-ai.started` 恰好 1 次 |
 | AC-7 | 并发不透支（额度 3） | `credits = 3` | 同一账号同时发起 5 个生成请求 | 恰好 3 个 200、2 个 402；`credits = 0`；`PlanResult` 新增 3 行；`started` 恰好 3 次 |
-| AC-8 | 并发+失败混合 | `credits = 2`，任务含 `[fail]` | 同时发起 4 个请求 | 4 个均 502；`credits` 回到 2；`PlanResult` 无新增；`started` 4 次、`failed` 4 次 |
+| AC-8 | 并发+失败混合 | `credits = 2`，任务含 `[fail]` | 同时发起 4 个请求 | 恰好 2 个 502（预占成功者调用模型后失败并回补）+ 2 个 402（预占失败者）；`credits` 回到 2；`PlanResult` 无新增；`started` **2 次**、`failed` 2 次 |
 | AC-9 | 未登录 | 无会话 | 直接调 `generatePlan` | 401；`credits` 不变；无 `started` |
 | AC-10 | 入参非法 | `credits = 3` | `hours` 传字符串 | 400；`credits` 仍为 3；无 `started` |
 | AC-11 | 额度展示与刷新 | `credits = 3` | 打开页面，生成 1 次 | 页面显示剩余额度 3；生成后自动刷新为 2，无需手动刷新页面 |
 | AC-12 | 保存失败回补 | `credits = 3`，注入 `PlanResult.create` 异常 | 点击「生成日程」 | 500；`credits` 回到 3；提示说明未扣额度 |
 
-AC-6/AC-7/AC-8 由 `scripts/verify-credits.mjs` 自动执行，其余由单元测试与手工页面操作覆盖。
+AC-1~AC-10、AC-12 由 `scripts/verify-credits.sh` 自动执行；AC-11 由真实浏览器操作核对；AC-3/AC-12 的前端可见部分另附浏览器实测与接口层证据（见 `SUBMISSION.md`）。
+
+**AC-8 预期修订说明**：初稿曾把 AC-8 写成「4 个请求均 502、`started` 4 次」。实测后判定该预期本身错误并予以修订——额度只有 2，第 3、4 个请求必然在预占阶段就被拒；若它们也返回 502，说明额度不足时仍调用了模型，直接违反 AC-3。因此正确预期是 `min(4,2)=2` 个 502 与 2 个 402，`started` 增量等于预占成功数 2。修订后的案例同时验证并发保护与失败回补两个机制的叠加行为，比原设计更有区分度。修订保留在 Git 历史中。
 
 ## 7. 已知限制与交接
 
